@@ -8,11 +8,13 @@
 */
 package logsdk
 
+import (
+	logrusplugin "github.com/itsfunny/go-cell/sdk/log/logrus"
+)
 
 func init() {
 	logManager = new(LogManager)
 	logManager.cfg = NewLogConfiguration()
-
-	RegisterBlackList("base/common")
-	RegisterBlackList("log/config.go")
+	logrusplugin.logger = logrusplugin.NewGlobalLogrusLogger()
+	RegisterBlackList("base/common", "log/log.go", "base/log", "base/base", "log/config.go")
 }

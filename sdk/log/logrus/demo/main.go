@@ -23,13 +23,13 @@ func init() {
 
 func main() {
 
-	// diffModuleWithDiffColor()
-	// disableColor()
-
-	// withFieldsColor()
+	diffModuleWithDiffColor()
+	disableColor()
 	//
-	// withNoSpecific()
-	// testWithFileds()
+	withFieldsColor()
+
+	withNoSpecific()
+	testWithFileds()
 	testWith()
 }
 func testWith() {
