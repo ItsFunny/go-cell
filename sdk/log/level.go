@@ -6,7 +6,7 @@
 # @Description :
 # @Attention :
 */
-package log
+package logsdk
 
 
 import "github.com/sirupsen/logrus"

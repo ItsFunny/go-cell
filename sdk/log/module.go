@@ -6,7 +6,7 @@
 # @Description :
 # @Attention :
 */
-package log
+package logsdk
 
 import (
 	"fmt"
@@ -24,6 +24,15 @@ type module struct {
 	name  string
 	index uint16
 	level Level
+}
+
+func NewModule(name string, index uint16) module {
+	name = strings.ToUpper(name)
+	return module{
+		index: index,
+		name:  name,
+		level: GetModuleLevel(name),
+	}
 }
 
 func NewModuleWithLevel(name string, index uint16, level Level) module {
