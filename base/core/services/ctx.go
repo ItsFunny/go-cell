@@ -6,9 +6,11 @@
 # @Description :
 # @Attention :
 */
-package base
+package services
 
-import "context"
+import (
+	"context"
+)
 
 // FIXME ,错误位置
 type StartCTX struct {
@@ -40,7 +42,7 @@ var startOption = func(copy *StartCTX) StartOption {
 type ResetCTX struct {
 	value map[string]interface{}
 }
-func NewResetCTX()*ResetCTX{
+func NewResetCTX()*ResetCTX {
 	r:=&ResetCTX{
 		value: make(map[string]interface{}),
 	}

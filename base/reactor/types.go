@@ -8,4 +8,28 @@
 */
 package reactor
 
-type Function func(ctx IBuzzContext) error
+import (
+	"github.com/itsfunny/go-cell/base/couple"
+)
+
+type Function func(ctx IBuzzContext,reqData interface{}) error
+
+//func FunctionWithBuz(ctx IBuzzContext, bo interface{}) Function {
+//	return func(ctx IBuzzContext) error {
+//		req:=ctx.GetCommandContext().ServerRequest
+//
+//	}
+//}
+
+//func FuncWithBuz(GetInputArchiveFromCtxFunc func(ctx IBuzzContext) serialize.IInputArchive,
+//	factory func() serialize.ISerialize) Function {
+//	return func(ctx IBuzzContext) error {
+//		archive := GetInputArchiveFromCtxFunc(ctx)
+//		req := factory()
+//
+//	}
+//}
+
+type PreRun func(req IBuzzContext) error
+
+type PostRunMap map[PostRunType]func(response couple.IServerResponse) error

@@ -9,6 +9,13 @@
 package couple
 
 type IServerRequest interface {
+	ContentLength() int
+	GetHeader(name string)string
 }
 type IServerResponse interface {
+	SetHeader(name, value string)
+	SetStatus(status int)
+	AddHeader(name, value string)
+	FireResult(ret interface{})
+	FireError(e error)
 }

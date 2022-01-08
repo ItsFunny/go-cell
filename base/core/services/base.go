@@ -6,7 +6,7 @@
 # @Description :
 # @Attention :
 */
-package base
+package services
 
 import (
 	"context"
@@ -59,8 +59,8 @@ type BaseService struct {
 	started uint32 // atomic
 	stopped uint32 // atomic
 	ctx     context.Context
-	cancel  func()
-	impl    IBaseService
+	cancel func()
+	impl   IBaseService
 
 	c1 chan struct{}
 	c2 chan struct{}

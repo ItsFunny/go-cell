@@ -9,7 +9,7 @@
 package reactor
 
 type ContextResponseWrapper struct {
-	Status  int64
+	Status  int
 	Msg     string
 	Error   error
 	Cmd     ICommand
@@ -17,4 +17,13 @@ type ContextResponseWrapper struct {
 	Headers map[string]string
 
 	Other interface{}
+}
+
+func (c *ContextResponseWrapper) WithStatus(status int) *ContextResponseWrapper {
+	c.Status = status
+	return c
+}
+func (c *ContextResponseWrapper) WithError(err error) *ContextResponseWrapper {
+	c.Error=err
+	return c
 }

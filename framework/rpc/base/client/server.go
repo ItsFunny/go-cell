@@ -8,8 +8,3 @@
 */
 package client
 
-import "github.com/itsfunny/go-cell/framework/base"
-
-type IRPCClientServer interface {
-	base.IFrameworkServer
-}

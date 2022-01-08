@@ -8,6 +8,13 @@ github.com/mgutz/ansi
 # github.com/sirupsen/logrus v1.8.1
 ## explicit
 github.com/sirupsen/logrus
+# github.com/tidwall/gjson v1.12.1
+## explicit
+github.com/tidwall/gjson
+# github.com/tidwall/match v1.1.1
+github.com/tidwall/match
+# github.com/tidwall/pretty v1.2.0
+github.com/tidwall/pretty
 # gitlab.ebidsun.com/chain/droplib/base/log v0.0.0-20211226133101-f8aaa21989f3
 ## explicit
 gitlab.ebidsun.com/chain/droplib/base/log/common
@@ -18,6 +25,7 @@ gitlab.ebidsun.com/chain/droplib/base/log/v2/base
 gitlab.ebidsun.com/chain/droplib/base/log/v2/component
 gitlab.ebidsun.com/chain/droplib/base/log/v2/logrus
 # gitlab.ebidsun.com/chain/droplib/base/services v0.0.0-20211118103714-0845e57ec999
+## explicit
 gitlab.ebidsun.com/chain/droplib/base/services
 gitlab.ebidsun.com/chain/droplib/base/services/constants
 gitlab.ebidsun.com/chain/droplib/base/services/e

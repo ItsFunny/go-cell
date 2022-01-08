@@ -8,22 +8,83 @@
 */
 package reactor
 
+import (
+	"github.com/itsfunny/go-cell/base/common"
+	"github.com/itsfunny/go-cell/base/serialize"
+)
+
 var (
 	_ ICommand = (*Command)(nil)
 )
 
 type ICommand interface {
-	execute(ctx IBuzzContext) error
+	execute(ctx IBuzzContext)
+}
+
+type ICommandSerialize interface {
+	serialize.ISerialize
+	common.IMessage
 }
 
 type Command struct {
-	Run   Function
-	Async bool
+	PreRun  PreRun
+	Run     Function
+	PostRun PostRunMap
+
+	property CommandProperty
+
+	Options []Option
 }
 
-func (c *Command) execute(ctx IBuzzContext) error {
-	c.Run(ctx)
-	if c.Async{
-
+func (c *Command) execute(ctx IBuzzContext) {
+	if err := c.PreRun(ctx); nil != err {
+		ctx.Response(c.CreateResponseWrapper().
+			WithStatus(common.FAIL).WithError(err))
+		return
 	}
+	async := c.property.Async
+	if async {
+		panic("not supported yet")
+	} else {
+		c.fire(ctx)
+	}
+}
+
+func (c *Command) fire(ctx IBuzzContext) {
+	req, err := c.newInstance(ctx)
+	if nil != err {
+		ctx.Error("获取参数失败", "err", err)
+		return
+	}
+	if err := c.Run(ctx, req); nil != err {
+		ctx.Error("调用失败", "err", err)
+	}
+	post := c.PostRun[ctx.PostRunType()]
+	if nil != post {
+		if err := post(ctx.GetCommandContext().ServerResponse); nil != err {
+			ctx.Error("postRun失败", "err", err)
+			ctx.Response(c.CreateResponseWrapper().WithError(err))
+		}
+	}
+}
+
+func (c *Command) newInstance(ctx IBuzzContext) (ICommandSerialize, error) {
+	if nil == c.property.RequestDataCreateF {
+		return nil, nil
+	}
+	if c.property.GetInputArchiveFromCtxFunc == nil {
+		return nil, nil
+	}
+
+	reqBo := c.property.RequestDataCreateF()
+	if err := reqBo.Read(c.property.GetInputArchiveFromCtxFunc(ctx)); nil != err {
+		return nil, err
+	}
+
+	return reqBo, reqBo.ValidateBasic()
+}
+
+func (c *Command) CreateResponseWrapper() *ContextResponseWrapper {
+	ret := &ContextResponseWrapper{Cmd: c}
+	return ret
 }

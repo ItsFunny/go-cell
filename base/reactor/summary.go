@@ -13,6 +13,8 @@ type ISummary interface {
 	GetProtocolId() string
 	GetReceiveTimeStamp() int64
 	GetToken() string
+
+	GetSequenceId() string
 	SetSequenceId(seqId string)
 	GetTimeOut() int64
 }
