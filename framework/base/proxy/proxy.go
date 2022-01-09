@@ -13,6 +13,7 @@ import (
 	"github.com/itsfunny/go-cell/base/server"
 	"github.com/itsfunny/go-cell/framework/base/context"
 	"github.com/itsfunny/go-cell/framework/base/dispatcher"
+	logsdk "github.com/itsfunny/go-cell/sdk/log"
 )
 
 var (
@@ -29,10 +30,18 @@ type BaseFrameworkProxy struct {
 	dispatch dispatcher.IDispatcher
 }
 
+func NewBaseFrameworkProxy(lg logsdk.Logger, m logsdk.Module, dispatch dispatcher.IDispatcher) *BaseFrameworkProxy {
+	ret := &BaseFrameworkProxy{
+		dispatch: dispatch,
+	}
+	proxy.NewBaseProxy(lg, m, ret)
+	return ret
+}
+
 func (b *BaseFrameworkProxy) OnProxy(event proxy.IProcessEvent) {
 	fe := event.(*server.DefaultProcessEvent)
 	req := fe.Request
 	resp := fe.Response
-	ctx:=context.NewDispatchContext(req,resp)
+	ctx := context.NewDispatchContext(req, resp)
 	b.dispatch.Dispatch(ctx)
 }

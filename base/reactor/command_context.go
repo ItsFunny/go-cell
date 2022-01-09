@@ -8,16 +8,17 @@
 */
 package reactor
 
-import "github.com/itsfunny/go-cell/base/couple"
+import (
+	"github.com/itsfunny/go-cell/base/channel"
+	"github.com/itsfunny/go-cell/base/couple"
+)
 
 type CommandContext struct {
 	ServerRequest  couple.IServerRequest
 	ServerResponse couple.IServerResponse
 	SessionKey     string
-	Summary        ISummary
-	CommandWrapper CommandWrapper
-	IChannel       IChannel
+	Summary  ISummary
+	IChannel channel.IChannel
+	Command ICommand
 }
 
-type CommandWrapper struct {
-}

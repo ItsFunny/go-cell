@@ -44,3 +44,7 @@ func (m *MockServerResponse) FireResult(ret interface{}) {
 func (m *MockServerResponse) FireError(e error) {
 	m.err = e
 }
+
+func(m *MockServerResponse)SetOrExpired() bool{
+	return false
+}

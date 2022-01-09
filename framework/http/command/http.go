@@ -1,15 +1,15 @@
 /*
 # -*- coding: utf-8 -*-
 # @Author : joker
-# @Time : 2022/1/8 11:00 上午
-# @File : wrapper.go
+# @Time : 2022/1/9 9:24 上午
+# @File : http.go
 # @Description :
 # @Attention :
 */
-package dispatcher
+package command
 
 import "github.com/itsfunny/go-cell/base/reactor"
 
-type CommandWrapper struct {
-	Command reactor.ICommand
+type HttpCommand struct {
+	*reactor.Command
 }

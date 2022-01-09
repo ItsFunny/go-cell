@@ -11,9 +11,8 @@ package common
 import "strconv"
 
 const (
-	RESPONSE_HEADER_CODE="code"
-	RESPONSE_HEADER_MSG="msg"
-
+	RESPONSE_HEADER_CODE = "code"
+	RESPONSE_HEADER_MSG  = "msg"
 )
 
 const (
@@ -23,5 +22,13 @@ const (
 )
 
 var (
-	STRING_FAIL=strconv.Itoa(FAIL)
+	STRING_FAIL = strconv.Itoa(FAIL)
 )
+
+func IsTimeOut(v int) bool {
+	return v&TIMEOUT >= TIMEOUT
+}
+
+func IsSuccess(v int) bool {
+	return v&SUCCESS >= SUCCESS
+}

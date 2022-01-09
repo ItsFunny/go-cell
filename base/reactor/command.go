@@ -18,7 +18,8 @@ var (
 )
 
 type ICommand interface {
-	execute(ctx IBuzzContext)
+	ID() ProtocolID
+	Execute(ctx IBuzzContext)
 }
 
 type ICommandSerialize interface {
@@ -27,16 +28,20 @@ type ICommandSerialize interface {
 }
 
 type Command struct {
-	PreRun  PreRun
-	Run     Function
-	PostRun PostRunMap
+	ProtocolID ProtocolID
+	PreRun     PreRun
+	Run        Function
+	PostRun    PostRunMap
 
 	property CommandProperty
 
 	Options []Option
 }
 
-func (c *Command) execute(ctx IBuzzContext) {
+func (c *Command) ID() ProtocolID {
+	return c.ProtocolID
+}
+func (c *Command) Execute(ctx IBuzzContext) {
 	if err := c.PreRun(ctx); nil != err {
 		ctx.Response(c.CreateResponseWrapper().
 			WithStatus(common.FAIL).WithError(err))

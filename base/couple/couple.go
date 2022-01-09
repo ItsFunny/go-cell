@@ -13,6 +13,7 @@ type IServerRequest interface {
 	GetHeader(name string)string
 }
 type IServerResponse interface {
+	SetOrExpired() bool
 	SetHeader(name, value string)
 	SetStatus(status int)
 	AddHeader(name, value string)

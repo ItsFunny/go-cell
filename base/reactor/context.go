@@ -9,14 +9,21 @@
 package reactor
 
 import (
+	"errors"
 	"fmt"
+	"github.com/itsfunny/go-cell/base/common"
+	"github.com/itsfunny/go-cell/base/couple"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
 	logrusplugin "github.com/itsfunny/go-cell/sdk/log/logrus"
+	"strconv"
+	"time"
 )
 
 var (
-	_ IBuzzContext = (*BaseBuzzContext)(nil)
+//_ IBuzzContext = (*BaseBuzzContext)(nil)
 )
+
+type FireResult func(response couple.IServerResponse, ret *ContextResponseWrapper)
 
 type IBuzzContext interface {
 	logsdk.Logger
@@ -25,12 +32,22 @@ type IBuzzContext interface {
 	GetCommandContext() *CommandContext
 
 	PostRunType() PostRunType
+
+	Module() logsdk.Module
 }
 
 type BaseBuzzContext struct {
 	CommandContext *CommandContext
 
 	PostType PostRunType
+
+	FireResult FireResult
+
+	impl IBuzzContext
+}
+
+func NewBaseBuzzContext(commandContext *CommandContext, postType PostRunType, impl IBuzzContext) *BaseBuzzContext {
+	return &BaseBuzzContext{CommandContext: commandContext, PostType: postType, impl: impl}
 }
 
 func (b *BaseBuzzContext) PostRunType() PostRunType {
@@ -87,5 +104,61 @@ func (b *BaseBuzzContext) GetCommandContext() *CommandContext {
 }
 
 func (b *BaseBuzzContext) Response(wrapper *ContextResponseWrapper) {
-	panic("implement me")
+	now := time.Now().Unix()
+	beginTime := b.CommandContext.Summary.GetReceiveTimeStamp()
+	cost := now - beginTime
+	seqId := b.CommandContext.Summary.GetSequenceId()
+	logrusplugin.MInfo(b.impl.Module(), fmt.Sprintf("response,protocol=%s,ip=%s,sequenceId=%s,cost=%d,ret=%v",
+		b.CommandContext.Command.ID(), b.CommandContext.Summary.GetRequestIp(), seqId, cost, wrapper.Ret))
+
+	resp := b.CommandContext.ServerResponse
+	if wrapper.Headers != nil {
+		for k, v := range wrapper.Headers {
+			resp.AddHeader(k, v)
+		}
+	}
+
+	resp.AddHeader(common.RESPONSE_HEADER_CODE, strconv.Itoa(wrapper.Status))
+	resp.AddHeader(common.RESPONSE_HEADER_MSG, wrapper.Msg)
+
+	if wrapper.Error != nil {
+		resp.FireError(wrapper.Error)
+		return
+	}
+
+	if resp.SetOrExpired() {
+		b.Error("duplicate result", "resp", resp)
+		resp.FireError(errors.New("duplicate call response"))
+		return
+	}
+
+	// TODO: other
+
+	if common.IsTimeOut(wrapper.Status) {
+		logrusplugin.MWarn(b.impl.Module(), "超时:xxx")
+	}
+
+	b.FireResult(resp, wrapper)
+}
+
+func FireResultWithSuccessOrFail(succ, fail FireResult) FireResult {
+	return func(response couple.IServerResponse, ret *ContextResponseWrapper) {
+		if common.IsSuccess(ret.Status) {
+			succ(response, ret)
+		} else {
+			fail(response, ret)
+		}
+	}
+}
+
+func FireResultWithHook(fs ...FireResult) FireResult {
+	return func(response couple.IServerResponse, ret *ContextResponseWrapper) {
+		for _, f := range fs {
+			f(response, ret)
+		}
+		if response.SetOrExpired() {
+			return
+		}
+		response.FireResult(ret.Ret)
+	}
 }

@@ -11,5 +11,4 @@ package context
 type IContext interface {
 	Discard()
 	Done() bool
-
 }
