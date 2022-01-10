@@ -10,11 +10,6 @@ package promise
 
 import (
 	"context"
-	"time"
-)
-
-var (
-	defaultT = time.Time{}
 )
 
 const (

@@ -37,7 +37,7 @@ type BaseServerResponse struct {
 }
 
 func (this *BaseServerResponse) SetOrExpired() bool {
-	this.promise.Timeout()
+	return this.promise.IsDone() || this.promise.IsTimeOut()
 }
 
 func (this *BaseServerResponse) SetHeader(name, value string) {
@@ -58,6 +58,4 @@ func (this *BaseServerResponse) FireError(e error) {
 
 func (this *BaseServerResponse) FireResult(ret render.Render) {
 	this.promise.Send(ret)
-}
-func (this *BaseServerResponse) render(render render.Render) error {
 }
