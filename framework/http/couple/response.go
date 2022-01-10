@@ -10,40 +10,57 @@ package couple
 
 import (
 	"github.com/itsfunny/go-cell/base/couple"
+	"github.com/itsfunny/go-cell/base/render"
 	"net/http"
 )
 
 var (
-	_ couple.IServerResponse=(*HttpServerResponse)(nil)
+	_ couple.IServerResponse = (*HttpServerResponse)(nil)
+	_ render.RenderWriter    = (*ResponseWriter)(nil)
 )
+
+type ResponseWriter struct {
+	w http.ResponseWriter
+}
+
+func NewResponseWriter(w http.ResponseWriter) *ResponseWriter {
+	return &ResponseWriter{w: w}
+}
+
+func (r *ResponseWriter) Write(p []byte) (n int, err error) {
+	return r.w.Write(p)
+}
+
+func (r *ResponseWriter) WriteContentType(h string, v []string) {
+	writeContentType(r.w, v)
+}
+
 type HttpServerResponse struct {
-	Writer http.ResponseWriter
+	Writer *ResponseWriter
+	// unsafe
+	set bool
 }
 
 func (h *HttpServerResponse) SetOrExpired() bool {
-	panic("implement me")
+	return h.set
 }
 
 func (h *HttpServerResponse) SetHeader(name, value string) {
-	h.Writer.Header().Set(name,value)
+	h.Writer.w.Header().Set(name, value)
 }
 
 func (h *HttpServerResponse) SetStatus(status int) {
-	h.Writer.WriteHeader(status)
+	h.Writer.w.WriteHeader(status)
 }
-
 
 func (h *HttpServerResponse) AddHeader(name, value string) {
-	h.Writer.Header().Add(name,value)
+	h.Writer.w.Header().Add(name, value)
 }
 
-func (h *HttpServerResponse) FireResult(ret interface{}) {
-	// FIXME ,avoid type
-	switch ret.(type) {
-	case string:
-
-	}
-	panic("implement me")
+func (h *HttpServerResponse) FireResult(ret render.Render) {
+	// 应该返回的是一个future
+	ret.Render(h.Writer)
+	h.set = true
 }
 
 func (h *HttpServerResponse) FireError(e error) {
@@ -51,5 +68,5 @@ func (h *HttpServerResponse) FireError(e error) {
 }
 
 func NewHttpServerResponse(writer http.ResponseWriter) *HttpServerResponse {
-	return &HttpServerResponse{Writer: writer}
+	return &HttpServerResponse{Writer: NewResponseWriter(writer)}
 }

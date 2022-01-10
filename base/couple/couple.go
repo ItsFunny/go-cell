@@ -9,6 +9,7 @@
 package couple
 
 import (
+	"github.com/itsfunny/go-cell/base/core/promise"
 	"github.com/itsfunny/go-cell/base/render"
 )
 
@@ -25,20 +26,38 @@ type IServerResponse interface {
 	FireError(e error)
 }
 
+var (
+	_ IServerResponse = (*BaseServerResponse)(nil)
+)
+
 type BaseServerResponse struct {
-	writer render.RenderWriter
-	//
+	header  map[string]string
+	promise *promise.Promise
+	status  int
+}
+
+func (this *BaseServerResponse) SetOrExpired() bool {
+	this.promise.Timeout()
+}
+
+func (this *BaseServerResponse) SetHeader(name, value string) {
+	this.header[name] = value
+}
+
+func (this *BaseServerResponse) SetStatus(status int) {
+	this.status = status
+}
+
+func (this *BaseServerResponse) AddHeader(name, value string) {
+	this.header[name] = value
+}
+
+func (this *BaseServerResponse) FireError(e error) {
+	this.promise.Fail(e)
 }
 
 func (this *BaseServerResponse) FireResult(ret render.Render) {
-	this.render(ret)
+	this.promise.Send(ret)
 }
 func (this *BaseServerResponse) render(render render.Render) error {
-	render.WriteContentType(this.writer)
-	return render.Render(this.writer)
-}
-
-func String(resp IServerResponse, status int,data string){
-	resp.SetStatus(status)
-	resp.FireResult()
 }
