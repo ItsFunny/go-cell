@@ -41,7 +41,7 @@ type BaseCommandDispatcher struct {
 }
 
 func (b *BaseCommandDispatcher) GetCommandFromRequest(wrappers map[string]*CommandWrapper, request couple.IServerRequest) *CommandWrapper {
-	panic("implement me")
+	return b.impl.GetCommandFromRequest(wrappers, request)
 }
 
 func (b *BaseCommandDispatcher) Dispatch(ctx *context.DispatchContext) {
@@ -60,7 +60,7 @@ func (b *BaseCommandDispatcher) Dispatch(ctx *context.DispatchContext) {
 
 func (b *BaseCommandDispatcher) CreateSuit(request couple.IServerRequest,
 	response couple.IServerResponse, channel channel.IChannel, wrapper *CommandWrapper) reactor.ICommandSuit {
-	panic("implement me")
+	return b.impl.CreateSuit(request, response, channel, wrapper)
 }
 
 func (b *BaseCommandDispatcher) failFast(response couple.IServerResponse, status int) {

@@ -9,6 +9,7 @@
 package couple
 
 import (
+	"context"
 	"github.com/itsfunny/go-cell/base/core/promise"
 	"github.com/itsfunny/go-cell/base/render"
 )
@@ -36,6 +37,13 @@ type BaseServerResponse struct {
 	status  int
 }
 
+func NewBaseServerResponse(ctx context.Context, ops ...promise.PromiseOntion) *BaseServerResponse {
+	ret := &BaseServerResponse{
+		header:  make(map[string]string),
+		promise: promise.NewPromise(ctx, ops...),
+	}
+	return ret
+}
 func (this *BaseServerResponse) SetOrExpired() bool {
 	return this.promise.IsDone() || this.promise.IsTimeOut()
 }
