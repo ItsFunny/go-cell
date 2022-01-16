@@ -10,6 +10,10 @@ package reactor
 
 import "github.com/itsfunny/go-cell/base/context"
 
+var (
+	_ ICommandSuit = (*BaseCommandSuit)(nil)
+)
+
 type IHandlerSuit interface {
 	context.IContext
 }
@@ -17,4 +21,25 @@ type IHandlerSuit interface {
 type ICommandSuit interface {
 	IHandlerSuit
 	GetBuzContext() IBuzzContext
+}
+
+type BaseCommandSuit struct {
+	CommandContext *CommandContext
+	impl    ICommandSuit
+}
+
+func NewBaseCommandSuit(ctx *CommandContext, impl ICommandSuit) *BaseCommandSuit {
+	return &BaseCommandSuit{CommandContext: ctx, impl: impl}
+}
+
+func (b *BaseCommandSuit) Discard() {
+	b.impl.Discard()
+}
+
+func (b *BaseCommandSuit) Done() bool {
+	return b.CommandContext.ServerResponse.SetOrExpired()
+}
+
+func (b *BaseCommandSuit) GetBuzContext() IBuzzContext {
+	return b.impl.GetBuzContext()
 }

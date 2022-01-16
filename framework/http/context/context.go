@@ -8,10 +8,14 @@
 */
 package context
 
-import "github.com/itsfunny/go-cell/base/reactor"
+import (
+	"github.com/itsfunny/go-cell/base/reactor"
+	logsdk "github.com/itsfunny/go-cell/sdk/log"
+)
 
 var (
-	_ IHttpBuzContext = (*HttpBuzContext)(nil)
+	_      IHttpBuzContext = (*HttpBuzContext)(nil)
+	module                 = logsdk.NewModule("HTTP", 1)
 )
 
 type IHttpBuzContext interface {
@@ -22,8 +26,18 @@ type HttpBuzContext struct {
 	*reactor.BaseBuzzContext
 }
 
-func (h *HttpBuzContext) Response(wrapper *reactor.ContextResponseWrapper) {
-	panic("implement me")
+func NewHttpBuzContext(commandContext *reactor.CommandContext, ) *HttpBuzContext {
+	ret := &HttpBuzContext{}
+	ret.BaseBuzzContext = reactor.NewBaseBuzzContext(commandContext, reactor.POST_RUN_TYPE_HTTP, ret)
+	return ret
 }
 
+func (this *HttpBuzContext) Module() logsdk.Module {
+	return module
+}
 
+//////////////
+
+type HttpCommandContext struct {
+	*reactor.CommandContext
+}

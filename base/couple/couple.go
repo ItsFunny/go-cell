@@ -11,7 +11,6 @@ package couple
 import (
 	"context"
 	"github.com/itsfunny/go-cell/base/core/promise"
-	"github.com/itsfunny/go-cell/base/render"
 )
 
 type IServerRequest interface {
@@ -23,7 +22,7 @@ type IServerResponse interface {
 	SetHeader(name, value string)
 	SetStatus(status int)
 	AddHeader(name, value string)
-	FireResult(ret render.Render)
+	FireResult(ret interface{})
 	FireError(e error)
 }
 
@@ -64,6 +63,6 @@ func (this *BaseServerResponse) FireError(e error) {
 	this.promise.Fail(e)
 }
 
-func (this *BaseServerResponse) FireResult(ret render.Render) {
+func (this *BaseServerResponse) FireResult(ret interface{}) {
 	this.promise.Send(ret)
 }

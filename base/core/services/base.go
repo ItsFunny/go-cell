@@ -389,3 +389,7 @@ func (bs *BaseService) CtxWithValue(key interface{}, value interface{}) context.
 func (bs *BaseService) Started() bool {
 	return atomic.LoadUint32(&bs.started) == STARTED
 }
+
+func(bs *BaseService)GetContext()context.Context{
+	return bs.ctx
+}

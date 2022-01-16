@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/itsfunny/go-cell/base/common"
+	"github.com/itsfunny/go-cell/base/context"
 	"github.com/itsfunny/go-cell/base/couple"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
 	logrusplugin "github.com/itsfunny/go-cell/sdk/log/logrus"
@@ -20,12 +21,13 @@ import (
 )
 
 var (
-//_ IBuzzContext = (*BaseBuzzContext)(nil)
+	_ IBuzzContext = (*BaseBuzzContext)(nil)
 )
 
 type FireResult func(response couple.IServerResponse, ret *ContextResponseWrapper)
 
 type IBuzzContext interface {
+	context.IContext
 	logsdk.Logger
 	Response(wrapper *ContextResponseWrapper)
 
@@ -37,17 +39,29 @@ type IBuzzContext interface {
 }
 
 type BaseBuzzContext struct {
+	*context.BaseContext
 	CommandContext *CommandContext
 
 	PostType PostRunType
 
-	FireResult FireResult
-
 	impl IBuzzContext
 }
 
-func NewBaseBuzzContext(commandContext *CommandContext, postType PostRunType, impl IBuzzContext) *BaseBuzzContext {
-	return &BaseBuzzContext{CommandContext: commandContext, PostType: postType, impl: impl}
+func NewBaseBuzzContext(commandContext *CommandContext,
+	postType PostRunType,
+	impl IBuzzContext) *BaseBuzzContext {
+	ret := &BaseBuzzContext{
+		CommandContext: commandContext,
+		PostType:       postType,
+		impl:           impl,
+	}
+	ret.BaseContext = context.NewBaseContext(commandContext.Ctx, ret)
+
+	return ret
+}
+
+func (b *BaseBuzzContext) Module() logsdk.Module {
+	return b.impl.Module()
 }
 
 func (b *BaseBuzzContext) PostRunType() PostRunType {
@@ -133,12 +147,11 @@ func (b *BaseBuzzContext) Response(wrapper *ContextResponseWrapper) {
 	}
 
 	// TODO: other
-
 	if common.IsTimeOut(wrapper.Status) {
 		logrusplugin.MWarn(b.impl.Module(), "超时:xxx")
 	}
 
-	b.FireResult(resp, wrapper)
+	resp.FireResult(wrapper)
 }
 
 func FireResultWithSuccessOrFail(succ, fail FireResult) FireResult {
