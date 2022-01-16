@@ -17,17 +17,29 @@ var (
 	_ IChannel = (*DefaultChannel)(nil)
 )
 
+type CommandHandler func(suit reactor.ICommandSuit)
+
 type IChannel interface {
 	ReadCommand(suit reactor.IHandlerSuit)
 }
 
 type DefaultChannel struct {
-	pipeline *pipeline.Engine
+	pipeline *pipeline.SingleEngine
 	// TODO onError
 }
 
-func NewDefaultChannel(pipeline *pipeline.Engine) *DefaultChannel {
-	return &DefaultChannel{pipeline: pipeline}
+// TODO ,handler 必须有一个校验,判断执行的那个是否存在
+func NewDefaultChannel(handlers ...CommandHandler) *DefaultChannel {
+	ret := &DefaultChannel{
+		pipeline: nil,
+	}
+	eng := pipeline.NewSingleEngine()
+	for _, handler := range handlers {
+		eng.RegisterFunc(func(ctx *pipeline.Context) {
+			handler(ctx.Request.(reactor.ICommandSuit))
+		})
+	}
+	return ret
 }
 
 func (d *DefaultChannel) ReadCommand(suit reactor.IHandlerSuit) {

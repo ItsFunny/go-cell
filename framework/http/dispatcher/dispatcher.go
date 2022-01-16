@@ -12,10 +12,12 @@ import (
 	"github.com/itsfunny/go-cell/base/channel"
 	"github.com/itsfunny/go-cell/base/couple"
 	"github.com/itsfunny/go-cell/base/reactor"
+	"github.com/itsfunny/go-cell/framework/base/common"
 	"github.com/itsfunny/go-cell/framework/base/dispatcher"
 	couple2 "github.com/itsfunny/go-cell/framework/http/couple"
 	"github.com/itsfunny/go-cell/framework/http/summary"
 	"github.com/itsfunny/go-cell/framework/http/util"
+	"time"
 )
 
 var (
@@ -39,7 +41,6 @@ func NewDefaultHttpDispatcher(handlers ...dispatcher.ICommandHandler) *DefaultHt
 func (b *DefaultHttpDispatcher) CreateSuit(request couple.IServerRequest,
 	response couple.IServerResponse, channel channel.IChannel, wrapper *dispatcher.CommandWrapper) reactor.ICommandSuit {
 	ctx := &reactor.CommandContext{
-		Ctx:            nil,
 		ServerRequest:  request,
 		ServerResponse: response,
 		Summary:        b.CollectSummary(request, wrapper),
@@ -54,18 +55,12 @@ func (b *DefaultHttpDispatcher) CollectSummary(request couple.IServerRequest, wr
 	ret := &summary.HttpSummary{
 		BaseSummary: reactor.BaseSummary{
 			RequestIp:        util.GetIPAddress(req),
-			ProtocolID:       "",
-			ReceiveTimeStamp: 0,
-			Token:            "",
-			SequenceId:       "",
+			ProtocolID:       reactor.ProtocolID(req.Request.RequestURI),
+			ReceiveTimeStamp: time.Now().Unix(),
+			Token:            req.GetHeader(common.Token),
+			SequenceId:       req.GetHeader(common.SequenceId),
 			TimeOut:          0,
 		},
 	}
-	// IHttpServerRequest request = (IHttpServerRequest) req;
-	// HttpSummary httpSummary = new HttpSummary();
-	// httpSummary.setRequestIP(HttpUtils.getIpAddress(request.getInternalRequest()));
-	// httpSummary.setProtocolId(request.getInternalRequest().getRequestURI());
-	// httpSummary.setToken(getHeaderData(TOKEN));
-	// httpSummary.setReceiveTimestamp(System.currentTimeMillis());
-	// httpSummary.setSequenceId(getHeaderData(DebugConstants.SEQUENCE_ID, UUIDUtils.uuid2()));
+	return ret
 }

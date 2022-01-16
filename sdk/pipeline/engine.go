@@ -33,10 +33,20 @@ type Engine struct {
 	interestGroup map[reflect.Type]RouterGroup
 }
 
+type SingleEngine struct {
+	RouterGroup
+	factory IContextFactory
+}
+
 func New() *Engine {
 	return &Engine{
 		factory:       &defaultContextFactory{},
 		interestGroup: make(map[reflect.Type]RouterGroup),
+	}
+}
+func NewSingleEngine() *SingleEngine {
+	return &SingleEngine{
+		factory: &defaultContextFactory{},
 	}
 }
 func (this *Engine) RegisterFunc(d reflect.Type, fs ...HandlerFunc) {
@@ -45,6 +55,11 @@ func (this *Engine) RegisterFunc(d reflect.Type, fs ...HandlerFunc) {
 		Handlers: hs.combineHandlers(fs),
 	}
 }
+
+func (this *SingleEngine) RegisterFunc(fs ...HandlerFunc) {
+	this.Handlers = this.combineHandlers(fs)
+}
+
 func (this *Engine) Serve(data interface{}) {
 	ctx := this.factory.Create()
 	defer this.factory.Release(ctx)
@@ -56,6 +71,19 @@ func (this *Engine) Serve(data interface{}) {
 	ctx.Request = data
 	ctx.handlers = hs.Handlers
 	this.handleCtx(ctx)
+}
+
+func (this *SingleEngine) Serve(data interface{}) {
+	ctx := this.factory.Create()
+	defer this.factory.Release(ctx)
+	ctx.reset()
+	ctx.Request = data
+	ctx.handlers = this.Handlers
+	this.handleCtx(ctx)
+}
+
+func (this *SingleEngine) handleCtx(c *Context) {
+	c.Next()
 }
 
 func (this *Engine) handleCtx(c *Context) {

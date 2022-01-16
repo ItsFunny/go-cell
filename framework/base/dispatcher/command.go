@@ -101,7 +101,8 @@ func (b *BaseCommandDispatcher) Dispatch(ctx *context.DispatchContext) {
 		b.failFast(resp, b.defaultFailStatus)
 		return
 	}
-	suit := b.impl.CreateSuit(req, resp, b.channel, wp)
+	suit := b.CreateSuit(req, resp, b.channel, wp)
+
 	b.channel.ReadCommand(suit)
 }
 

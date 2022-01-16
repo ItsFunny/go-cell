@@ -8,7 +8,9 @@
 */
 package context
 
-import "github.com/itsfunny/go-cell/base/couple"
+import (
+	"github.com/itsfunny/go-cell/base/couple"
+)
 
 type DispatchContext struct {
 	Request couple.IServerRequest
