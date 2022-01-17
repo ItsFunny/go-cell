@@ -23,7 +23,9 @@ type IServerResponse interface {
 	SetStatus(status int)
 	AddHeader(name, value string)
 	FireResult(ret interface{})
+	OnFireResult()
 	FireError(e error)
+	OnFireError()
 }
 
 var (
@@ -31,38 +33,47 @@ var (
 )
 
 type BaseServerResponse struct {
-	header  map[string]string
-	promise *promise.Promise
-	status  int
+	Header  map[string]string
+	Promise *promise.Promise
+	Status  int
+	impl    IServerResponse
 }
 
-func NewBaseServerResponse(ctx context.Context, ops ...promise.PromiseOntion) *BaseServerResponse {
+func NewBaseServerResponse(ctx context.Context,impl IServerResponse, ops ...promise.PromiseOntion) *BaseServerResponse {
 	ret := &BaseServerResponse{
-		header:  make(map[string]string),
-		promise: promise.NewPromise(ctx, ops...),
+		Header:  make(map[string]string),
+		Promise: promise.NewPromise(ctx, ops...),
 	}
 	return ret
 }
 func (this *BaseServerResponse) SetOrExpired() bool {
-	return this.promise.IsDone() || this.promise.IsTimeOut()
+	return this.Promise.IsDone() || this.Promise.IsTimeOut()
 }
 
 func (this *BaseServerResponse) SetHeader(name, value string) {
-	this.header[name] = value
+	this.Header[name] = value
 }
 
 func (this *BaseServerResponse) SetStatus(status int) {
-	this.status = status
+	this.Status = status
 }
 
 func (this *BaseServerResponse) AddHeader(name, value string) {
-	this.header[name] = value
+	this.Header[name] = value
 }
 
 func (this *BaseServerResponse) FireError(e error) {
-	this.promise.Fail(e)
+	this.Promise.Fail(e)
+	this.OnFireError()
 }
 
 func (this *BaseServerResponse) FireResult(ret interface{}) {
-	this.promise.Send(ret)
+	this.Promise.Send(ret)
+	this.OnFireResult()
+}
+func (this *BaseServerResponse) OnFireResult() {
+	this.impl.OnFireResult()
+}
+func (this *BaseServerResponse) OnFireError() {
+	this.impl.OnFireError()
 }

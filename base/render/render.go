@@ -15,6 +15,7 @@ import (
 var (
 	_ Render = (*Data)(nil)
 	_ Render = (*RenderString)(nil)
+	_ Render = (*JSON)(nil)
 )
 
 type RenderWriter interface {

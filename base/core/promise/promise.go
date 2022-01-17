@@ -10,6 +10,7 @@ package promise
 
 import (
 	"context"
+	"time"
 )
 
 const (
@@ -19,6 +20,7 @@ const (
 )
 
 type Promise struct {
+	// TODO ,或许可以优化到 context中
 	value interface{}
 	done  chan struct{}
 
@@ -29,13 +31,17 @@ type Promise struct {
 }
 
 func NewPromise(ctx context.Context, ops ...PromiseOntion) *Promise {
-	ret := &Promise{done: make(chan struct{}), ctx: ctx}
+	cc, cancel := context.WithCancel(ctx)
+	ret := &Promise{done: make(chan struct{}), ctx: cc, cancel: cancel}
 	for _, opt := range ops {
 		opt(ret)
 	}
 	return ret
 }
-
+func (p *Promise) WithTimeOut(t time.Duration) *Promise {
+	p.ctx, p.cancel = context.WithTimeout(p.ctx, t)
+	return p
+}
 func (np *Promise) Fail(err error) {
 	if np.err != nil || np.value != nil {
 		// Already filled.
@@ -89,5 +95,14 @@ func (np *Promise) Get(ctx context.Context) (interface{}, error) {
 		return nil, np.ctx.Err()
 	case <-ctx.Done():
 		return nil, ctx.Err()
+	}
+}
+
+func (np *Promise) GetForever() (interface{}, error) {
+	select {
+	case <-np.done:
+		return np.value, np.err
+	case <-np.ctx.Done():
+		return nil, np.ctx.Err()
 	}
 }

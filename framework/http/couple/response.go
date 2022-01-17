@@ -9,6 +9,7 @@
 package couple
 
 import (
+	"context"
 	"github.com/itsfunny/go-cell/base/couple"
 	"github.com/itsfunny/go-cell/base/render"
 	"net/http"
@@ -36,37 +37,27 @@ func (r *ResponseWriter) WriteContentType(h string, v []string) {
 }
 
 type HttpServerResponse struct {
+	*couple.BaseServerResponse
 	Writer *ResponseWriter
-	// unsafe
-	set bool
 }
 
-func (h *HttpServerResponse) SetOrExpired() bool {
-	return h.set
+func NewHttpServerResponse(ctx context.Context, writer http.ResponseWriter) *HttpServerResponse {
+	ret := &HttpServerResponse{
+		Writer: NewResponseWriter(writer),
+	}
+	ret.BaseServerResponse = couple.NewBaseServerResponse(ctx, ret)
+	return ret
 }
 
-func (h *HttpServerResponse) SetHeader(name, value string) {
-	h.Writer.w.Header().Set(name, value)
+func (this *HttpServerResponse) OnFireResult() {
+	ret, _ := this.Promise.GetForever()
+	for k, v := range this.Header {
+		this.Writer.w.Header().Set(k, v)
+	}
+	// TODO
+	// demo
+	render.Write(this.Writer, ret)
 }
+func (this *HttpServerResponse) OnFireError() {
 
-func (h *HttpServerResponse) SetStatus(status int) {
-	h.Writer.w.WriteHeader(status)
-}
-
-func (h *HttpServerResponse) AddHeader(name, value string) {
-	h.Writer.w.Header().Add(name, value)
-}
-
-func (h *HttpServerResponse) FireResult(ret render.Render) {
-	// 应该返回的是一个future
-	ret.Render(h.Writer)
-	h.set = true
-}
-
-func (h *HttpServerResponse) FireError(e error) {
-	panic("implement me")
-}
-
-func NewHttpServerResponse(writer http.ResponseWriter) *HttpServerResponse {
-	return &HttpServerResponse{Writer: NewResponseWriter(writer)}
 }

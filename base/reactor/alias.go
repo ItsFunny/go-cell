@@ -8,12 +8,14 @@
 */
 package reactor
 
-
 type AliasRequestType byte
 
 type AliasResponseType byte
 
-
 type PostRunType string
 
 type ProtocolID string
+
+func ProtocolIDFromString(str string) ProtocolID {
+	return ProtocolID(str)
+}

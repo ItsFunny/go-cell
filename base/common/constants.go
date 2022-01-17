@@ -16,6 +16,10 @@ const (
 )
 
 const (
+	CONTENT_TYPE="Content-Type"
+)
+
+const (
 	SUCCESS = int(1 << 0)
 	FAIL    = 1 << 1
 	TIMEOUT = 1<<2 | FAIL

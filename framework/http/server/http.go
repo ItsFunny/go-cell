@@ -15,7 +15,8 @@ import (
 )
 
 var (
-	_ IHttpServer = (*HttpServer)(nil)
+	_        IHttpServer = (*HttpServer)(nil)
+	notReady             = []byte("not ready ")
 )
 
 type IHttpServer interface {
@@ -24,8 +25,15 @@ type IHttpServer interface {
 
 type HttpServer struct {
 	*server.BaseServer
+	ready bool
 }
 
 func (s *HttpServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	s.Serve(couple.NewHttpServerRequest(req),couple.NewHttpServerResponse(w))
+	if !s.ready {
+		s.Logger.Error("http server not ready yet ,discard")
+		w.Write(notReady)
+		w.WriteHeader(400)
+		return
+	}
+	s.Serve(couple.NewHttpServerRequest(req), couple.NewHttpServerResponse(s.GetContext(),w))
 }

@@ -24,7 +24,7 @@ type IChannel interface {
 }
 
 type DefaultChannel struct {
-	pipeline *pipeline.SingleEngine
+	pipeline pipeline.Pipeline
 	// TODO onError
 }
 
@@ -35,13 +35,23 @@ func NewDefaultChannel(handlers ...CommandHandler) *DefaultChannel {
 	}
 	eng := pipeline.NewSingleEngine()
 	for _, handler := range handlers {
-		eng.RegisterFunc(func(ctx *pipeline.Context) {
+		eng.RegisterFunc(nil, func(ctx *pipeline.Context) {
 			handler(ctx.Request.(reactor.ICommandSuit))
 		})
 	}
+	eng.RegisterFunc(nil, func(ctx *pipeline.Context) {
+		commandFinalExecute(ctx.Request.(reactor.ICommandSuit))
+	})
+
 	return ret
 }
 
 func (d *DefaultChannel) ReadCommand(suit reactor.IHandlerSuit) {
 	d.pipeline.Serve(suit.(reactor.ICommandSuit))
+}
+
+var commandFinalExecute CommandHandler = func(suit reactor.ICommandSuit) {
+	//  TODO check if the result is done
+	buz := suit.GetBuzContext()
+	buz.GetCommandContext().Command.Execute(buz)
 }

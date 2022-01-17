@@ -9,31 +9,31 @@
 package render
 
 import (
-	"fmt"
-	"github.com/itsfunny/go-cell/base/common/utils"
+	"github.com/itsfunny/go-cell/base/common"
 )
 
 // String contains the given interface object slice and its format.
 type RenderString struct {
-	Format string
-	Data   []interface{}
+	Data string
 }
 
 func (r RenderString) WriteContentType(response RenderWriter) {
-	response.WriteContentType("Content-Type", plainContentType)
+	response.WriteContentType(common.CONTENT_TYPE, plainContentType)
 }
 
 var plainContentType = []string{"text/plain; charset=utf-8"}
 
 func (r RenderString) Render(w RenderWriter) error {
-	return WriteString(w, r.Format, r.Data)
+	return WriteString(w, r.Data, nil)
 }
 
-func WriteString(w RenderWriter, format string, data []interface{}) (err error) {
-	if len(data) > 0 {
-		_, err = fmt.Fprintf(w, format, data...)
-		return
+func Write(w RenderWriter, data interface{}) error {
+	var r Render
+	switch v := data.(type) {
+	case string:
+		r = RenderString{Data: v}
+	default:
+		r = &JSON{Data: data}
 	}
-	_, err = w.Write(utils.StringToBytes(format))
-	return
+	return r.Render(w)
 }

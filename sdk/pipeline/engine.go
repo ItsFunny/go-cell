@@ -56,7 +56,7 @@ func (this *Engine) RegisterFunc(d reflect.Type, fs ...HandlerFunc) {
 	}
 }
 
-func (this *SingleEngine) RegisterFunc(fs ...HandlerFunc) {
+func (this *SingleEngine) RegisterFunc(d reflect.Type, fs ...HandlerFunc) {
 	this.Handlers = this.combineHandlers(fs)
 }
 
