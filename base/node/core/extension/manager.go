@@ -11,6 +11,7 @@ package extension
 import (
 	"errors"
 	"github.com/itsfunny/go-cell/base/common/utils"
+	"github.com/itsfunny/go-cell/base/core/eventbus"
 	"github.com/itsfunny/go-cell/base/core/options"
 	"github.com/itsfunny/go-cell/base/core/services"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
@@ -29,28 +30,40 @@ type NodeExtensionManager struct {
 	Ctx         *NodeContext
 
 	state byte
-	// TODO ,添加监听器,简体event 事件,然后达到初始化功能
+	bus   IApplicationEventBus
 }
 
 func (m *NodeExtensionManager) OnReady(c *services.ReadyCTX) error {
+	subscribe, err := m.bus.SubscribeApplicationEvent(m.GetContext(), "extensionManager")
+	if nil != err {
+		return err
+	}
+	go m.onEvent(subscribe)
 	if err := m.initCommandLine(); nil != err {
 		return err
 	}
 	return nil
 }
 
-func (m *NodeExtensionManager) OnStart(c *services.StartCTX) error {
-	go m.onEvent()
-	return nil
-}
-func (m *NodeExtensionManager) onEvent() {
-
-}
-func (m *NodeExtensionManager) prepare() {
-	m.AllOps[ipOption.Name()] = &options.OptionWrapper{
-		Option: ipOption,
-		Value:  ipOption.Default(),
+func (m *NodeExtensionManager) onEvent(subscribe eventbus.Subscription) {
+	var (
+		msg  eventbus.PubSubMessage
+		data interface{}
+	)
+	for {
+		select {
+		case msg = <-subscribe.Out():
+			data = msg.Data()
+		}
+		m.handleMsg(data)
 	}
+}
+func (m *NodeExtensionManager) handleMsg(data interface{}) {
+	// TODO
+	// EXTENSION INIT START CLOSE
+}
+func (m *NodeExtensionManager) OnStart(c *services.StartCTX) error {
+	return nil
 }
 
 func (m *NodeExtensionManager) initCommandLine() error {
@@ -100,6 +113,13 @@ func (m *NodeExtensionManager) fillCtx() error {
 	return nil
 }
 
+func (m *NodeExtensionManager) prepare() {
+	m.AllOps[ipOption.Name()] = &options.OptionWrapper{
+		Option: ipOption,
+		Value:  ipOption.Default(),
+	}
+}
+
 func (m *NodeExtensionManager) init() {
 	if m.state == stateInit {
 		m.Logger.Error("init twice")
@@ -114,6 +134,7 @@ func (m *NodeExtensionManager) init() {
 		}
 	}
 }
+
 func (m *NodeExtensionManager) start() {
 	if m.state == stateStart {
 		m.Logger.Error("start twice")

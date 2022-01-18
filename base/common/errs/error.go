@@ -8,6 +8,12 @@
 */
 package errs
 
+import "errors"
+
+var (
+	ProgramError = errors.New("program error")
+)
+
 type ErrorType uint64
 
 type Error struct {
