@@ -37,6 +37,7 @@ func GetLogConfig() *config.LogConfiguration {
 func IsLogLevelDisabled(level common.Level, moduleName string) bool {
 	return logManager.cfg.IsLogLevelDisabled(level, moduleName)
 }
+
 func FindCaller(skip int) (string, bool) {
 	return logManager.cfg.FindCaller(skip)
 }

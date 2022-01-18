@@ -1,13 +1,24 @@
-# github.com/mattn/go-colorable v0.1.11
+# github.com/Kubuxu/go-os-helper v0.0.1
+## explicit
+# github.com/davecgh/go-spew v1.1.1
+github.com/davecgh/go-spew/spew
+# github.com/mattn/go-colorable v0.1.12
+## explicit
 github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.14
 github.com/mattn/go-isatty
 # github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d
 ## explicit
 github.com/mgutz/ansi
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
 # github.com/sirupsen/logrus v1.8.1
 ## explicit
 github.com/sirupsen/logrus
+# github.com/stretchr/testify v1.7.0
+## explicit
+github.com/stretchr/testify/assert
+github.com/stretchr/testify/require
 # github.com/tidwall/gjson v1.12.1
 ## explicit
 github.com/tidwall/gjson
@@ -15,28 +26,14 @@ github.com/tidwall/gjson
 github.com/tidwall/match
 # github.com/tidwall/pretty v1.2.0
 github.com/tidwall/pretty
-# gitlab.ebidsun.com/chain/droplib/base/log v0.0.0-20211226133101-f8aaa21989f3
+# gitlab.ebidsun.com/chain/droplib/base/log v0.0.0-20220108032834-c86a0b98d26f
 ## explicit
 gitlab.ebidsun.com/chain/droplib/base/log/common
 gitlab.ebidsun.com/chain/droplib/base/log/config
-gitlab.ebidsun.com/chain/droplib/base/log/modules
-gitlab.ebidsun.com/chain/droplib/base/log/v2
-gitlab.ebidsun.com/chain/droplib/base/log/v2/base
 gitlab.ebidsun.com/chain/droplib/base/log/v2/component
-gitlab.ebidsun.com/chain/droplib/base/log/v2/logrus
-# gitlab.ebidsun.com/chain/droplib/base/services v0.0.0-20211118103714-0845e57ec999
+# gitlab.ebidsun.com/chain/droplib/base/services v0.0.0-20220108032834-c86a0b98d26f
 ## explicit
-gitlab.ebidsun.com/chain/droplib/base/services
-gitlab.ebidsun.com/chain/droplib/base/services/constants
 gitlab.ebidsun.com/chain/droplib/base/services/e
-gitlab.ebidsun.com/chain/droplib/base/services/impl
-gitlab.ebidsun.com/chain/droplib/base/services/models
-# gitlab.ebidsun.com/chain/droplib/component/base v0.0.0-20211118103714-0845e57ec999
-gitlab.ebidsun.com/chain/droplib/component/base
-# gitlab.ebidsun.com/chain/droplib/component/routine v0.0.0-20211226133101-f8aaa21989f3
-## explicit
-gitlab.ebidsun.com/chain/droplib/component/routine/services
-gitlab.ebidsun.com/chain/droplib/component/routine/worker/gowp/workpoolv0
 # golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 ## explicit
 golang.org/x/crypto/ssh/terminal
@@ -47,5 +44,5 @@ golang.org/x/sys/unix
 golang.org/x/sys/windows
 # golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1
 golang.org/x/term
-# gopkg.in/eapache/queue.v1 v1.1.0
-gopkg.in/eapache/queue.v1
+# gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+gopkg.in/yaml.v3

@@ -52,6 +52,7 @@ func (this *LogConfiguration) IsLogLevelDisabled(level common.Level, moduleName 
 	_, exist := this.blackModuleSet[moduleName]
 	return exist
 }
+
 func (this *LogConfiguration) FindCaller(skip int) (string, bool) {
 	return common.FindCaller(skip, this.blackList)
 }
