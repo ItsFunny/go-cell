@@ -6,21 +6,21 @@
 # @Description :
 # @Attention :
 */
-package channel
+package reactor
 
 import (
-	"github.com/itsfunny/go-cell/base/reactor"
 	"github.com/itsfunny/go-cell/sdk/pipeline"
+	"go.uber.org/fx"
 )
 
 var (
 	_ IChannel = (*DefaultChannel)(nil)
 )
 
-type CommandHandler func(suit reactor.ICommandSuit)
+type CommandHandler func(suit ICommandSuit)
 
 type IChannel interface {
-	ReadCommand(suit reactor.IHandlerSuit)
+	ReadCommand(suit IHandlerSuit)
 }
 
 type DefaultChannel struct {
@@ -36,21 +36,28 @@ func NewDefaultChannel(handlers ...CommandHandler) *DefaultChannel {
 	eng := pipeline.NewSingleEngine()
 	for _, handler := range handlers {
 		eng.RegisterFunc(nil, func(ctx *pipeline.Context) {
-			handler(ctx.Request.(reactor.ICommandSuit))
+			handler(ctx.Request.(ICommandSuit))
 		})
 	}
 	eng.RegisterFunc(nil, func(ctx *pipeline.Context) {
-		commandFinalExecute(ctx.Request.(reactor.ICommandSuit))
+		commandFinalExecute(ctx.Request.(ICommandSuit))
 	})
 
 	return ret
 }
 
-func (d *DefaultChannel) ReadCommand(suit reactor.IHandlerSuit) {
-	d.pipeline.Serve(suit.(reactor.ICommandSuit))
+// 但是好像会变成rpc 也用这些cmd了
+func DefaultChannelOption() fx.Option {
+	return fx.Options(
+		fx.Provide(NewDefaultChannel),
+	)
 }
 
-var commandFinalExecute CommandHandler = func(suit reactor.ICommandSuit) {
+func (d *DefaultChannel) ReadCommand(suit IHandlerSuit) {
+	d.pipeline.Serve(suit.(ICommandSuit))
+}
+
+var commandFinalExecute CommandHandler = func(suit ICommandSuit) {
 	//  TODO check if the result is done
 	buz := suit.GetBuzContext()
 	buz.GetCommandContext().Command.Execute(buz)

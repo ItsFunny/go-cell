@@ -10,7 +10,6 @@ package dispatcher
 
 import (
 	"errors"
-	"github.com/itsfunny/go-cell/base/channel"
 	"github.com/itsfunny/go-cell/base/common"
 	"github.com/itsfunny/go-cell/base/core/promise"
 	"github.com/itsfunny/go-cell/base/core/services"
@@ -28,7 +27,7 @@ var (
 
 type ICommandDispatcher interface {
 	IDispatcher
-	CreateSuit(request couple.IServerRequest, response couple.IServerResponse, channel channel.IChannel, wrapper *CommandWrapper) reactor.ICommandSuit
+	CreateSuit(request couple.IServerRequest, response couple.IServerResponse, channel reactor.IChannel, wrapper *CommandWrapper) reactor.ICommandSuit
 	CollectSummary(request couple.IServerRequest,wrapper *CommandWrapper)reactor.ISummary
 }
 type BaseCommandDispatcher struct {
@@ -38,7 +37,7 @@ type BaseCommandDispatcher struct {
 
 	impl ICommandDispatcher
 
-	channel channel.IChannel
+	channel reactor.IChannel
 
 	selectorStrategy    *pipeline.Engine
 	commandRegisterHook *pipeline.Engine
@@ -52,6 +51,7 @@ func (b *BaseCommandDispatcher) CollectSummary(request couple.IServerRequest, wr
 
 func NewBaseCommandDispatcher(impl ICommandDispatcher, selectors ...ICommandHandler, ) *BaseCommandDispatcher {
 	ret := &BaseCommandDispatcher{}
+	ret.impl=impl
 	eng := pipeline.New()
 	for _, sel := range selectors {
 		eng.RegisterFunc(reflect.TypeOf(&CommandSelectReq{}), func(ctx *pipeline.Context) {
@@ -107,7 +107,7 @@ func (b *BaseCommandDispatcher) Dispatch(ctx *context.DispatchContext) {
 }
 
 func (b *BaseCommandDispatcher) CreateSuit(request couple.IServerRequest,
-	response couple.IServerResponse, channel channel.IChannel, wrapper *CommandWrapper) reactor.ICommandSuit {
+	response couple.IServerResponse, channel reactor.IChannel, wrapper *CommandWrapper) reactor.ICommandSuit {
 	return b.impl.CreateSuit(request,response,channel,wrapper)
 }
 

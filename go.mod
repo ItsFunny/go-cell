@@ -11,5 +11,6 @@ require (
 	github.com/tidwall/gjson v1.12.1
 	gitlab.ebidsun.com/chain/droplib/base/log v0.0.0-20220108032834-c86a0b98d26f
 	gitlab.ebidsun.com/chain/droplib/base/services v0.0.0-20220108032834-c86a0b98d26f
+	go.uber.org/fx v1.16.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 )

@@ -33,6 +33,8 @@ type NodeExtensionManager struct {
 	bus   IApplicationEventBus
 }
 
+
+
 func (m *NodeExtensionManager) OnReady(c *services.ReadyCTX) error {
 	subscribe, err := m.bus.SubscribeApplicationEvent(m.GetContext(), "extensionManager")
 	if nil != err {

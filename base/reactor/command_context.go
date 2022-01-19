@@ -10,7 +10,6 @@ package reactor
 
 import (
 	"context"
-	"github.com/itsfunny/go-cell/base/channel"
 	"github.com/itsfunny/go-cell/base/couple"
 )
 
@@ -20,7 +19,7 @@ type CommandContext struct {
 	ServerResponse couple.IServerResponse
 	// SessionKey     string
 	Summary  ISummary
-	IChannel channel.IChannel
+	IChannel IChannel
 	Command ICommand
 }
 

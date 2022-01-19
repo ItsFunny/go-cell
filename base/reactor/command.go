@@ -10,6 +10,7 @@ package reactor
 
 import (
 	"github.com/itsfunny/go-cell/base/common"
+	"github.com/itsfunny/go-cell/base/core/options"
 	"github.com/itsfunny/go-cell/base/serialize"
 )
 
@@ -35,7 +36,7 @@ type Command struct {
 
 	property CommandProperty
 
-	Options []Option
+	Options []options.Option
 }
 
 func (c *Command) ID() ProtocolID {

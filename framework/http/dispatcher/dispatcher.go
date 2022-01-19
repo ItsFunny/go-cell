@@ -9,7 +9,6 @@
 package dispatcher
 
 import (
-	"github.com/itsfunny/go-cell/base/channel"
 	"github.com/itsfunny/go-cell/base/couple"
 	"github.com/itsfunny/go-cell/base/reactor"
 	"github.com/itsfunny/go-cell/framework/base/common"
@@ -17,6 +16,7 @@ import (
 	couple2 "github.com/itsfunny/go-cell/framework/http/couple"
 	"github.com/itsfunny/go-cell/framework/http/summary"
 	"github.com/itsfunny/go-cell/framework/http/util"
+	"go.uber.org/fx"
 	"time"
 )
 
@@ -38,8 +38,14 @@ func NewDefaultHttpDispatcher(handlers ...dispatcher.ICommandHandler) *DefaultHt
 	return ret
 }
 
+func HttpDispatcherOption() fx.Option {
+	return fx.Provide(
+		reactor.DefaultChannelOption(),
+	)
+}
+
 func (b *DefaultHttpDispatcher) CreateSuit(request couple.IServerRequest,
-	response couple.IServerResponse, channel channel.IChannel, wrapper *dispatcher.CommandWrapper) reactor.ICommandSuit {
+	response couple.IServerResponse, channel reactor.IChannel, wrapper *dispatcher.CommandWrapper) reactor.ICommandSuit {
 	ctx := &reactor.CommandContext{
 		ServerRequest:  request,
 		ServerResponse: response,
