@@ -60,7 +60,7 @@ func BufferCapacity(cap int) Option {
 	}
 }
 
-func NewCommonEventBusComponentImpl(options ...Option) *CommonEventBusComponentImpl {
+func NewCommonEventBusComponentImpl(options ...Option) ICommonEventBus {
 	s := &CommonEventBusComponentImpl{
 		subscriptions: make(map[string]map[string]struct{}),
 	}

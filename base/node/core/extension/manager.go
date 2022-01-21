@@ -9,31 +9,17 @@
 package extension
 
 import (
-	"context"
 	"errors"
-	"fmt"
 	"github.com/itsfunny/go-cell/base/common/utils"
 	"github.com/itsfunny/go-cell/base/core/eventbus"
 	"github.com/itsfunny/go-cell/base/core/options"
 	"github.com/itsfunny/go-cell/base/core/services"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
-	"go.uber.org/fx"
-)
-
-var (
-	instance *NodeExtensionManager
-	ipOption = options.StringOption("ip", "i", "ip address").WithDefault("127.0.0.1")
-
-	extensionManagerModule = logsdk.NewModule("manager", 1)
-	ExtensionManagerModule = fx.Options(
-		fx.Provide(NewExtensionManager),
-		fx.Invoke(start),
-	)
 )
 
 type NodeExtensionManager struct {
 	*services.BaseService
-	Extensions  []INodeExtension
+	Extensions  []INodeExtension `group:"g"`
 	UnImportSet map[string]struct{}
 	AllOps      map[string]*options.OptionWrapper
 	Ctx         *NodeContext
@@ -42,30 +28,21 @@ type NodeExtensionManager struct {
 	bus   IApplicationEventBus
 }
 
-func start(m *NodeExtensionManager) {
-	fmt.Println(123)
-}
-func NewExtensionManager(lc fx.Lifecycle, bus IApplicationEventBus, extensions []INodeExtension) *NodeExtensionManager {
+func NewExtensionManager(bus IApplicationEventBus, e Extensions) *NodeExtensionManager {
 	ret := &NodeExtensionManager{}
 	ret.BaseService = services.NewBaseService(nil, extensionManagerModule, ret)
 	ret.Ctx = &NodeContext{}
-	ret.Extensions = extensions
 	ret.bus = bus
-	lc.Append(fx.Hook{
-		OnStart: func(ctx context.Context) error {
-			fmt.Println(1)
-			return nil
-		},
-		OnStop: func(ctx context.Context) error {
-			fmt.Println(2)
-			return nil
-		},
-	})
+	ret.Extensions = e.Extensions
 
 	return ret
 }
 
 func (m *NodeExtensionManager) OnReady(c *services.ReadyCTX) error {
+	return nil
+}
+
+func (m *NodeExtensionManager) OnStart(c *services.StartCTX) error {
 	subscribe, err := m.bus.SubscribeApplicationEvent(m.GetContext(), "extensionManager")
 	if nil != err {
 		return err
@@ -90,12 +67,10 @@ func (m *NodeExtensionManager) onEvent(subscribe eventbus.Subscription) {
 		m.handleMsg(data)
 	}
 }
+
 func (m *NodeExtensionManager) handleMsg(data interface{}) {
 	// TODO
 	// EXTENSION INIT START CLOSE
-}
-func (m *NodeExtensionManager) OnStart(c *services.StartCTX) error {
-	return nil
 }
 
 func (m *NodeExtensionManager) initCommandLine() error {

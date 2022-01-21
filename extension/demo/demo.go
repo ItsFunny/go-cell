@@ -10,26 +10,28 @@ package demo
 
 import (
 	"github.com/itsfunny/go-cell/base/node/core/extension"
-	"go.uber.org/fx"
 )
 
 var (
-	DemoExtensionModule = fx.Options(
-		fx.Provide(NewDemoExtension),
-		fx.Annotated{
-			Name:   "",
-			Group:  "extension",
-			Target: nil,
-		},
-	)
+	DemoExtensionModule  = extension.Register(NewDemoExtension)
+	Demo2ExtensionModule = extension.Register(NewDemoExtension2)
 )
 
 type DemoExtension struct {
 	*extension.BaseExtension
 }
+type Demo2Extension struct {
+	*extension.BaseExtension
+}
 
-func NewDemoExtension() extension.INodeExtension {
+func NewDemoExtension(eve extension.IApplicationEventBus) extension.INodeExtension {
 	ret := &DemoExtension{}
+	ret.BaseExtension = extension.NewBaseExtension(ret)
+	return ret
+}
+
+func NewDemoExtension2() extension.INodeExtension {
+	ret := &Demo2Extension{}
 	ret.BaseExtension = extension.NewBaseExtension(ret)
 	return ret
 }
