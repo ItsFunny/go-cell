@@ -31,7 +31,11 @@ type INodeExtension interface {
 type BaseExtension struct {
 	impl INodeExtension
 }
-
+func NewBaseExtension(impl INodeExtension)*BaseExtension{
+	return &BaseExtension{
+		impl: impl,
+	}
+}
 func (b *BaseExtension) Name() string {
 	panic("implement me")
 }

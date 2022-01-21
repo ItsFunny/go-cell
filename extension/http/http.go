@@ -16,20 +16,23 @@ import (
 )
 
 var (
-	_      extension.INodeExtension = (*HttpFarmeWorkExtension)(nil)
-	module                          = logsdk.NewModule("http_framework", 1)
+	_                   extension.INodeExtension = (*HttpFarmeWorkExtension)(nil)
+	module                                       = logsdk.NewModule("http_framework", 1)
+	HttpExtensionModule                          = fx.Options(
+		server.HttpServerOption(),
+		fx.Provide(NewHttpFrameWorkExtension),
+	)
 )
 
 type HttpFarmeWorkExtension struct {
 	*extension.BaseExtension
 }
 
-func HttpExtension() fx.Option {
-	return fx.Options(
-		server.HttpServerOption(),
-	)
+func NewHttpFrameWorkExtension()*HttpFarmeWorkExtension {
+	ret := &HttpFarmeWorkExtension{}
+	ret.BaseExtension = extension.NewBaseExtension(ret)
+	return ret
 }
-
 func (this *HttpFarmeWorkExtension) Name() string {
 	return module.String()
 }

@@ -9,17 +9,26 @@
 package extension
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"github.com/itsfunny/go-cell/base/common/utils"
 	"github.com/itsfunny/go-cell/base/core/eventbus"
 	"github.com/itsfunny/go-cell/base/core/options"
 	"github.com/itsfunny/go-cell/base/core/services"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
+	"go.uber.org/fx"
 )
 
 var (
 	instance *NodeExtensionManager
 	ipOption = options.StringOption("ip", "i", "ip address").WithDefault("127.0.0.1")
+
+	extensionManagerModule = logsdk.NewModule("manager", 1)
+	ExtensionManagerModule = fx.Options(
+		fx.Provide(NewExtensionManager),
+		fx.Invoke(start),
+	)
 )
 
 type NodeExtensionManager struct {
@@ -33,7 +42,28 @@ type NodeExtensionManager struct {
 	bus   IApplicationEventBus
 }
 
+func start(m *NodeExtensionManager) {
+	fmt.Println(123)
+}
+func NewExtensionManager(lc fx.Lifecycle, bus IApplicationEventBus, extensions []INodeExtension) *NodeExtensionManager {
+	ret := &NodeExtensionManager{}
+	ret.BaseService = services.NewBaseService(nil, extensionManagerModule, ret)
+	ret.Ctx = &NodeContext{}
+	ret.Extensions = extensions
+	ret.bus = bus
+	lc.Append(fx.Hook{
+		OnStart: func(ctx context.Context) error {
+			fmt.Println(1)
+			return nil
+		},
+		OnStop: func(ctx context.Context) error {
+			fmt.Println(2)
+			return nil
+		},
+	})
 
+	return ret
+}
 
 func (m *NodeExtensionManager) OnReady(c *services.ReadyCTX) error {
 	subscribe, err := m.bus.SubscribeApplicationEvent(m.GetContext(), "extensionManager")

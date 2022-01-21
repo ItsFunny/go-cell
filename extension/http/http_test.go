@@ -9,15 +9,20 @@
 package http
 
 import (
-	"context"
-	"go.uber.org/fx"
+	"github.com/itsfunny/go-cell/application"
+	"github.com/itsfunny/go-cell/extension/demo"
 	"testing"
 )
 
 func TestFx(t *testing.T) {
-	app := fx.New(HttpExtension())
-	err := app.Start(context.Background())
-	if nil != err {
-		panic(err)
-	}
+	// app := fx.New(
+	// 	application.CellApplicationOption(),
+	// 	fx.Provide(eventbus.NewCommonEventBusComponentImpl),
+	// 	HttpExtensionModule,
+	// )
+	// err := app.Start(context.Background())
+	// if nil != err {
+	// 	panic(err)
+	// }
+	application.Start(demo.DemoExtensionModule)
 }
