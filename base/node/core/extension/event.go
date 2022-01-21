@@ -10,8 +10,10 @@ package extension
 
 import (
 	"context"
+	"github.com/itsfunny/go-cell/base/core/event"
 	"github.com/itsfunny/go-cell/base/core/eventbus"
 	"go.uber.org/fx"
+	"sync/atomic"
 )
 
 const applicationEventTypeKey = "extension.event"
@@ -27,6 +29,7 @@ var (
 type IApplicationEventBus interface {
 	eventbus.ICommonEventBus
 	SubscribeApplicationEvent(ctx context.Context, clientId string) (eventbus.Subscription, error)
+	FireApplicationEvents(ctx context.Context, data interface{}) error
 }
 
 func NewApplicationEventBus(bus eventbus.ICommonEventBus) IApplicationEventBus {
@@ -36,8 +39,32 @@ func NewApplicationEventBus(bus eventbus.ICommonEventBus) IApplicationEventBus {
 
 type applicationEventBus struct {
 	eventbus.ICommonEventBus
+
+	applicationEventCount int32
 }
 
 func (a *applicationEventBus) SubscribeApplicationEvent(ctx context.Context, clientId string) (eventbus.Subscription, error) {
-	return a.ICommonEventBus.Subscribe(ctx, clientId, eventbus.QueryForEvent(applicationEventTypeKey, applicationEventTypeKey), 1)
+	atomic.AddInt32(&a.applicationEventCount, 1)
+	return a.ICommonEventBus.Subscribe(ctx, clientId, eventbus.QueryForEvent(applicationEventTypeKey, applicationEvent), 1)
+}
+func (a *applicationEventBus) GetApplicationListenerCounts() int32 {
+	return atomic.LoadInt32(&a.applicationEventCount)
+}
+func (a *applicationEventBus) FireApplicationEvents(ctx context.Context, data interface{}) error {
+	return a.ICommonEventBus.PublishWithEvents(ctx, data, map[string][]string{
+		applicationEventTypeKey: {applicationEvent},
+	})
+}
+
+type ApplicationEnvironmentPreparedEvent struct {
+	event.CallBack
+	Args []string
+}
+
+type ApplicationStartedEvent struct {
+	event.CallBack
+}
+
+type ApplicationReadyEvent struct {
+	event.CallBack
 }

@@ -8,10 +8,14 @@
 */
 package eventbus
 
-import "context"
+import (
+	"context"
+	"github.com/itsfunny/go-cell/base/core/services"
+)
 
 // IInternalPubSubComponent
 type ICommonEventBus interface {
+	services.IBaseService
 	Subscribe(ctx context.Context, clientID string, query Query, outCapacity ...int) (Subscription, error)
 	PublishWithEvents(ctx context.Context, msg interface{}, events map[string][]string) error
 	SubscribeUnbuffered(ctx context.Context, clientID string, query Query) (*SubscriptionImpl, error)

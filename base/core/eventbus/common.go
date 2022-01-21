@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"github.com/itsfunny/go-cell/base/core/services"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
+	"go.uber.org/fx"
 	"sync"
 )
 
@@ -30,6 +31,17 @@ var (
 	ErrSubscriptionNotFound = errors.New("subscription 不存在")
 	ErrAlreadySubscribed    = errors.New("重复订阅")
 )
+
+var (
+	DefaultEventBusModule = fx.Options(
+		fx.Provide(defaultNewCommonEventBusComponentImpl),
+		fx.Invoke(start),
+	)
+)
+
+func start(bus ICommonEventBus) {
+	bus.BStart()
+}
 
 type cmd struct {
 	op operation
@@ -58,6 +70,11 @@ func BufferCapacity(cap int) Option {
 			s.cmdsCap = cap
 		}
 	}
+}
+
+func defaultNewCommonEventBusComponentImpl(ops ...Option) ICommonEventBus {
+	ops = append(ops, BufferCapacity(10))
+	return NewCommonEventBusComponentImpl(ops...)
 }
 
 func NewCommonEventBusComponentImpl(options ...Option) ICommonEventBus {

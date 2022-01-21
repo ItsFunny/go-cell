@@ -59,8 +59,8 @@ type BaseService struct {
 	started uint32 // atomic
 	stopped uint32 // atomic
 	ctx     context.Context
-	cancel func()
-	impl   IBaseService
+	cancel  func()
+	impl    IBaseService
 
 	c1 chan struct{}
 	c2 chan struct{}
@@ -286,7 +286,7 @@ func (bs *BaseService) BStart(opts ...StartOption) error {
 	return nil
 }
 
-func NewBaseService(logger logsdk.Logger, m logsdk.Module, concreteImpl IBaseService) *BaseService {
+func NewBaseService(logger logsdk.Logger, m logsdk.Module, concreteImpl IBaseService, ops ...BaseServiceOption) *BaseService {
 	if logger == nil {
 		logger = logrusplugin.NewLogrusLogger(m)
 	}
@@ -297,6 +297,9 @@ func NewBaseService(logger logsdk.Logger, m logsdk.Module, concreteImpl IBaseSer
 		ctx:    context.Background(),
 		c1:     make(chan struct{}),
 		c2:     make(chan struct{}),
+	}
+	for _, opt := range ops {
+		opt(res)
 	}
 	return res
 }
@@ -390,6 +393,6 @@ func (bs *BaseService) Started() bool {
 	return atomic.LoadUint32(&bs.started) == STARTED
 }
 
-func(bs *BaseService)GetContext()context.Context{
+func (bs *BaseService) GetContext() context.Context {
 	return bs.ctx
 }

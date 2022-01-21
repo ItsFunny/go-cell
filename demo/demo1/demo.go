@@ -1,22 +1,23 @@
 /*
 # -*- coding: utf-8 -*-
 # @Author : joker
-# @Time : 2022/1/19 10:25 下午
-# @File : http_test.go.go
+# @Time : 2022/1/22 6:24 上午
+# @File : demo.go
 # @Description :
 # @Attention :
 */
-package http
+package main
 
 import (
 	"context"
 	"github.com/itsfunny/go-cell/application"
 	"github.com/itsfunny/go-cell/extension/demo"
-	"testing"
+	"os"
 )
 
-func TestFx(t *testing.T) {
-	application.Start(context.Background(), nil,
+func main() {
+	app := application.New(context.Background(),
 		demo.DemoExtensionModule,
 		demo.Demo2ExtensionModule)
+	app.Run(os.Args)
 }

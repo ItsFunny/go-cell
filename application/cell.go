@@ -10,34 +10,43 @@ package application
 
 import (
 	"context"
+	"github.com/itsfunny/go-cell/base/core/event"
 	"github.com/itsfunny/go-cell/base/core/eventbus"
+	"github.com/itsfunny/go-cell/base/core/services"
 	"github.com/itsfunny/go-cell/base/node/core/extension"
+	logsdk "github.com/itsfunny/go-cell/sdk/log"
 	logrusplugin "github.com/itsfunny/go-cell/sdk/log/logrus"
 	"go.uber.org/fx"
 	"sync"
 )
 
 type CellApplication struct {
-	Event extension.IApplicationEventBus
-
+	*services.BaseService
+	*application
+	app  *fx.App
 	stop func() error
 }
 
-// TODO,remove duplicate option
-func Start(ctx context.Context, args []string, moduleOps ...fx.Option) *CellApplication {
-	lctx := ctx
-	ctx, cancel := context.WithCancel(valueContext{lctx})
+type application struct {
+	Event extension.IApplicationEventBus
+}
 
+// TODO,remove duplicate option
+func New(ctx context.Context, moduleOps ...fx.Option) *CellApplication {
+	apl := &application{}
 	ret := &CellApplication{}
+	ret.BaseService = services.NewBaseService(nil, logsdk.NewModule("APPLICATION", 1), ret,
+		services.BaseServiceWithCtx(ctx))
 	ops := make([]fx.Option, 0)
 	ops = append(ops, extension.ExtensionManagerModule)
-	ops = append(ops, fx.Provide(eventbus.NewCommonEventBusComponentImpl))
+	ops = append(ops, eventbus.DefaultEventBusModule)
 	ops = append(ops, extension.ApplicationEventBusModule)
 	ops = append(ops, moduleOps...)
-	ops = append(ops, fx.Extract(ret))
+	ops = append(ops, fx.Extract(apl))
 	app := fx.New(
 		ops...,
 	)
+	ret.application = apl
 	var once sync.Once
 	var stopErr error
 	ret.stop = func() error {
@@ -46,8 +55,6 @@ func Start(ctx context.Context, args []string, moduleOps ...fx.Option) *CellAppl
 			if stopErr != nil {
 				logrusplugin.Error("failure on stop: ", stopErr)
 			}
-			// Cancel the context _after_ the app has stopped.
-			cancel()
 		})
 		return stopErr
 	}
@@ -65,9 +72,58 @@ func Start(ctx context.Context, args []string, moduleOps ...fx.Option) *CellAppl
 	if app.Err() != nil {
 		panic(app.Err())
 	}
-	if err := app.Start(ctx); err != nil {
+	ret.app = app
+	return ret
+}
+
+func (this *CellApplication) Run(args []string) {
+	if err := this.app.Start(this.GetContext()); err != nil {
 		panic(err)
 	}
-	select {}
-	return ret
+	go this.step1(args)
+	<-this.Quit()
+}
+
+func (this *CellApplication) step1(args []string) {
+	wait := make(chan struct{})
+	go func() {
+		this.Event.FireApplicationEvents(this.GetContext(),
+			extension.ApplicationEnvironmentPreparedEvent{
+				CallBack: event.CallBack{
+					CB: func() {
+						close(wait)
+					},
+				},
+				Args: args,
+			},
+		)
+	}()
+	<-wait
+	go this.step2()
+}
+func (this *CellApplication) step2() {
+	go func() {
+		wait := make(chan struct{})
+		this.Event.FireApplicationEvents(this.GetContext(), extension.ApplicationStartedEvent{
+			CallBack: event.CallBack{CB: func() {
+				close(wait)
+			}},
+		})
+		<-wait
+		go this.step3()
+	}()
+}
+
+func (this *CellApplication) step3() {
+	go func() {
+		wait := make(chan struct{})
+		this.Event.FireApplicationEvents(this.GetContext(), extension.ApplicationReadyEvent{
+			CallBack: event.CallBack{
+				CB: func() {
+					close(wait)
+				},
+			},
+		})
+		<-wait
+	}()
 }

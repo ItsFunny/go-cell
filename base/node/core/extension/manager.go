@@ -10,7 +10,9 @@ package extension
 
 import (
 	"errors"
+	"github.com/itsfunny/go-cell/base/common/banner"
 	"github.com/itsfunny/go-cell/base/common/utils"
+	"github.com/itsfunny/go-cell/base/core/event"
 	"github.com/itsfunny/go-cell/base/core/eventbus"
 	"github.com/itsfunny/go-cell/base/core/options"
 	"github.com/itsfunny/go-cell/base/core/services"
@@ -48,9 +50,6 @@ func (m *NodeExtensionManager) OnStart(c *services.StartCTX) error {
 		return err
 	}
 	go m.onEvent(subscribe)
-	if err := m.initCommandLine(); nil != err {
-		return err
-	}
 	return nil
 }
 
@@ -63,6 +62,8 @@ func (m *NodeExtensionManager) onEvent(subscribe eventbus.Subscription) {
 		select {
 		case msg = <-subscribe.Out():
 			data = msg.Data()
+		case <-m.Quit():
+			return
 		}
 		m.handleMsg(data)
 	}
@@ -71,6 +72,60 @@ func (m *NodeExtensionManager) onEvent(subscribe eventbus.Subscription) {
 func (m *NodeExtensionManager) handleMsg(data interface{}) {
 	// TODO
 	// EXTENSION INIT START CLOSE
+	switch e := data.(type) {
+	case event.ICallBack:
+		defer e.CallBack()
+		switch v := e.(type) {
+		case ApplicationEnvironmentPreparedEvent:
+			m.onPrepared(v)
+		case ApplicationStartedEvent:
+			m.onStart(v)
+		case ApplicationReadyEvent:
+			m.onReady(v)
+		}
+	default:
+	}
+}
+func (m *NodeExtensionManager) onPrepared(e ApplicationEnvironmentPreparedEvent) {
+	m.Logger.Info(banner.INIT)
+	m.Ctx.Args = e.Args
+	if err := m.initCommandLine(); nil != err {
+		m.Logger.Error("init command failed", "err", err)
+	}
+}
+
+func (m *NodeExtensionManager) onStart(e ApplicationStartedEvent) {
+	m.Logger.Info(banner.START)
+	for _, ex := range m.Extensions {
+		if m.skipExtension(ex) {
+			continue
+		}
+		if err := ex.ExtensionStart(m.Ctx); nil != err {
+			if ex.IsRequired() {
+				// TODO ,close application
+				panic(err)
+			} else {
+				m.addExcludeExtension(ex)
+			}
+		}
+	}
+}
+
+func (m *NodeExtensionManager) onReady(e ApplicationReadyEvent) {
+	m.Logger.Info(banner.Bless)
+	for _, ex := range m.Extensions {
+		if m.skipExtension(ex) {
+			continue
+		}
+		if err := ex.ExtensionReady(m.Ctx); nil != err {
+			if ex.IsRequired() {
+				// TODO ,close application
+				panic(err)
+			} else {
+
+			}
+		}
+	}
 }
 
 func (m *NodeExtensionManager) initCommandLine() error {
@@ -170,4 +225,12 @@ func (m *NodeExtensionManager) close() {
 			m.Logger.Error("close extension failed", "err", err)
 		}
 	}
+}
+
+func (m *NodeExtensionManager) addExcludeExtension(e INodeExtension) {
+	m.UnImportSet[e.Name()] = struct{}{}
+}
+func (m *NodeExtensionManager) skipExtension(e INodeExtension) bool {
+	_, exist := m.UnImportSet[e.Name()]
+	return exist
 }

@@ -12,11 +12,17 @@ import (
 	"context"
 )
 
+type BaseServiceOption func(c *BaseService)
 type StartOption func(c *StartCTX)
 type ReadyOption func(c *ReadyCTX)
 type StopOption func(c *StopCTX)
 type ResetOption func(c *ResetCTX)
 
+func BaseServiceWithCtx(ctx context.Context) BaseServiceOption {
+	return func(c *BaseService) {
+		c.ctx = ctx
+	}
+}
 func ResetCTXWithKV(key string, value interface{}) ResetOption {
 	return func(c *ResetCTX) {
 		if c.value == nil {
