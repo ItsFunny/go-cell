@@ -10,4 +10,5 @@ package logrusplugin
 
 func init() {
 	g = newColorManager()
+	logger=NewGlobalLogrusLogger()
 }
