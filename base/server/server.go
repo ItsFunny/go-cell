@@ -23,6 +23,7 @@ type IServer interface {
 	services.IBaseService
 
 	Serve(request couple.IServerRequest, response couple.IServerResponse)
+	GetProxy() proxy.IProxy
 }
 
 type BaseServer struct {
@@ -31,6 +32,9 @@ type BaseServer struct {
 	proxy proxy.IProxy
 }
 
+func (b *BaseServer) GetProxy() proxy.IProxy {
+	return b.proxy
+}
 func (b *BaseServer) Serve(request couple.IServerRequest, response couple.IServerResponse) {
 	// 在想,这里是要返回一个promise呢,还是自己处理呢,
 	b.proxy.Proxy(NewDefaultProcessEvent(request, response))

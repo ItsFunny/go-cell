@@ -9,6 +9,7 @@
 package extension
 
 import (
+	"github.com/itsfunny/go-cell/base/core/services"
 	"github.com/itsfunny/go-cell/base/reactor"
 	"github.com/itsfunny/go-cell/base/server"
 	"github.com/itsfunny/go-cell/di"
@@ -26,16 +27,13 @@ var (
 type reactorExtension struct {
 	*BaseExtension
 
-	Servers     []server.IServer                `group:"server"`
-	Proxies     []proxy.IFrameworkProxy         `group:"proxy"`
-	Dispatchers []dispatcher.ICommandDispatcher `group:"dispatcher"`
-	Commands    []reactor.ICommand              `group:"command"`
+	servers  []server.IServer
+	Commands []reactor.ICommand `group:"command"`
 }
 
 func newReactorExtension(h di.ReactorHolder) INodeExtension {
 	ret := &reactorExtension{}
 	ret.BaseExtension = NewBaseExtension(ret)
-	ret.Dispatchers = h.Dispatchers
 	ret.Commands = h.Commands
 	return ret
 }
@@ -45,18 +43,31 @@ func (this *reactorExtension) Name() string {
 }
 
 func (b *reactorExtension) OnExtensionInit(ctx INodeContext) error {
-	for _, dis := range b.Dispatchers {
+	exs := ctx.GetExtensions()
+	for _, ex := range exs {
+		srvEx, ok := ex.(IServerNodeExtension)
+		if ok {
+			b.servers = append(b.servers, srvEx.GetServer())
+		}
+	}
+	for _, srv := range b.servers {
+		p := srv.GetProxy().(proxy.IFrameworkProxy)
+		dis := p.GetDispatcher().(dispatcher.ICommandDispatcher)
 		for _, cmd := range b.Commands {
 			if dis.Supported(cmd) {
 				dis.AddCommand(cmd)
 			}
 		}
 	}
-
 	return nil
 }
 
 func (this *reactorExtension) OnExtensionStart(ctx INodeContext) error {
+	for _, srv := range this.servers {
+		if err := srv.BStart(services.StartCTXWithKV("nodeCtx", ctx)); nil != err {
+			return err
+		}
+	}
 	return nil
 }
 

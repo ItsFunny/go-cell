@@ -36,6 +36,7 @@ func NewExtensionManager(bus IApplicationEventBus, e Extensions) *NodeExtensionM
 	ret := &NodeExtensionManager{}
 	ret.BaseService = services.NewBaseService(nil, extensionManagerModule, ret)
 	ret.Ctx = &NodeContext{}
+	ret.Ctx.Extensions = e.Extensions
 	ret.bus = bus
 	ret.Extensions = e.Extensions
 

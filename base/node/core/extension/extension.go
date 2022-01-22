@@ -10,6 +10,7 @@ package extension
 
 import (
 	"github.com/itsfunny/go-cell/base/core/options"
+	"github.com/itsfunny/go-cell/base/server"
 	"reflect"
 )
 
@@ -29,6 +30,11 @@ type INodeExtension interface {
 	OnExtensionClose(ctx INodeContext) error
 	GetOptions() []options.Option
 	IsRequired() bool
+}
+
+type IServerNodeExtension interface {
+	INodeExtension
+	GetServer() server.IServer
 }
 
 type BaseExtension struct {

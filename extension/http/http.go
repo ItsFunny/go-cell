@@ -10,13 +10,14 @@ package http
 
 import (
 	"github.com/itsfunny/go-cell/base/node/core/extension"
+	server2 "github.com/itsfunny/go-cell/base/server"
 	"github.com/itsfunny/go-cell/framework/http/server"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
 )
 
 var (
-	_      extension.INodeExtension = (*HttpFarmeWorkExtension)(nil)
-	module                          = logsdk.NewModule("http_framework", 1)
+	_      extension.IServerNodeExtension = (*HttpFarmeWorkExtension)(nil)
+	module                                = logsdk.NewModule("http_framework", 1)
 )
 
 type HttpFarmeWorkExtension struct {
@@ -29,6 +30,9 @@ func NewHttpFrameWorkExtension(httpServer server.IHttpServer) extension.INodeExt
 	ret.BaseExtension = extension.NewBaseExtension(ret)
 	ret.Server = httpServer
 	return ret
+}
+func (this *HttpFarmeWorkExtension) GetServer() server2.IServer {
+	return this.Server
 }
 func (this *HttpFarmeWorkExtension) Name() string {
 	return module.String()

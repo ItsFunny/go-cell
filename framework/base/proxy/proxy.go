@@ -22,6 +22,7 @@ var (
 
 type IFrameworkProxy interface {
 	proxy.IProxy
+	GetDispatcher() dispatcher.IDispatcher
 }
 
 type BaseFrameworkProxy struct {
@@ -37,7 +38,9 @@ func NewBaseFrameworkProxy(lg logsdk.Logger, m logsdk.Module, dispatch dispatche
 	proxy.NewBaseProxy(lg, m, ret)
 	return ret
 }
-
+func (b *BaseFrameworkProxy) GetDispatcher() dispatcher.IDispatcher {
+	return b.dispatch
+}
 func (b *BaseFrameworkProxy) OnProxy(event proxy.IProcessEvent) {
 	fe := event.(*server.DefaultProcessEvent)
 	req := fe.Request
