@@ -11,11 +11,16 @@ package demo
 import (
 	"github.com/itsfunny/go-cell/base/node/core/extension"
 	"github.com/itsfunny/go-cell/di"
+	"go.uber.org/fx"
 )
 
 var (
-	DemoExtensionModule  = di.RegisterExtension(NewDemoExtension)
-	Demo2ExtensionModule = di.RegisterExtension(NewDemoExtension2)
+	DemoExtensionModule di.OptionBuilder = func() fx.Option {
+		return di.RegisterExtension(NewDemoExtension)
+	}
+	Demo2ExtensionModule = func() fx.Option {
+		return di.RegisterExtension(NewDemoExtension2)
+	}
 )
 
 type DemoExtension struct {

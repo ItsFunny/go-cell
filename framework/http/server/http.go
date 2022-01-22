@@ -9,6 +9,8 @@
 package server
 
 import (
+	"fmt"
+	"github.com/itsfunny/go-cell/base/core/services"
 	"github.com/itsfunny/go-cell/base/server"
 	"github.com/itsfunny/go-cell/di"
 	"github.com/itsfunny/go-cell/framework/http/couple"
@@ -44,6 +46,17 @@ func NewHttpServer(p proxy.IHttpProxy) IHttpServer {
 	return ret
 }
 
+func (s *HttpServer) OnStart(c *services.StartCTX) error {
+	// ip := c.GetValueFromMap("ip")
+	// port := c.GetValueFromMap("port")
+	ip := ""
+	port := 8080
+	addr := fmt.Sprintf("%s:%d", ip, port)
+	s.Logger.Info("http start up ", "addr", addr)
+	go http.ListenAndServe(addr, s)
+	s.ready = true
+	return nil
+}
 func (s *HttpServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if !s.ready {
 		s.Logger.Error("http server not ready yet ,discard")

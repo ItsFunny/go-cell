@@ -9,8 +9,10 @@
 package http
 
 import (
+	"github.com/itsfunny/go-cell/base/core/services"
 	"github.com/itsfunny/go-cell/base/node/core/extension"
 	server2 "github.com/itsfunny/go-cell/base/server"
+	server3 "github.com/itsfunny/go-cell/framework/base/server"
 	"github.com/itsfunny/go-cell/framework/http/server"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
 )
@@ -39,14 +41,18 @@ func (this *HttpFarmeWorkExtension) Name() string {
 }
 
 func (this *HttpFarmeWorkExtension) OnExtensionInit(ctx extension.INodeContext) error {
+	cmds := ctx.GetCommands()
+	server3.FillServerCommand(this.Server, cmds)
 	return nil
+}
+
+func (this *HttpFarmeWorkExtension) OnExtensionStart(ctx extension.INodeContext) error {
+	return this.Server.BStart(services.AsyncStartWaitReadyOpt)
 }
 func (this *HttpFarmeWorkExtension) OnExtensionReady(ctx extension.INodeContext) error {
-	return nil
+	return this.Server.BReady(services.ReadyAsyncWithUtilStart)
 }
-func (this *HttpFarmeWorkExtension) OnExtensionStart(ctx extension.INodeContext) error {
-	return nil
-}
+
 func (this *HttpFarmeWorkExtension) OnExtensionClose(ctx extension.INodeContext) error {
 	return nil
 }

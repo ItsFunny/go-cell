@@ -31,11 +31,13 @@ type BaseFrameworkProxy struct {
 	dispatch dispatcher.IDispatcher
 }
 
-func NewBaseFrameworkProxy(lg logsdk.Logger, m logsdk.Module, dispatch dispatcher.IDispatcher) *BaseFrameworkProxy {
+func NewBaseFrameworkProxy(lg logsdk.Logger,
+	m logsdk.Module,
+	dispatch dispatcher.IDispatcher, impl proxy.IProxy) *BaseFrameworkProxy {
 	ret := &BaseFrameworkProxy{
 		dispatch: dispatch,
 	}
-	proxy.NewBaseProxy(lg, m, ret)
+	ret.BaseProxy = proxy.NewBaseProxy(lg, m, impl)
 	return ret
 }
 func (b *BaseFrameworkProxy) GetDispatcher() dispatcher.IDispatcher {

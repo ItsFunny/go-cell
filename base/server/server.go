@@ -45,3 +45,4 @@ func NewBaseServer(m logsdk.Module, proxy proxy.IProxy, impl IServer) *BaseServe
 	ret.BaseService = services.NewBaseService(nil, m, impl)
 	return ret
 }
+

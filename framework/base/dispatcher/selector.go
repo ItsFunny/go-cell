@@ -26,6 +26,10 @@ type CommandSelectReq struct {
 	Promise  *promise.Promise
 }
 
+type CommandAddReq struct {
+	Command *CommandWrapper
+}
+
 var (
 	_ ICommandSelector = (*UriSelector)(nil)
 )

@@ -39,11 +39,12 @@ type BaseServerResponse struct {
 	impl    IServerResponse
 }
 
-func NewBaseServerResponse(ctx context.Context,impl IServerResponse, ops ...promise.PromiseOntion) *BaseServerResponse {
+func NewBaseServerResponse(ctx context.Context, impl IServerResponse, ops ...promise.PromiseOntion) *BaseServerResponse {
 	ret := &BaseServerResponse{
 		Header:  make(map[string]string),
 		Promise: promise.NewPromise(ctx, ops...),
 	}
+	ret.impl = impl
 	return ret
 }
 func (this *BaseServerResponse) SetOrExpired() bool {

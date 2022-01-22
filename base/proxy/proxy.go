@@ -28,6 +28,7 @@ type BaseProxy struct {
 func NewBaseProxy(lg logsdk.Logger, m logsdk.Module, proxy IProxy) *BaseProxy {
 	ret := &BaseProxy{
 		BaseService: services.NewBaseService(lg, m, proxy),
+		proxy: proxy,
 	}
 	return ret
 }

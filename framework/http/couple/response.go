@@ -59,5 +59,14 @@ func (this *HttpServerResponse) OnFireResult() {
 	render.Write(this.Writer, ret)
 }
 func (this *HttpServerResponse) OnFireError() {
-
+	_, e := this.Promise.GetForever()
+	this.write(e)
+}
+func (this *HttpServerResponse) write(ret interface{}) {
+	for k, v := range this.Header {
+		this.Writer.w.Header().Set(k, v)
+	}
+	// TODO
+	// demo
+	render.Write(this.Writer, ret)
 }

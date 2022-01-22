@@ -8,7 +8,10 @@
 */
 package extension
 
-import "github.com/itsfunny/go-cell/base/core/options"
+import (
+	"github.com/itsfunny/go-cell/base/core/options"
+	"github.com/itsfunny/go-cell/base/reactor"
+)
 
 var (
 	_ INodeContext = (*NodeContext)(nil)
@@ -21,6 +24,7 @@ type INodeContext interface {
 	GetMetaDataName() string
 	GetArgs() []string
 	GetExtensions() []INodeExtension
+	GetCommands() []reactor.ICommand
 	SetMetaData(m map[string]string)
 	GetMetaData() map[string]string
 	GetIp() string
@@ -37,8 +41,14 @@ type NodeContext struct {
 	Cluster          string
 	Meta             map[string]string
 	Extensions       []INodeExtension
+	Commands         []reactor.ICommand
 	IP               string
 }
+
+func (n *NodeContext) GetCommands() []reactor.ICommand {
+	return n.Commands
+}
+
 type Node struct {
 	ID string
 }

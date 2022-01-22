@@ -9,6 +9,7 @@
 package di
 
 import (
+	"github.com/itsfunny/go-cell/base/reactor"
 	"go.uber.org/fx"
 )
 
@@ -52,11 +53,23 @@ func RegisterDispatcher(constructor interface{}) fx.Option {
 	// })
 	return fx.Provide(constructor)
 }
-func RegisterCommand(constructor interface{}) fx.Option {
+func RegisterCommand(cmd reactor.ICommand) fx.Option {
 	return fx.Provide(fx.Annotated{
-		Group:  FxCommand,
-		Target: constructor,
+		Group: FxCommand,
+		Target: func() reactor.ICommand {
+			return cmd
+		},
 	})
+}
+
+func CommandOptionBuilder(cmds ...reactor.ICommand) OptionBuilder {
+	return func() fx.Option {
+		ops := make([]fx.Option, 0)
+		for _, cmd := range cmds {
+			ops = append(ops, RegisterCommand(cmd))
+		}
+		return fx.Options(ops...)
+	}
 }
 
 func RegisterHttpSelector(constructor interface{}) fx.Option {

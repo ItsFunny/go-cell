@@ -41,8 +41,8 @@ type BaseCommandDispatcher struct {
 
 	channel reactor.IChannel
 
-	selectorStrategy    *pipeline.Engine
-	commandRegisterHook *pipeline.Engine
+	selectorStrategy     *pipeline.Engine
+	onAddCommandPipeline pipeline.Pipeline
 
 	defaultFailStatus int
 }
@@ -53,12 +53,14 @@ func (b *BaseCommandDispatcher) Supported(cmd reactor.ICommand) bool {
 
 func (b *BaseCommandDispatcher) AddCommand(cmd reactor.ICommand) {
 	_, exist := b.Commands[cmd.ID()]
-	if !exist {
-		panic("")
+	if exist {
+		panic("duplicate command")
 	}
-	b.Commands[cmd.ID()] = &CommandWrapper{
+	wp := &CommandWrapper{
 		Command: cmd,
 	}
+	b.Commands[cmd.ID()] = wp
+	b.onAddCommandPipeline.Serve(wp)
 }
 
 func (b *BaseCommandDispatcher) CollectSummary(request couple.IServerRequest, wrapper *CommandWrapper) reactor.ISummary {
@@ -68,7 +70,9 @@ func (b *BaseCommandDispatcher) CollectSummary(request couple.IServerRequest, wr
 func NewBaseCommandDispatcher(m logsdk.Module, impl ICommandDispatcher, selectors []ICommandSelector, handlers []reactor.CommandHandler) *BaseCommandDispatcher {
 	ret := &BaseCommandDispatcher{}
 	ret.impl = impl
+	ret.Commands = make(map[reactor.ProtocolID]*CommandWrapper)
 	eng := pipeline.New()
+	onCmdAddP := pipeline.NewSingleEngine()
 	for _, sel := range selectors {
 		eng.RegisterFunc(reflect.TypeOf(&CommandSelectReq{}), func(ctx *pipeline.Context) {
 			req := ctx.Request.(*CommandSelectReq)
@@ -79,6 +83,10 @@ func NewBaseCommandDispatcher(m logsdk.Module, impl ICommandDispatcher, selector
 				ctx.Next()
 			}
 		})
+		onCmdAddP.RegisterFunc(nil, func(ctx *pipeline.Context) {
+			req := ctx.Request.(*CommandWrapper)
+			sel.OnRegisterCommand(req)
+		})
 	}
 	eng.RegisterFunc(reflect.TypeOf(&CommandSelectReq{}), func(ctx *pipeline.Context) {
 		req := ctx.Request.(*CommandSelectReq)
@@ -86,8 +94,10 @@ func NewBaseCommandDispatcher(m logsdk.Module, impl ICommandDispatcher, selector
 		ctx.Abort()
 	})
 	ret.selectorStrategy = eng
+	ret.onAddCommandPipeline = onCmdAddP
 	ret.BaseService = services.NewBaseService(nil, m, impl)
 	ret.channel = reactor.NewDefaultChannel(handlers...)
+
 	return ret
 }
 

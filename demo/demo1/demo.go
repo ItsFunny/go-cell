@@ -11,20 +11,17 @@ package main
 import (
 	"context"
 	"github.com/itsfunny/go-cell/application"
+	"github.com/itsfunny/go-cell/di"
 	"github.com/itsfunny/go-cell/extension/demo"
 	"github.com/itsfunny/go-cell/extension/http"
-	"go.uber.org/fx"
 	"os"
 )
 
 func main() {
 	app := application.New(context.Background(),
-		func() fx.Option {
-			return demo.DemoExtensionModule
-		},
-		func() fx.Option {
-			return demo.Demo2ExtensionModule
-		},
-		http.DefaultHttpOptionBuilder)
+		demo.DemoExtensionModule,
+		demo.Demo2ExtensionModule,
+		http.DefaultHttpOptionBuilder,
+		di.CommandOptionBuilder(demoCmd1))
 	app.Run(os.Args)
 }

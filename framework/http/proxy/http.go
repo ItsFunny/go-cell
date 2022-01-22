@@ -29,6 +29,7 @@ type HttpFrameWorkProxy struct {
 func NewHttpFrameWorkProxy(dispatcher dispatcher.IHttpDispatcher) IHttpProxy {
 	ret := &HttpFrameWorkProxy{}
 	ret.BaseFrameworkProxy = proxy.NewBaseFrameworkProxy(nil,
-		logsdk.NewModule("http_framework_proxy", 1), dispatcher)
+		logsdk.NewModule("http_framework_proxy", 1), dispatcher,
+		ret)
 	return ret
 }
