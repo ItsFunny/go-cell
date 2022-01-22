@@ -15,37 +15,37 @@ import (
 	couple2 "github.com/itsfunny/go-cell/framework/http/couple"
 )
 
-type ICommandHandler interface {
+type ICommandSelector interface {
 	Select(req *CommandSelectReq)
 	OnRegisterCommand(wrapper *CommandWrapper)
 }
 
 type CommandSelectReq struct {
-	Commands map[string]*CommandWrapper
+	Commands map[reactor.ProtocolID]*CommandWrapper
 	Request  couple.IServerRequest
 	Promise  *promise.Promise
 }
 
 var (
-	_ ICommandHandler = (*uriHandler)(nil)
+	_ ICommandSelector = (*UriSelector)(nil)
 )
 
-type uriHandler struct {
+type UriSelector struct {
 	commands map[reactor.ProtocolID]*CommandWrapper
 }
 
-func NewUriHandler() *uriHandler {
-	ret := &uriHandler{
+func NewUriSelector() ICommandSelector {
+	ret := &UriSelector{
 		commands: make(map[reactor.ProtocolID]*CommandWrapper),
 	}
 	return ret
 }
 
-func (u *uriHandler) OnRegisterCommand(wrapper *CommandWrapper) {
+func (u *UriSelector) OnRegisterCommand(wrapper *CommandWrapper) {
 	u.commands[wrapper.Command.ID()] = wrapper
 }
 
-func (u *uriHandler) Select(req *CommandSelectReq) {
+func (u *UriSelector) Select(req *CommandSelectReq) {
 	httpReq := req.Request.(*couple2.HttpServerRequest)
 	uri := httpReq.Request.RequestURI
 	ret := u.commands[reactor.ProtocolIDFromString(uri)]

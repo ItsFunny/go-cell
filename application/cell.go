@@ -14,6 +14,7 @@ import (
 	"github.com/itsfunny/go-cell/base/core/eventbus"
 	"github.com/itsfunny/go-cell/base/core/services"
 	"github.com/itsfunny/go-cell/base/node/core/extension"
+	"github.com/itsfunny/go-cell/di"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
 	logrusplugin "github.com/itsfunny/go-cell/sdk/log/logrus"
 	"go.uber.org/fx"
@@ -32,7 +33,7 @@ type application struct {
 }
 
 // TODO,remove duplicate option
-func New(ctx context.Context, moduleOps ...fx.Option) *CellApplication {
+func New(ctx context.Context, builders ...di.OptionBuilder) *CellApplication {
 	apl := &application{}
 	ret := &CellApplication{}
 	ret.BaseService = services.NewBaseService(nil, logsdk.NewModule("APPLICATION", 1), ret,
@@ -41,7 +42,9 @@ func New(ctx context.Context, moduleOps ...fx.Option) *CellApplication {
 	ops = append(ops, extension.ExtensionManagerModule)
 	ops = append(ops, eventbus.DefaultEventBusModule)
 	ops = append(ops, extension.ApplicationEventBusModule)
-	ops = append(ops, moduleOps...)
+	for _, b := range builders {
+		ops = append(ops, b())
+	}
 	ops = append(ops, fx.Extract(apl))
 	app := fx.New(
 		ops...,
@@ -80,16 +83,16 @@ func (this *CellApplication) Run(args []string) {
 	if err := this.app.Start(this.GetContext()); err != nil {
 		panic(err)
 	}
-	go this.step1(args)
+	go this.step0(args)
 	<-this.Quit()
 }
 
-func (this *CellApplication) step1(args []string) {
+func (this *CellApplication) step0(args []string) {
 	wait := make(chan struct{})
 	go func() {
 		this.Event.FireApplicationEvents(this.GetContext(),
 			extension.ApplicationEnvironmentPreparedEvent{
-				CallBack: event.CallBack{
+				ICallBack: event.CallBack{
 					CB: func() {
 						close(wait)
 					},
@@ -99,13 +102,30 @@ func (this *CellApplication) step1(args []string) {
 		)
 	}()
 	<-wait
+	go this.step1()
+}
+func (this *CellApplication) step1() {
+	wait := make(chan struct{})
+	go func() {
+		this.Event.FireApplicationEvents(this.GetContext(),
+			extension.ApplicationInitEvent{
+				ICallBack: event.CallBack{
+					CB: func() {
+						close(wait)
+					},
+				},
+			},
+		)
+	}()
+	<-wait
 	go this.step2()
 }
+
 func (this *CellApplication) step2() {
 	go func() {
 		wait := make(chan struct{})
 		this.Event.FireApplicationEvents(this.GetContext(), extension.ApplicationStartedEvent{
-			CallBack: event.CallBack{CB: func() {
+			ICallBack: event.CallBack{CB: func() {
 				close(wait)
 			}},
 		})
@@ -118,7 +138,7 @@ func (this *CellApplication) step3() {
 	go func() {
 		wait := make(chan struct{})
 		this.Event.FireApplicationEvents(this.GetContext(), extension.ApplicationReadyEvent{
-			CallBack: event.CallBack{
+			ICallBack: event.CallBack{
 				CB: func() {
 					close(wait)
 				},

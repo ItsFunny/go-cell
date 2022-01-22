@@ -28,6 +28,8 @@ type NodeExtensionManager struct {
 
 	state byte
 	bus   IApplicationEventBus
+
+	onClose func(err error)
 }
 
 func NewExtensionManager(bus IApplicationEventBus, e Extensions) *NodeExtensionManager {
@@ -75,9 +77,11 @@ func (m *NodeExtensionManager) handleMsg(data interface{}) {
 	switch e := data.(type) {
 	case event.ICallBack:
 		defer e.CallBack()
-		switch v := e.(type) {
+		switch v := data.(type) {
 		case ApplicationEnvironmentPreparedEvent:
 			m.onPrepared(v)
+		case ApplicationInitEvent:
+			m.onInit(v)
 		case ApplicationStartedEvent:
 			m.onStart(v)
 		case ApplicationReadyEvent:
@@ -87,10 +91,26 @@ func (m *NodeExtensionManager) handleMsg(data interface{}) {
 	}
 }
 func (m *NodeExtensionManager) onPrepared(e ApplicationEnvironmentPreparedEvent) {
-	m.Logger.Info(banner.INIT)
 	m.Ctx.Args = e.Args
 	if err := m.initCommandLine(); nil != err {
 		m.Logger.Error("init command failed", "err", err)
+	}
+}
+
+func (m *NodeExtensionManager) onInit(v ApplicationInitEvent) {
+	m.Logger.Info(banner.INIT)
+
+	for _, ex := range m.Extensions {
+		if m.skipExtension(ex) {
+			continue
+		}
+		if err := ex.ExtensionInit(m.Ctx); nil != err {
+			if ex.IsRequired() {
+				m.onClose(err)
+			} else {
+				m.addExcludeExtension(ex)
+			}
+		}
 	}
 }
 
@@ -102,8 +122,7 @@ func (m *NodeExtensionManager) onStart(e ApplicationStartedEvent) {
 		}
 		if err := ex.ExtensionStart(m.Ctx); nil != err {
 			if ex.IsRequired() {
-				// TODO ,close application
-				panic(err)
+				m.onClose(err)
 			} else {
 				m.addExcludeExtension(ex)
 			}
@@ -119,10 +138,9 @@ func (m *NodeExtensionManager) onReady(e ApplicationReadyEvent) {
 		}
 		if err := ex.ExtensionReady(m.Ctx); nil != err {
 			if ex.IsRequired() {
-				// TODO ,close application
-				panic(err)
+				m.onClose(err)
 			} else {
-
+				m.addExcludeExtension(ex)
 			}
 		}
 	}

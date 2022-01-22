@@ -9,18 +9,24 @@
 package server
 
 import (
-	"github.com/itsfunny/go-cell/base/reactor"
 	"github.com/itsfunny/go-cell/base/server"
+	"github.com/itsfunny/go-cell/di"
 	"github.com/itsfunny/go-cell/framework/http/couple"
 	"github.com/itsfunny/go-cell/framework/http/dispatcher"
 	"github.com/itsfunny/go-cell/framework/http/proxy"
+	logsdk "github.com/itsfunny/go-cell/sdk/log"
 	"go.uber.org/fx"
 	"net/http"
 )
 
 var (
-	_        IHttpServer = (*HttpServer)(nil)
-	notReady             = []byte("not ready ")
+	_                IHttpServer = (*HttpServer)(nil)
+	notReady                     = []byte("not ready ")
+	HttpServerOption             = fx.Options(
+		di.RegisterServer(NewHttpServer),
+		di.RegisterProxy(proxy.NewHttpFrameWorkProxy),
+		di.RegisterDispatcher(dispatcher.NewDefaultHttpDispatcher),
+	)
 )
 
 type IHttpServer interface {
@@ -32,20 +38,10 @@ type HttpServer struct {
 	ready bool
 }
 
-func NewHttpServer() *HttpServer {
-	ret := &HttpServer{
-		BaseServer: nil,
-		ready:      false,
-	}
+func NewHttpServer(p proxy.IHttpProxy) IHttpServer {
+	ret := &HttpServer{ready: false}
+	ret.BaseServer = server.NewBaseServer(logsdk.NewModule("http_server", 1), p, ret)
 	return ret
-}
-
-func HttpServerOption() fx.Option {
-	return fx.Options(
-		fx.Provide(proxy.NewHttpFrameWorkProxy),
-		fx.Provide(dispatcher.NewDefaultHttpDispatcher),
-		fx.Provide(reactor.NewDefaultChannel),
-	)
 }
 
 func (s *HttpServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {

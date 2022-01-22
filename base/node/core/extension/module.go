@@ -22,21 +22,14 @@ var (
 
 	ExtensionManagerModule = fx.Options(
 		fx.Provide(NewExtensionManager),
-		extensionModuleOption,
+		reactorModule,
+		extensionModule,
 	)
-	extensionModuleOption = fx.Options(
+	extensionModule = fx.Options(
 		fx.Invoke(start),
 	)
 )
 
-func Register(constructor interface{}) fx.Option {
-	return fx.Options(
-		fx.Provide(fx.Annotated{
-			Group:  "extension",
-			Target: constructor,
-		}),
-	)
-}
 
 func start(lc fx.Lifecycle, m *NodeExtensionManager) {
 	lc.Append(fx.Hook{

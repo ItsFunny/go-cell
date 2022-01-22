@@ -10,7 +10,6 @@ package reactor
 
 import (
 	"github.com/itsfunny/go-cell/sdk/pipeline"
-	"go.uber.org/fx"
 )
 
 var (
@@ -34,30 +33,24 @@ func NewDefaultChannel(handlers ...CommandHandler) *DefaultChannel {
 		pipeline: nil,
 	}
 	eng := pipeline.NewSingleEngine()
+	ret.pipeline=eng
 	for _, handler := range handlers {
 		eng.RegisterFunc(nil, func(ctx *pipeline.Context) {
 			handler(ctx.Request.(ICommandSuit))
 		})
 	}
-	eng.RegisterFunc(nil, func(ctx *pipeline.Context) {
-		commandFinalExecute(ctx.Request.(ICommandSuit))
-	})
+	// eng.RegisterFunc(nil, func(ctx *pipeline.Context) {
+	// 	CommandFinalExecute(ctx.Request.(ICommandSuit))
+	// })
 
 	return ret
-}
-
-// 但是好像会变成rpc 也用这些cmd了
-func DefaultChannelOption() fx.Option {
-	return fx.Options(
-		fx.Provide(NewDefaultChannel),
-	)
 }
 
 func (d *DefaultChannel) ReadCommand(suit IHandlerSuit) {
 	d.pipeline.Serve(suit.(ICommandSuit))
 }
 
-var commandFinalExecute CommandHandler = func(suit ICommandSuit) {
+var CommandFinalExecute CommandHandler = func(suit ICommandSuit) {
 	//  TODO check if the result is done
 	buz := suit.GetBuzContext()
 	buz.GetCommandContext().Command.Execute(buz)

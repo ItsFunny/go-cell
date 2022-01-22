@@ -12,6 +12,10 @@ type ICallBack interface {
 	CallBack()
 }
 
+func NewCallBack(f func()) *CallBack {
+	return &CallBack{CB: f}
+}
+
 type CallBack struct {
 	CB func()
 }

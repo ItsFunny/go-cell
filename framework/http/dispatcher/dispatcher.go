@@ -11,17 +11,25 @@ package dispatcher
 import (
 	"github.com/itsfunny/go-cell/base/couple"
 	"github.com/itsfunny/go-cell/base/reactor"
+	"github.com/itsfunny/go-cell/di"
 	"github.com/itsfunny/go-cell/framework/base/common"
 	"github.com/itsfunny/go-cell/framework/base/dispatcher"
+	"github.com/itsfunny/go-cell/framework/http/command"
 	couple2 "github.com/itsfunny/go-cell/framework/http/couple"
 	"github.com/itsfunny/go-cell/framework/http/summary"
 	"github.com/itsfunny/go-cell/framework/http/util"
-	"go.uber.org/fx"
+	logsdk "github.com/itsfunny/go-cell/sdk/log"
 	"time"
 )
 
 var (
-	_ IHttpDispatcher = (*DefaultHttpDispatcher)(nil)
+	_      IHttpDispatcher = (*DefaultHttpDispatcher)(nil)
+	module logsdk.Module   = logsdk.NewModule("http_dispatcher", 1)
+)
+
+const (
+	SelectorGroup      = "httpSelector"
+	HttpCommandHandler = "httpCommandHandler"
 )
 
 type IHttpDispatcher interface {
@@ -32,16 +40,10 @@ type DefaultHttpDispatcher struct {
 	*dispatcher.BaseCommandDispatcher
 }
 
-func NewDefaultHttpDispatcher(handlers ...dispatcher.ICommandHandler) *DefaultHttpDispatcher {
+func NewDefaultHttpDispatcher(h di.HttpCommandConstructorHolder) IHttpDispatcher {
 	ret := &DefaultHttpDispatcher{}
-	ret.BaseCommandDispatcher = dispatcher.NewBaseCommandDispatcher(ret, handlers...)
+	ret.BaseCommandDispatcher = dispatcher.NewBaseCommandDispatcher(module, ret, h.Selectors, h.CommandHandler)
 	return ret
-}
-
-func HttpDispatcherOption() fx.Option {
-	return fx.Provide(
-		reactor.DefaultChannelOption(),
-	)
 }
 
 func (b *DefaultHttpDispatcher) CreateSuit(request couple.IServerRequest,
@@ -69,4 +71,9 @@ func (b *DefaultHttpDispatcher) CollectSummary(request couple.IServerRequest, wr
 		},
 	}
 	return ret
+}
+
+func (b *DefaultHttpDispatcher) Supported(cmd reactor.ICommand) bool {
+	_, ok := cmd.(*command.HttpCommand)
+	return ok
 }

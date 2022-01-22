@@ -12,25 +12,22 @@ import (
 	"github.com/itsfunny/go-cell/base/node/core/extension"
 	"github.com/itsfunny/go-cell/framework/http/server"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
-	"go.uber.org/fx"
 )
 
 var (
-	_                   extension.INodeExtension = (*HttpFarmeWorkExtension)(nil)
-	module                                       = logsdk.NewModule("http_framework", 1)
-	HttpExtensionModule                          = fx.Options(
-		server.HttpServerOption(),
-		fx.Provide(NewHttpFrameWorkExtension),
-	)
+	_      extension.INodeExtension = (*HttpFarmeWorkExtension)(nil)
+	module                          = logsdk.NewModule("http_framework", 1)
 )
 
 type HttpFarmeWorkExtension struct {
 	*extension.BaseExtension
+	Server server.IHttpServer
 }
 
-func NewHttpFrameWorkExtension()*HttpFarmeWorkExtension {
+func NewHttpFrameWorkExtension(httpServer server.IHttpServer) extension.INodeExtension {
 	ret := &HttpFarmeWorkExtension{}
 	ret.BaseExtension = extension.NewBaseExtension(ret)
+	ret.Server = httpServer
 	return ret
 }
 func (this *HttpFarmeWorkExtension) Name() string {

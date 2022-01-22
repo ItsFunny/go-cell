@@ -57,14 +57,16 @@ func (a *applicationEventBus) FireApplicationEvents(ctx context.Context, data in
 }
 
 type ApplicationEnvironmentPreparedEvent struct {
-	event.CallBack
+	event.ICallBack
 	Args []string
 }
-
+type ApplicationInitEvent struct {
+	event.ICallBack
+}
 type ApplicationStartedEvent struct {
-	event.CallBack
+	event.ICallBack
 }
 
 type ApplicationReadyEvent struct {
-	event.CallBack
+	event.ICallBack
 }

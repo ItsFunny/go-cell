@@ -9,25 +9,26 @@
 package proxy
 
 import (
+	proxy2 "github.com/itsfunny/go-cell/base/proxy"
 	"github.com/itsfunny/go-cell/framework/base/proxy"
 	"github.com/itsfunny/go-cell/framework/http/dispatcher"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
-	"go.uber.org/fx"
 )
 
+var (
+	_ IHttpProxy = (*HttpFrameWorkProxy)(nil)
+)
+
+type IHttpProxy interface {
+	proxy2.IProxy
+}
 type HttpFrameWorkProxy struct {
 	*proxy.BaseFrameworkProxy
 }
 
-func NewHttpFrameWorkProxy(dispatcher dispatcher.IHttpDispatcher) *HttpFrameWorkProxy {
+func NewHttpFrameWorkProxy(dispatcher dispatcher.IHttpDispatcher) IHttpProxy {
 	ret := &HttpFrameWorkProxy{}
 	ret.BaseFrameworkProxy = proxy.NewBaseFrameworkProxy(nil,
 		logsdk.NewModule("http_framework_proxy", 1), dispatcher)
 	return ret
-}
-
-func HttpFrameWorkProxyOption() fx.Option {
-	return fx.Options(
-		fx.Provide(dispatcher.NewDefaultHttpDispatcher),
-	)
 }

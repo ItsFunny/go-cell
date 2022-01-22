@@ -12,6 +12,7 @@ import (
 	"github.com/itsfunny/go-cell/base/core/services"
 	"github.com/itsfunny/go-cell/base/couple"
 	"github.com/itsfunny/go-cell/base/proxy"
+	logsdk "github.com/itsfunny/go-cell/sdk/log"
 )
 
 var (
@@ -25,7 +26,7 @@ type IServer interface {
 }
 
 type BaseServer struct {
-	services.BaseService
+	*services.BaseService
 
 	proxy proxy.IProxy
 }
@@ -33,4 +34,10 @@ type BaseServer struct {
 func (b *BaseServer) Serve(request couple.IServerRequest, response couple.IServerResponse) {
 	// 在想,这里是要返回一个promise呢,还是自己处理呢,
 	b.proxy.Proxy(NewDefaultProcessEvent(request, response))
+}
+
+func NewBaseServer(m logsdk.Module, proxy proxy.IProxy, impl IServer) *BaseServer {
+	ret := &BaseServer{proxy: proxy}
+	ret.BaseService = services.NewBaseService(nil, m, impl)
+	return ret
 }

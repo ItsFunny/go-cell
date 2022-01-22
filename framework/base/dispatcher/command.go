@@ -17,6 +17,7 @@ import (
 	"github.com/itsfunny/go-cell/base/reactor"
 	"github.com/itsfunny/go-cell/framework/base/context"
 	"github.com/itsfunny/go-cell/framework/base/errordef"
+	logsdk "github.com/itsfunny/go-cell/sdk/log"
 	"github.com/itsfunny/go-cell/sdk/pipeline"
 	"reflect"
 )
@@ -28,12 +29,13 @@ var (
 type ICommandDispatcher interface {
 	IDispatcher
 	CreateSuit(request couple.IServerRequest, response couple.IServerResponse, channel reactor.IChannel, wrapper *CommandWrapper) reactor.ICommandSuit
-	CollectSummary(request couple.IServerRequest,wrapper *CommandWrapper)reactor.ISummary
+	CollectSummary(request couple.IServerRequest, wrapper *CommandWrapper) reactor.ISummary
+	Supported(cmd reactor.ICommand) bool
 }
 type BaseCommandDispatcher struct {
 	*services.BaseService
 
-	Commands map[string]*CommandWrapper
+	Commands map[reactor.ProtocolID]*CommandWrapper
 
 	impl ICommandDispatcher
 
@@ -45,13 +47,27 @@ type BaseCommandDispatcher struct {
 	defaultFailStatus int
 }
 
-func (b *BaseCommandDispatcher) CollectSummary(request couple.IServerRequest, wrapper *CommandWrapper) reactor.ISummary {
-	return b.impl.CollectSummary(request,wrapper)
+func (b *BaseCommandDispatcher) Supported(cmd reactor.ICommand) bool {
+	return b.impl.Supported(cmd)
 }
 
-func NewBaseCommandDispatcher(impl ICommandDispatcher, selectors ...ICommandHandler, ) *BaseCommandDispatcher {
+func (b *BaseCommandDispatcher) AddCommand(cmd reactor.ICommand) {
+	_, exist := b.Commands[cmd.ID()]
+	if !exist {
+		panic("")
+	}
+	b.Commands[cmd.ID()] = &CommandWrapper{
+		Command: cmd,
+	}
+}
+
+func (b *BaseCommandDispatcher) CollectSummary(request couple.IServerRequest, wrapper *CommandWrapper) reactor.ISummary {
+	return b.impl.CollectSummary(request, wrapper)
+}
+
+func NewBaseCommandDispatcher(m logsdk.Module, impl ICommandDispatcher, selectors []ICommandSelector, handlers []reactor.CommandHandler) *BaseCommandDispatcher {
 	ret := &BaseCommandDispatcher{}
-	ret.impl=impl
+	ret.impl = impl
 	eng := pipeline.New()
 	for _, sel := range selectors {
 		eng.RegisterFunc(reflect.TypeOf(&CommandSelectReq{}), func(ctx *pipeline.Context) {
@@ -70,6 +86,8 @@ func NewBaseCommandDispatcher(impl ICommandDispatcher, selectors ...ICommandHand
 		ctx.Abort()
 	})
 	ret.selectorStrategy = eng
+	ret.BaseService = services.NewBaseService(nil, m, impl)
+	ret.channel = reactor.NewDefaultChannel(handlers...)
 	return ret
 }
 
@@ -108,7 +126,7 @@ func (b *BaseCommandDispatcher) Dispatch(ctx *context.DispatchContext) {
 
 func (b *BaseCommandDispatcher) CreateSuit(request couple.IServerRequest,
 	response couple.IServerResponse, channel reactor.IChannel, wrapper *CommandWrapper) reactor.ICommandSuit {
-	return b.impl.CreateSuit(request,response,channel,wrapper)
+	return b.impl.CreateSuit(request, response, channel, wrapper)
 }
 
 func (b *BaseCommandDispatcher) failFast(response couple.IServerResponse, status int) {

@@ -10,11 +10,12 @@ package demo
 
 import (
 	"github.com/itsfunny/go-cell/base/node/core/extension"
+	"github.com/itsfunny/go-cell/di"
 )
 
 var (
-	DemoExtensionModule  = extension.Register(NewDemoExtension)
-	Demo2ExtensionModule = extension.Register(NewDemoExtension2)
+	DemoExtensionModule  = di.RegisterExtension(NewDemoExtension)
+	Demo2ExtensionModule = di.RegisterExtension(NewDemoExtension2)
 )
 
 type DemoExtension struct {

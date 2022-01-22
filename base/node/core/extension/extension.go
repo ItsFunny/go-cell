@@ -8,7 +8,10 @@
 */
 package extension
 
-import "github.com/itsfunny/go-cell/base/core/options"
+import (
+	"github.com/itsfunny/go-cell/base/core/options"
+	"reflect"
+)
 
 var (
 	_ INodeExtension = (*BaseExtension)(nil)
@@ -31,13 +34,14 @@ type INodeExtension interface {
 type BaseExtension struct {
 	impl INodeExtension
 }
-func NewBaseExtension(impl INodeExtension)*BaseExtension{
+
+func NewBaseExtension(impl INodeExtension) *BaseExtension {
 	return &BaseExtension{
 		impl: impl,
 	}
 }
 func (b *BaseExtension) Name() string {
-	panic("implement me")
+	return reflect.TypeOf(b.impl).Name()
 }
 
 func (b *BaseExtension) ExtensionInit(ctx INodeContext) error {
@@ -45,7 +49,7 @@ func (b *BaseExtension) ExtensionInit(ctx INodeContext) error {
 }
 
 func (b *BaseExtension) OnExtensionInit(ctx INodeContext) error {
-	panic("override me ")
+	return nil
 }
 
 func (b *BaseExtension) ExtensionReady(ctx INodeContext) error {
@@ -53,7 +57,7 @@ func (b *BaseExtension) ExtensionReady(ctx INodeContext) error {
 }
 
 func (b *BaseExtension) OnExtensionReady(ctx INodeContext) error {
-	panic("implement me")
+	return nil
 }
 
 func (b *BaseExtension) ExtensionStart(ctx INodeContext) error {
@@ -61,7 +65,7 @@ func (b *BaseExtension) ExtensionStart(ctx INodeContext) error {
 }
 
 func (b *BaseExtension) OnExtensionStart(ctx INodeContext) error {
-	panic("implement me")
+	return nil
 }
 
 func (b *BaseExtension) ExtensionClose(ctx INodeContext) error {
@@ -69,7 +73,7 @@ func (b *BaseExtension) ExtensionClose(ctx INodeContext) error {
 }
 
 func (b *BaseExtension) OnExtensionClose(ctx INodeContext) error {
-	panic("implement me")
+	return nil
 }
 
 func (b *BaseExtension) GetOptions() []options.Option {
