@@ -32,4 +32,4 @@ type Function func(ctx IBuzzContext,reqData interface{}) error
 
 type PreRun func(req IBuzzContext) error
 
-type PostRunMap map[PostRunType]func(response couple.IServerResponse) error
+type PostRunMap map[RunType]func(response couple.IServerResponse) error

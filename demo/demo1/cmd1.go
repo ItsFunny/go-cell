@@ -12,21 +12,19 @@ import (
 	"fmt"
 	"github.com/itsfunny/go-cell/base/couple"
 	"github.com/itsfunny/go-cell/base/reactor"
-	"github.com/itsfunny/go-cell/framework/http/command"
 )
 
-var demoCmd1 = &command.HttpCommand{
-	Command: &reactor.Command{
-		ProtocolID: "/demo",
-		PreRun: func(req reactor.IBuzzContext) error {
-			fmt.Println("pre")
-			return nil
-		},
-		Run: func(ctx reactor.IBuzzContext, reqData interface{}) error {
-			fmt.Println(123)
-			return nil
-		},
-		PostRun: map[reactor.PostRunType]func(response couple.IServerResponse) error{},
-		Options: nil,
+var demoCmd1 = &reactor.Command{
+	ProtocolID: "/demo",
+	PreRun: func(req reactor.IBuzzContext) error {
+		fmt.Println("pre")
+		return nil
 	},
+	Run: func(ctx reactor.IBuzzContext, reqData interface{}) error {
+		fmt.Println(123)
+		return nil
+	},
+	PostRun: map[reactor.RunType]func(response couple.IServerResponse) error{},
+	RunType: reactor.RunTypeHttp,
+	Options: nil,
 }

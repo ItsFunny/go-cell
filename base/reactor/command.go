@@ -9,6 +9,7 @@
 package reactor
 
 import (
+	"errors"
 	"github.com/itsfunny/go-cell/base/common"
 	"github.com/itsfunny/go-cell/base/core/options"
 	"github.com/itsfunny/go-cell/base/serialize"
@@ -18,9 +19,18 @@ var (
 	_ ICommand = (*Command)(nil)
 )
 
+type RunType int32
+
+const (
+	RunTypeHttp = 1 << 0
+	RunTypeRpc  = 1 << 1
+	RunTypeCli  = 1 << 2
+)
+
 type ICommand interface {
 	ID() ProtocolID
 	Execute(ctx IBuzzContext)
+	SupportRunType() RunType
 }
 
 type ICommandSerialize interface {
@@ -36,11 +46,16 @@ type Command struct {
 
 	property CommandProperty
 
+	RunType RunType
+
 	Options []options.Option
 }
 
 func (c *Command) ID() ProtocolID {
 	return c.ProtocolID
+}
+func (c *Command) SupportRunType() RunType {
+	return c.RunType
 }
 func (c *Command) Execute(ctx IBuzzContext) {
 	if err := c.PreRun(ctx); nil != err {
@@ -57,6 +72,11 @@ func (c *Command) Execute(ctx IBuzzContext) {
 }
 
 func (c *Command) fire(ctx IBuzzContext) {
+	defer func() {
+		if !ctx.Done() {
+			ctx.Response(c.CreateResponseWrapper().WithError(errors.New("missing ret")))
+		}
+	}()
 	req, err := c.newInstance(ctx)
 	if nil != err {
 		ctx.Error("获取参数失败", "err", err)

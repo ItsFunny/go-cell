@@ -8,7 +8,10 @@
 */
 package reactor
 
-import "github.com/itsfunny/go-cell/base/context"
+import (
+	"github.com/itsfunny/go-cell/base/context"
+	"github.com/itsfunny/go-cell/base/core/promise"
+)
 
 var (
 	_ ICommandSuit = (*BaseCommandSuit)(nil)
@@ -21,15 +24,20 @@ type IHandlerSuit interface {
 type ICommandSuit interface {
 	IHandlerSuit
 	GetBuzContext() IBuzzContext
+	SetPromise(p *promise.Promise)
 }
 
 type BaseCommandSuit struct {
 	CommandContext *CommandContext
-	impl    ICommandSuit
+	impl           ICommandSuit
 }
 
 func NewBaseCommandSuit(ctx *CommandContext, impl ICommandSuit) *BaseCommandSuit {
 	return &BaseCommandSuit{CommandContext: ctx, impl: impl}
+}
+
+func (b *BaseCommandSuit) SetPromise(p *promise.Promise) {
+	b.CommandContext.Promise = p
 }
 
 func (b *BaseCommandSuit) Discard() {

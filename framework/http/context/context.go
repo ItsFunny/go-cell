@@ -28,7 +28,7 @@ type HttpBuzContext struct {
 
 func NewHttpBuzContext(commandContext *reactor.CommandContext, ) *HttpBuzContext {
 	ret := &HttpBuzContext{}
-	ret.BaseBuzzContext = reactor.NewBaseBuzzContext(commandContext, reactor.POST_RUN_TYPE_HTTP, ret)
+	ret.BaseBuzzContext = reactor.NewBaseBuzzContext(commandContext, reactor.RunTypeHttp, ret)
 	return ret
 }
 
@@ -36,7 +36,7 @@ func (this *HttpBuzContext) Module() logsdk.Module {
 	return module
 }
 
-//////////////
+// ////////////
 
 type HttpCommandContext struct {
 	*reactor.CommandContext

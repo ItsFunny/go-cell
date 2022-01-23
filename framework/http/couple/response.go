@@ -54,19 +54,14 @@ func (this *HttpServerResponse) OnFireResult() {
 	for k, v := range this.Header {
 		this.Writer.w.Header().Set(k, v)
 	}
-	// TODO
-	// demo
 	render.Write(this.Writer, ret)
 }
 func (this *HttpServerResponse) OnFireError() {
 	_, e := this.Promise.GetForever()
-	this.write(e)
+	render.WriteString(this.Writer, e.Error(), nil)
 }
-func (this *HttpServerResponse) write(ret interface{}) {
+func (this *HttpServerResponse) fillHeader() {
 	for k, v := range this.Header {
 		this.Writer.w.Header().Set(k, v)
 	}
-	// TODO
-	// demo
-	render.Write(this.Writer, ret)
 }

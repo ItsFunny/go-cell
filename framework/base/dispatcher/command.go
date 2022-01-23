@@ -130,6 +130,8 @@ func (b *BaseCommandDispatcher) Dispatch(ctx *context.DispatchContext) {
 		return
 	}
 	suit := b.CreateSuit(req, resp, b.channel, wp)
+	p := promise.NewPromise(b.GetContext())
+	suit.SetPromise(p)
 
 	b.channel.ReadCommand(suit)
 }

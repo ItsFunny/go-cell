@@ -24,6 +24,7 @@ import (
 var (
 	_                IHttpServer = (*HttpServer)(nil)
 	notReady                     = []byte("not ready ")
+	blocked                      = []byte("blocked")
 	HttpServerOption             = fx.Options(
 		di.RegisterServer(NewHttpServer),
 		di.RegisterProxy(proxy.NewHttpFrameWorkProxy),
@@ -38,6 +39,10 @@ type IHttpServer interface {
 type HttpServer struct {
 	*server.BaseServer
 	ready bool
+
+	// TODO filter
+	// TODO,cfg
+	blackList map[string]struct{}
 }
 
 func NewHttpServer(p proxy.IHttpProxy) IHttpServer {
@@ -49,6 +54,9 @@ func NewHttpServer(p proxy.IHttpProxy) IHttpServer {
 func (s *HttpServer) OnStart(c *services.StartCTX) error {
 	// ip := c.GetValueFromMap("ip")
 	// port := c.GetValueFromMap("port")
+	// TODO ,move to filter#filter(request)
+	s.blackList = make(map[string]struct{})
+	s.blackList["/favicon.ico"] = struct{}{}
 	ip := ""
 	port := 8080
 	addr := fmt.Sprintf("%s:%d", ip, port)
@@ -64,5 +72,15 @@ func (s *HttpServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(400)
 		return
 	}
+	if s.filter(req.RequestURI) {
+		s.Logger.Error("black uri:" + req.RequestURI)
+		w.Write(blocked)
+		w.WriteHeader(400)
+		return
+	}
 	s.Serve(couple.NewHttpServerRequest(req), couple.NewHttpServerResponse(s.GetContext(), w))
+}
+func (s *HttpServer) filter(uri string) bool {
+	_, exist := s.blackList[uri]
+	return exist
 }

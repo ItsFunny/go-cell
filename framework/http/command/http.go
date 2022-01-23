@@ -8,8 +8,6 @@
 */
 package command
 
-import "github.com/itsfunny/go-cell/base/reactor"
-
-type HttpCommand struct {
-	*reactor.Command
-}
+// type HttpCommand struct {
+// 	*reactor.Command
+// }

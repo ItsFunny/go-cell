@@ -14,7 +14,6 @@ import (
 	"github.com/itsfunny/go-cell/di"
 	"github.com/itsfunny/go-cell/framework/base/common"
 	"github.com/itsfunny/go-cell/framework/base/dispatcher"
-	"github.com/itsfunny/go-cell/framework/http/command"
 	couple2 "github.com/itsfunny/go-cell/framework/http/couple"
 	"github.com/itsfunny/go-cell/framework/http/summary"
 	"github.com/itsfunny/go-cell/framework/http/util"
@@ -74,6 +73,5 @@ func (b *DefaultHttpDispatcher) CollectSummary(request couple.IServerRequest, wr
 }
 
 func (b *DefaultHttpDispatcher) Supported(cmd reactor.ICommand) bool {
-	_, ok := cmd.(*command.HttpCommand)
-	return ok
+	return cmd.SupportRunType()&reactor.RunTypeHttp >= reactor.RunTypeHttp
 }

@@ -33,7 +33,7 @@ type IBuzzContext interface {
 
 	GetCommandContext() *CommandContext
 
-	PostRunType() PostRunType
+	PostRunType() RunType
 
 	Module() logsdk.Module
 }
@@ -42,20 +42,20 @@ type BaseBuzzContext struct {
 	*context.BaseContext
 	CommandContext *CommandContext
 
-	PostType PostRunType
+	PostType RunType
 
 	impl IBuzzContext
 }
 
 func NewBaseBuzzContext(commandContext *CommandContext,
-	postType PostRunType,
+	postType RunType,
 	impl IBuzzContext) *BaseBuzzContext {
 	ret := &BaseBuzzContext{
 		CommandContext: commandContext,
 		PostType:       postType,
 		impl:           impl,
 	}
-	ret.BaseContext = context.NewBaseContext(commandContext.Ctx, ret)
+	ret.BaseContext = context.NewBaseContext(commandContext.Promise, ret)
 
 	return ret
 }
@@ -64,7 +64,7 @@ func (b *BaseBuzzContext) Module() logsdk.Module {
 	return b.impl.Module()
 }
 
-func (b *BaseBuzzContext) PostRunType() PostRunType {
+func (b *BaseBuzzContext) PostRunType() RunType {
 	return b.PostType
 }
 

@@ -9,7 +9,6 @@
 package context
 
 import (
-	"context"
 	"github.com/itsfunny/go-cell/base/core/promise"
 )
 
@@ -27,8 +26,8 @@ type BaseContext struct {
 	impl    IContext
 }
 
-func NewBaseContext(ctx context.Context, impl IContext,ops ...promise.PromiseOntion) *BaseContext {
-	return &BaseContext{promise: promise.NewPromise(ctx,ops...), impl: impl}
+func NewBaseContext(p *promise.Promise,impl IContext) *BaseContext {
+	return &BaseContext{promise: p,impl: impl}
 }
 
 func (b *BaseContext) Discard() {

@@ -7,7 +7,3 @@
 # @Attention :
 */
 package reactor
-
-const (
-	POST_RUN_TYPE_HTTP PostRunType="http"
-)

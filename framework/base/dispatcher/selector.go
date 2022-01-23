@@ -54,6 +54,6 @@ func (u *UriSelector) Select(req *CommandSelectReq) {
 	uri := httpReq.Request.RequestURI
 	ret := u.commands[reactor.ProtocolIDFromString(uri)]
 	if nil != ret {
-		req.Promise.Send(uri)
+		req.Promise.Send(ret)
 	}
 }
