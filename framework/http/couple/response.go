@@ -35,6 +35,9 @@ func (r *ResponseWriter) Write(p []byte) (n int, err error) {
 func (r *ResponseWriter) WriteContentType(h string, v []string) {
 	writeContentType(r.w, v)
 }
+func (r *ResponseWriter) GetInternalWriter() http.ResponseWriter {
+	return r.w
+}
 
 type HttpServerResponse struct {
 	*couple.BaseServerResponse

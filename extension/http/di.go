@@ -16,13 +16,13 @@ import (
 	"go.uber.org/fx"
 )
 
+func DefaultHttpOptionBuilder() fx.Option {
+	return NewDefaultHttpSuit().BuildOption()
+}
+
 type HttpSuit struct {
 	Selectors      []dispatcher.ICommandSelector
 	CommandHandler []reactor.CommandHandler
-}
-
-func DefaultHttpOptionBuilder() fx.Option {
-	return NewDefaultHttpSuit().BuildOption()
 }
 
 func NewDefaultHttpSuit() *HttpSuit {

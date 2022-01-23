@@ -40,6 +40,10 @@ type HttpServer struct {
 	*server.BaseServer
 	ready bool
 
+	mux *http.ServeMux
+
+	handlers map[string]http.Handler
+
 	// TODO filter
 	// TODO,cfg
 	blackList map[string]struct{}
@@ -52,6 +56,9 @@ func NewHttpServer(p proxy.IHttpProxy) IHttpServer {
 }
 
 func (s *HttpServer) OnStart(c *services.StartCTX) error {
+	for p, h := range s.handlers {
+		s.mux.Handle(p, h)
+	}
 	// ip := c.GetValueFromMap("ip")
 	// port := c.GetValueFromMap("port")
 	// TODO ,move to filter#filter(request)
