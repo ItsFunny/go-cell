@@ -27,13 +27,13 @@ type HttpSuit struct {
 
 func NewDefaultHttpSuit() *HttpSuit {
 	ret := &HttpSuit{}
-	ret.Selectors = append(ret.Selectors, dispatcher.NewUriSelector())
 	return ret
 }
 func (this *HttpSuit) BuildOption() fx.Option {
 	// FIXME
 	ops := make([]fx.Option, 0)
-	ops = append(ops, di.RegisterHttpSelector(dispatcher.NewUriSelector))
+	ops = append(ops, di.RegisterHttpSelector(dispatcher.NewUriSelector),
+		di.RegisterHttpSelector(dispatcher.NewAntPathSelector))
 	ops = append(ops, di.RegisterHttpCommandHandler(func() reactor.CommandHandler {
 		return reactor.CommandFinalExecute
 	}))

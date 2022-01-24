@@ -55,7 +55,7 @@ func NewBaseBuzzContext(commandContext *CommandContext,
 		PostType:       postType,
 		impl:           impl,
 	}
-	ret.BaseContext = context.NewBaseContext(commandContext.Promise, ret)
+	ret.BaseContext = context.NewBaseContext(ret)
 
 	return ret
 }
@@ -116,6 +116,16 @@ func (b *BaseBuzzContext) With(fileds map[string]interface{}) logsdk.Logger {
 func (b *BaseBuzzContext) GetCommandContext() *CommandContext {
 	return b.CommandContext
 }
+func (b *BaseBuzzContext) UnsafeNotifyDone() {
+	b.CommandContext.ServerResponse.GetPromise().EmptyDone()
+}
+func (b *BaseBuzzContext) Discard() {
+	panic("not supported")
+}
+func (b *BaseBuzzContext) Done() bool {
+	return b.CommandContext.ServerResponse.GetPromise().IsDone()
+}
+
 
 func (b *BaseBuzzContext) Response(wrapper *ContextResponseWrapper) {
 	now := time.Now().Unix()
@@ -151,7 +161,7 @@ func (b *BaseBuzzContext) Response(wrapper *ContextResponseWrapper) {
 		logrusplugin.MWarn(b.impl.Module(), "超时:xxx")
 	}
 
-	resp.FireResult(wrapper)
+	resp.FireResult(wrapper.Ret)
 }
 
 func FireResultWithSuccessOrFail(succ, fail FireResult) FireResult {

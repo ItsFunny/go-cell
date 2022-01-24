@@ -8,13 +8,10 @@
 */
 package context
 
-import (
-	"github.com/itsfunny/go-cell/base/core/promise"
-)
-
 type IContext interface {
 	Discard()
 	Done() bool
+	UnsafeNotifyDone()
 }
 
 var (
@@ -22,18 +19,19 @@ var (
 )
 
 type BaseContext struct {
-	promise *promise.Promise
 	impl    IContext
 }
-
-func NewBaseContext(p *promise.Promise,impl IContext) *BaseContext {
-	return &BaseContext{promise: p,impl: impl}
+func NewBaseContext( impl IContext) *BaseContext {
+	return &BaseContext{ impl: impl}
 }
 
+func (b *BaseContext) UnsafeNotifyDone() {
+	b.impl.UnsafeNotifyDone()
+}
 func (b *BaseContext) Discard() {
 	b.impl.Discard()
 }
 
 func (b *BaseContext) Done() bool {
-	return b.promise.IsDone()
+	return b.impl.Done()
 }

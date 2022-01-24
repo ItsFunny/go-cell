@@ -26,6 +26,9 @@ type IServerResponse interface {
 	OnFireResult()
 	FireError(e error)
 	OnFireError()
+
+	GetPromise() *promise.Promise
+	SetPromise(p *promise.Promise)
 }
 
 var (
@@ -46,6 +49,12 @@ func NewBaseServerResponse(ctx context.Context, impl IServerResponse, ops ...pro
 	}
 	ret.impl = impl
 	return ret
+}
+func (this *BaseServerResponse) GetPromise() *promise.Promise {
+	return this.Promise
+}
+func (this *BaseServerResponse) SetPromise(p *promise.Promise) {
+	this.Promise = p
 }
 func (this *BaseServerResponse) SetOrExpired() bool {
 	return this.Promise.IsDone() || this.Promise.IsTimeOut()

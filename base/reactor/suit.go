@@ -32,12 +32,17 @@ type BaseCommandSuit struct {
 	impl           ICommandSuit
 }
 
+// FIXME ,有点乱
+func (b *BaseCommandSuit) UnsafeNotifyDone() {
+	b.CommandContext.ServerResponse.GetPromise().EmptyDone()
+}
+
 func NewBaseCommandSuit(ctx *CommandContext, impl ICommandSuit) *BaseCommandSuit {
 	return &BaseCommandSuit{CommandContext: ctx, impl: impl}
 }
 
 func (b *BaseCommandSuit) SetPromise(p *promise.Promise) {
-	b.CommandContext.Promise = p
+	b.CommandContext.ServerResponse.SetPromise(p)
 }
 
 func (b *BaseCommandSuit) Discard() {

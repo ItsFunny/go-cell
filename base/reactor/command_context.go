@@ -9,12 +9,11 @@
 package reactor
 
 import (
-	"github.com/itsfunny/go-cell/base/core/promise"
 	"github.com/itsfunny/go-cell/base/couple"
 )
 
 type CommandContext struct {
-	Promise *promise.Promise
+	// Promise *promise.Promise
 	ServerRequest  couple.IServerRequest
 	ServerResponse couple.IServerResponse
 	// SessionKey     string

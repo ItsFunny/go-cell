@@ -17,6 +17,7 @@ var (
 	SwaggerModule di.OptionBuilder = func() fx.Option {
 		return fx.Options(
 			di.RegisterExtension(newSwaggerExtension),
+			di.RegisterCommand(cmd),
 		)
 	}
 )

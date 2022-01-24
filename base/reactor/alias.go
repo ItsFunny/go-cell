@@ -18,3 +18,7 @@ type ProtocolID string
 func ProtocolIDFromString(str string) ProtocolID {
 	return ProtocolID(str)
 }
+
+func(this ProtocolID)String()string{
+	return string(this)
+}

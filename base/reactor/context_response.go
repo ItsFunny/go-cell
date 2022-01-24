@@ -18,6 +18,10 @@ type ContextResponseWrapper struct {
 
 	Other interface{}
 }
+func NewContextResponseWrapper(c ICommand)*ContextResponseWrapper{
+	ret:=&ContextResponseWrapper{Cmd: c}
+	return ret
+}
 
 func (c *ContextResponseWrapper) WithStatus(status int) *ContextResponseWrapper {
 	c.Status = status
@@ -25,5 +29,9 @@ func (c *ContextResponseWrapper) WithStatus(status int) *ContextResponseWrapper 
 }
 func (c *ContextResponseWrapper) WithError(err error) *ContextResponseWrapper {
 	c.Error=err
+	return c
+}
+func (c *ContextResponseWrapper) WithRet(ret interface{}) *ContextResponseWrapper {
+	c.Ret=ret
 	return c
 }

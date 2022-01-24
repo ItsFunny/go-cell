@@ -9,10 +9,12 @@
 package dispatcher
 
 import (
+	"github.com/itsfunny/go-cell/base/common/utils"
 	"github.com/itsfunny/go-cell/base/core/promise"
 	"github.com/itsfunny/go-cell/base/couple"
 	"github.com/itsfunny/go-cell/base/reactor"
 	couple2 "github.com/itsfunny/go-cell/framework/http/couple"
+	"path/filepath"
 )
 
 type ICommandSelector interface {
@@ -32,6 +34,7 @@ type CommandAddReq struct {
 
 var (
 	_ ICommandSelector = (*UriSelector)(nil)
+	_ ICommandSelector = (*antPathSelector)(nil)
 )
 
 type UriSelector struct {
@@ -55,5 +58,38 @@ func (u *UriSelector) Select(req *CommandSelectReq) {
 	ret := u.commands[reactor.ProtocolIDFromString(uri)]
 	if nil != ret {
 		req.Promise.Send(ret)
+	}
+}
+
+// ///
+
+type antPathSelector struct {
+	wrappers map[string]*CommandWrapper
+}
+
+func NewAntPathSelector() ICommandSelector {
+	ret := &antPathSelector{
+		wrappers: make(map[string]*CommandWrapper),
+	}
+	return ret
+}
+func (a *antPathSelector) Select(req *CommandSelectReq) {
+	httpReq := req.Request.(*couple2.HttpServerRequest)
+	uri := httpReq.Request.RequestURI
+	for path, v := range a.wrappers {
+		ok, err := filepath.Match(path, uri)
+		if !ok || err != nil {
+			continue
+		}
+		if ok {
+			req.Promise.Send(v)
+		}
+	}
+}
+
+func (a *antPathSelector) OnRegisterCommand(wrapper *CommandWrapper) {
+	id := wrapper.Command.ID()
+	if utils.IsPattern(id.String()) {
+		a.wrappers[id.String()] = wrapper
 	}
 }

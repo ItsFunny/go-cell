@@ -18,10 +18,19 @@ import (
 var (
 	_ couple.IServerResponse = (*HttpServerResponse)(nil)
 	_ render.RenderWriter    = (*ResponseWriter)(nil)
+	_ http.ResponseWriter    = (*ResponseWriter)(nil)
 )
 
 type ResponseWriter struct {
 	w http.ResponseWriter
+}
+
+func (r *ResponseWriter) Header() http.Header {
+	return r.w.Header()
+}
+
+func (r *ResponseWriter) WriteHeader(statusCode int) {
+	r.w.WriteHeader(statusCode)
 }
 
 func NewResponseWriter(w http.ResponseWriter) *ResponseWriter {

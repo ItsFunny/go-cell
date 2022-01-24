@@ -58,11 +58,14 @@ func (c *Command) SupportRunType() RunType {
 	return c.RunType
 }
 func (c *Command) Execute(ctx IBuzzContext) {
-	if err := c.PreRun(ctx); nil != err {
-		ctx.Response(c.CreateResponseWrapper().
-			WithStatus(common.FAIL).WithError(err))
-		return
+	if c.PreRun!=nil{
+		if err := c.PreRun(ctx); nil != err {
+			ctx.Response(c.CreateResponseWrapper().
+				WithStatus(common.FAIL).WithError(err))
+			return
+		}
 	}
+
 	async := c.property.Async
 	if async {
 		panic("not supported yet")

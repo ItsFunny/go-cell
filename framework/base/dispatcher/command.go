@@ -73,10 +73,11 @@ func NewBaseCommandDispatcher(m logsdk.Module, impl ICommandDispatcher, selector
 	ret.Commands = make(map[reactor.ProtocolID]*CommandWrapper)
 	eng := pipeline.New()
 	onCmdAddP := pipeline.NewSingleEngine()
-	for _, sel := range selectors {
+	for i := 0; i < len(selectors); i++ {
+		s:=selectors[i]
 		eng.RegisterFunc(reflect.TypeOf(&CommandSelectReq{}), func(ctx *pipeline.Context) {
 			req := ctx.Request.(*CommandSelectReq)
-			sel.Select(req)
+			s.Select(req)
 			if req.Promise.IsDone() {
 				ctx.Abort()
 			} else {
@@ -85,7 +86,7 @@ func NewBaseCommandDispatcher(m logsdk.Module, impl ICommandDispatcher, selector
 		})
 		onCmdAddP.RegisterFunc(nil, func(ctx *pipeline.Context) {
 			req := ctx.Request.(*CommandWrapper)
-			sel.OnRegisterCommand(req)
+			s.OnRegisterCommand(req)
 		})
 	}
 	eng.RegisterFunc(reflect.TypeOf(&CommandSelectReq{}), func(ctx *pipeline.Context) {

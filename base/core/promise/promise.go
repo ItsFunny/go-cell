@@ -52,6 +52,11 @@ func (np *Promise) Fail(err error) {
 	close(np.done)
 }
 
+func (np *Promise) EmptyDone() {
+	np.flag = done
+	close(np.done)
+}
+
 func (np *Promise) Send(nd interface{}) {
 	if np.err != nil || np.value != nil {
 		panic("already filled")
