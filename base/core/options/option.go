@@ -43,6 +43,9 @@ type Option interface {
 	Default() interface{}
 
 	Parse(str string) (interface{}, error)
+
+	Required() bool
+	WithRequired(b bool)Option
 }
 
 type OptionWrapper struct {
@@ -55,6 +58,16 @@ type option struct {
 	kind        reflect.Kind
 	description string
 	defaultVal  interface{}
+	required    bool
+}
+
+func (o *option) WithRequired(b bool) Option{
+	o.required=b
+	return o
+}
+
+func (o *option) Required() bool {
+	return o.required
 }
 
 func (o *option) Name() string {

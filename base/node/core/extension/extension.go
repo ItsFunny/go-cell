@@ -58,6 +58,14 @@ func (b *BaseExtension) OnExtensionInit(ctx INodeContext) error {
 	return nil
 }
 
+func (b *BaseExtension) ExtensionStart(ctx INodeContext) error {
+	return b.impl.OnExtensionStart(ctx)
+}
+
+func (b *BaseExtension) OnExtensionStart(ctx INodeContext) error {
+	return nil
+}
+
 func (b *BaseExtension) ExtensionReady(ctx INodeContext) error {
 	return b.impl.OnExtensionReady(ctx)
 }
@@ -66,13 +74,6 @@ func (b *BaseExtension) OnExtensionReady(ctx INodeContext) error {
 	return nil
 }
 
-func (b *BaseExtension) ExtensionStart(ctx INodeContext) error {
-	return b.impl.OnExtensionStart(ctx)
-}
-
-func (b *BaseExtension) OnExtensionStart(ctx INodeContext) error {
-	return nil
-}
 
 func (b *BaseExtension) ExtensionClose(ctx INodeContext) error {
 	return b.impl.OnExtensionClose(ctx)

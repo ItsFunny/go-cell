@@ -22,6 +22,17 @@ func newSwaggerExtension() extension.INodeExtension {
 	return ret
 }
 
+func (b *swaggerExtension) OnExtensionInit(ctx extension.INodeContext) error {
+	// cmds := ctx.GetCommands()
+	// for _, cmd := range cmds {
+	//
+	// }
+	// p:=swag.New()
+	// op:=swag.NewOperation(p)
+	// spec.QueryParam()
+	// op.AddParam()
+	return nil
+}
 func (b *swaggerExtension) OnExtensionReady(ctx extension.INodeContext) error {
 	return nil
 }
