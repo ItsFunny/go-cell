@@ -36,6 +36,8 @@ type IBuzzContext interface {
 	PostRunType() RunType
 
 	Module() logsdk.Module
+
+	CreateResponseWrapper() *ContextResponseWrapper
 }
 
 type BaseBuzzContext struct {
@@ -126,7 +128,10 @@ func (b *BaseBuzzContext) Done() bool {
 	return b.CommandContext.ServerResponse.GetPromise().IsDone()
 }
 
-
+// FIXME
+func (b *BaseBuzzContext) CreateResponseWrapper() *ContextResponseWrapper {
+	return NewContextResponseWrapper(b.CommandContext.Command)
+}
 func (b *BaseBuzzContext) Response(wrapper *ContextResponseWrapper) {
 	now := time.Now().Unix()
 	beginTime := b.CommandContext.Summary.GetReceiveTimeStamp()

@@ -14,7 +14,6 @@ import (
 	"github.com/itsfunny/go-cell/base/common"
 	"github.com/itsfunny/go-cell/base/core/options"
 	"github.com/itsfunny/go-cell/base/serialize"
-	"github.com/swaggo/swag"
 )
 
 var (
@@ -44,6 +43,7 @@ type ICommand interface {
 	ID() ProtocolID
 	Execute(ctx IBuzzContext)
 	SupportRunType() RunType
+	ToSwaggerPath() *PathItemWrapper
 }
 
 type ICommandSerialize interface {
@@ -167,15 +167,26 @@ type SwaggerNode struct {
 	Detail string
 }
 
-func (c *Command) ToSwagger() SwaggerNode {
-	ret := SwaggerNode{}
-	p := swag.New()
-	op := swag.NewOperation(p)
+type PathItemWrapper struct {
+	ID   string
+	PathItem spec.PathItem
+}
+
+func (c *Command) ToSwaggerPath() *PathItemWrapper {
+	ret := &PathItemWrapper{}
+	// map[string]PathItem
+	item := spec.PathItem{}
+
+	// p := swag.New()
+	// ops := swag.NewOperation(p)
+	op := spec.NewOperation(c.ID().String())
 	op.Description = c.MetaData.Description
 	op.Produces = c.MetaData.Produces
 	op.Tags = c.MetaData.Tags
 	op.Summary = c.MetaData.Summary
-
+	//
+	// op:=spec.NewOperation(c.ID().String())
+	// op.
 	for _, opt := range c.Options {
 		name := opt.Name()
 		param := spec.QueryParam(name)
@@ -184,20 +195,24 @@ func (c *Command) ToSwagger() SwaggerNode {
 		param.Required = opt.Required()
 		op.AddParam(param)
 	}
-
+	op.Responses = &spec.Responses{
+		ResponsesProps: spec.ResponsesProps{
+			StatusCodeResponses: map[int]spec.Response{},
+		},
+	}
 	for k, v := range c.MetaData.Response {
 		resp := spec.NewResponse()
 		resp.ResponseProps = v
-		op.AddResponse(k, resp)
+		op.Responses.ResponsesProps.StatusCodeResponses[k] = *resp
 	}
 
-	ret.Path = c.ID().String()
-	ret.Method = getRunTypeDesc(c.RunType)
-	bs, err := op.MarshalJSON()
-	if nil != err {
-		panic(err)
+	if c.RunType == RunTypeHttpPost {
+		item.Post = op
+	} else {
+		item.Get = op
 	}
-	ret.Detail = string(bs)
+	ret.ID = c.ID().String()
+	ret.PathItem = item
 	return ret
 }
 

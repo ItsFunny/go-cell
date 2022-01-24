@@ -49,6 +49,6 @@ var dummyCommand = &Command{
 }
 
 func TestCommand_ToSwagger(t *testing.T) {
-	node := dummyCommand.ToSwagger()
+	node := dummyCommand.ToSwaggerPath()
 	fmt.Println(node)
 }

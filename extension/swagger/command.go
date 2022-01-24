@@ -9,6 +9,7 @@
 package swagger
 
 import (
+	"errors"
 	"github.com/itsfunny/go-cell/base/reactor"
 	"github.com/itsfunny/go-cell/framework/http/couple"
 	swaggerFiles "github.com/swaggo/files"
@@ -21,12 +22,23 @@ import (
 	"sync"
 )
 
-var cmd = &reactor.Command{
-	ProtocolID: "/swagger/*",
-	PreRun:     nil,
-	PostRun:    nil,
-	RunType:    reactor.RunTypeHttp,
-	Options:    nil,
+type swaggerCommand struct {
+	*reactor.Command
+
+	ready   bool
+	docJson string
+}
+
+var swgCmd = &swaggerCommand{
+	Command: &reactor.Command{
+		ProtocolID: "/swagger/*",
+		PreRun:     nil,
+		PostRun:    nil,
+		RunType:    reactor.RunTypeHttp,
+		Options:    nil,
+	},
+	ready:   false,
+	docJson: "",
 }
 
 func init() {
@@ -38,7 +50,7 @@ func init() {
 		InstanceName:             swag.Name,
 		Title:                    "Swagger UI",
 	}
-	cmd.Run = wrapCellCommand(cmd, defaultConfig, swaggerFiles.Handler)
+	swgCmd.Run = wrapCellCommand(swgCmd, defaultConfig, swaggerFiles.Handler)
 }
 
 const swagger_index_templ = `<!-- HTML for static distribution bundle build -->
@@ -141,7 +153,7 @@ window.onload = function() {
 </html>
 `
 
-func wrapCellCommand(cmd reactor.ICommand, config *Config, handler *webdav.Handler) reactor.Function {
+func wrapCellCommand(cmd *swaggerCommand, config *Config, handler *webdav.Handler) reactor.Function {
 	var once sync.Once
 	// create a template with name
 	t := template.New("swagger_index.html")
@@ -179,14 +191,19 @@ func wrapCellCommand(cmd reactor.ICommand, config *Config, handler *webdav.Handl
 			_ = index.Execute(resp.Writer, config.ToSwaggerConfig())
 			ctx.UnsafeNotifyDone()
 		case "doc.json":
-			doc, err := swag.ReadDoc(config.InstanceName)
-			if err != nil {
-				ctx.Response(reactor.NewContextResponseWrapper(cmd).
-					WithStatus(http.StatusInternalServerError).
-					WithError(err))
-				return err
+			if !cmd.ready {
+				ctx.Response(ctx.CreateResponseWrapper().WithError(errors.New("not ready")))
+				return nil
 			}
-			ctx.Response(reactor.NewContextResponseWrapper(cmd).WithRet([]byte(doc)))
+			ctx.Response(reactor.NewContextResponseWrapper(cmd).WithRet([]byte(cmd.docJson)))
+			// doc, err := swag.ReadDoc(config.InstanceName)
+			// if err != nil {
+			// 	ctx.Response(reactor.NewContextResponseWrapper(cmd).
+			// 		WithStatus(http.StatusInternalServerError).
+			// 		WithError(err))
+			// 	return err
+			// }
+			// ctx.Response(reactor.NewContextResponseWrapper(cmd).WithRet([]byte(doc)))
 		default:
 			handler.ServeHTTP(resp.Writer, req.Request)
 			ctx.UnsafeNotifyDone()

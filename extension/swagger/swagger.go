@@ -9,7 +9,9 @@
 package swagger
 
 import (
+	"fmt"
 	"github.com/itsfunny/go-cell/base/node/core/extension"
+	"github.com/swaggo/swag"
 )
 
 type swaggerExtension struct {
@@ -23,10 +25,23 @@ func newSwaggerExtension() extension.INodeExtension {
 }
 
 func (b *swaggerExtension) OnExtensionInit(ctx extension.INodeContext) error {
-	// cmds := ctx.GetCommands()
-	// for _, cmd := range cmds {
-	//
-	// }
+	cmds := ctx.GetCommands()
+	p := swag.New()
+	sg := p.GetSwagger()
+	for _, cmd := range cmds {
+		if cmd == swgCmd {
+			continue
+		}
+		wrapper := cmd.ToSwaggerPath()
+		sg.Paths.Paths[wrapper.ID] = wrapper.PathItem
+	}
+	ret, err := sg.MarshalJSON()
+	if nil != err {
+		return err
+	}
+	fmt.Println(string(ret))
+	swgCmd.docJson = string(ret)
+	swgCmd.ready = true
 	// p:=swag.New()
 	// op:=swag.NewOperation(p)
 	// spec.QueryParam()
