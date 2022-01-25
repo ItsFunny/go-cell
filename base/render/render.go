@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	_ Render = (*Data)(nil)
+	_ Render = (*RenderData)(nil)
 	_ Render = (*RenderString)(nil)
 	_ Render = (*JSON)(nil)
 )

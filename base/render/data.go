@@ -9,15 +9,13 @@
 package render
 
 // Data contains ContentType and bytes data.
-type Data struct {
-	ContentType string
+type RenderData struct {
 	Data        []byte
 }
 
-func (d *Data) Render(writer RenderWriter) error {
-	panic("implement me")
+func (r RenderData) Render(writer RenderWriter) (err error) {
+	_, err = writer.Write(r.Data)
+	return
 }
-
-func (d *Data) WriteContentType(writer RenderWriter) {
-	panic("implement me")
+func (r RenderData) WriteContentType(w RenderWriter) {
 }

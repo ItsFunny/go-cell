@@ -26,7 +26,6 @@ type IServerResponse interface {
 	OnFireResult()
 	FireError(e error)
 	OnFireError()
-
 	GetPromise() *promise.Promise
 	SetPromise(p *promise.Promise)
 }

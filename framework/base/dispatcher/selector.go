@@ -54,7 +54,7 @@ func (u *UriSelector) OnRegisterCommand(wrapper *CommandWrapper) {
 
 func (u *UriSelector) Select(req *CommandSelectReq) {
 	httpReq := req.Request.(*couple2.HttpServerRequest)
-	uri := httpReq.Request.RequestURI
+	uri := httpReq.Request.URL.Path
 	ret := u.commands[reactor.ProtocolIDFromString(uri)]
 	if nil != ret {
 		req.Promise.Send(ret)
@@ -75,7 +75,7 @@ func NewAntPathSelector() ICommandSelector {
 }
 func (a *antPathSelector) Select(req *CommandSelectReq) {
 	httpReq := req.Request.(*couple2.HttpServerRequest)
-	uri := httpReq.Request.RequestURI
+	uri := httpReq.Request.URL.Path
 	for path, v := range a.wrappers {
 		ok, err := filepath.Match(path, uri)
 		if !ok || err != nil {
