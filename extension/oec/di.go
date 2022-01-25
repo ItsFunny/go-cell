@@ -10,9 +10,7 @@ import (
 
 var (
 	OecModule di.OptionBuilder = func() fx.Option {
-		return fx.Options(di.RegisterExtension(
-			newOecExtension,
-		),
+		return fx.Options(di.RegisterExtension(newOecExtension),
 			fx.Provide(contract.NewContractServiceImpl),
 			commands.OecCommands,
 		)

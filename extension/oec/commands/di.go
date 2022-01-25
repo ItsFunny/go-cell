@@ -10,5 +10,6 @@ var (
 		newTransferCommand,
 		newBalanceCommand,
 		newImportAccountCommand,
+		newBenchCommand,
 	)
 )
