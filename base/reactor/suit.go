@@ -11,6 +11,7 @@ package reactor
 import (
 	"github.com/itsfunny/go-cell/base/context"
 	"github.com/itsfunny/go-cell/base/core/promise"
+	"github.com/itsfunny/go-cell/base/couple"
 )
 
 var (
@@ -25,6 +26,7 @@ type ICommandSuit interface {
 	IHandlerSuit
 	GetBuzContext() IBuzzContext
 	SetPromise(p *promise.Promise)
+	FillArguments() error
 }
 
 type BaseCommandSuit struct {
@@ -55,4 +57,15 @@ func (b *BaseCommandSuit) Done() bool {
 
 func (b *BaseCommandSuit) GetBuzContext() IBuzzContext {
 	return b.impl.GetBuzContext()
+}
+
+func (b *BaseCommandSuit) FillArguments() error {
+	ops := b.CommandContext.Command.GetOptions()
+	req := b.CommandContext.ServerRequest
+	optM, err := couple.CheckAndConvertOptions(req, ops)
+	if nil != err {
+		return err
+	}
+	b.CommandContext.Options = optM
+	return nil
 }

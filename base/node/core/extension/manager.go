@@ -109,7 +109,9 @@ func (m *NodeExtensionManager) onInit(v ApplicationInitEvent) {
 		}
 		if err := ex.ExtensionInit(m.Ctx); nil != err {
 			if ex.IsRequired() {
-				m.onClose(err)
+				panic(err)
+				// TODO
+				//m.onClose(err)
 			} else {
 				m.addExcludeExtension(ex)
 			}

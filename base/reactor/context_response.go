@@ -13,6 +13,7 @@ type ContextResponseWrapper struct {
 	Msg     string
 	Error   error
 	Cmd     ICommand
+
 	Ret     interface{}
 	Headers map[string]string
 

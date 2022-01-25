@@ -74,7 +74,7 @@ func NewBaseCommandDispatcher(m logsdk.Module, impl ICommandDispatcher, selector
 	eng := pipeline.New()
 	onCmdAddP := pipeline.NewSingleEngine()
 	for i := 0; i < len(selectors); i++ {
-		s:=selectors[i]
+		s := selectors[i]
 		eng.RegisterFunc(reflect.TypeOf(&CommandSelectReq{}), func(ctx *pipeline.Context) {
 			req := ctx.Request.(*CommandSelectReq)
 			s.Select(req)
@@ -131,6 +131,12 @@ func (b *BaseCommandDispatcher) Dispatch(ctx *context.DispatchContext) {
 		return
 	}
 	suit := b.CreateSuit(req, resp, b.channel, wp)
+	if err := suit.FillArguments(); nil != err {
+		b.Logger.Error("参数校验失败:%s", "err", err)
+		b.failFast(resp, b.defaultFailStatus)
+		return
+	}
+
 	p := promise.NewPromise(b.GetContext())
 	suit.SetPromise(p)
 

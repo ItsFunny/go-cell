@@ -68,7 +68,13 @@ func (s *HttpServer) OnStart(c *services.StartCTX) error {
 	port := 8080
 	addr := fmt.Sprintf("%s:%d", ip, port)
 	s.Logger.Info("http start up ", "addr", addr)
-	go http.ListenAndServe(addr, s)
+	// FIXME
+	go func() {
+		err := http.ListenAndServe(addr, s)
+		if nil != err {
+			s.Logger.Error("启动http server 失败", "err", err)
+		}
+	}()
 	s.ready = true
 	return nil
 }

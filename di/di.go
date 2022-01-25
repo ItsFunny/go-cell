@@ -53,6 +53,19 @@ func RegisterDispatcher(constructor interface{}) fx.Option {
 	// })
 	return fx.Provide(constructor)
 }
+
+func RegisterCommandConstructor(constructor ...interface{}) fx.Option {
+	ops := make([]fx.Option, 0)
+	for _, con := range constructor {
+		ops = append(ops, fx.Provide(
+			fx.Annotated{
+				Group:  FxCommand,
+				Target: con,
+			},
+		))
+	}
+	return fx.Options(ops...)
+}
 func RegisterCommand(cmd reactor.ICommand) fx.Option {
 	return fx.Provide(fx.Annotated{
 		Group: FxCommand,

@@ -32,6 +32,8 @@ func Write(w RenderWriter, data interface{}) error {
 	switch v := data.(type) {
 	case string:
 		r = RenderString{Data: v}
+	case []byte:
+		r = RenderData{Data: v}
 	default:
 		r = &JSON{Data: data}
 	}

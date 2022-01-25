@@ -9,6 +9,7 @@
 package reactor
 
 import (
+	"github.com/itsfunny/go-cell/base/core/options"
 	"github.com/itsfunny/go-cell/base/couple"
 )
 
@@ -19,10 +20,9 @@ type CommandContext struct {
 	// SessionKey     string
 	Summary  ISummary
 	IChannel IChannel
-	Command ICommand
+	Command  ICommand
+	Options  options.OptMap
 }
 
-
 type CommandContextFactory interface {
-
 }

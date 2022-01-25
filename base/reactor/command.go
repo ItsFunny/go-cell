@@ -9,7 +9,6 @@
 package reactor
 
 import (
-	"errors"
 	"github.com/go-openapi/spec"
 	"github.com/itsfunny/go-cell/base/common"
 	"github.com/itsfunny/go-cell/base/core/options"
@@ -44,6 +43,7 @@ type ICommand interface {
 	Execute(ctx IBuzzContext)
 	SupportRunType() RunType
 	ToSwaggerPath() *PathItemWrapper
+	GetOptions() []options.Option
 }
 
 type ICommandSerialize interface {
@@ -74,6 +74,9 @@ func (c *Command) ID() ProtocolID {
 func (c *Command) SupportRunType() RunType {
 	return c.RunType
 }
+func (c *Command) GetOptions() []options.Option {
+	return c.Options
+}
 func (c *Command) Execute(ctx IBuzzContext) {
 	if c.PreRun != nil {
 		if err := c.PreRun(ctx); nil != err {
@@ -94,7 +97,7 @@ func (c *Command) Execute(ctx IBuzzContext) {
 func (c *Command) fire(ctx IBuzzContext) {
 	defer func() {
 		if !ctx.Done() {
-			ctx.Response(c.CreateResponseWrapper().WithError(errors.New("missing ret")))
+			ctx.Response(ctx.CreateResponseWrapper().WithRet(nil))
 		}
 	}()
 	req, err := c.newInstance(ctx)
@@ -168,7 +171,7 @@ type SwaggerNode struct {
 }
 
 type PathItemWrapper struct {
-	ID   string
+	ID       string
 	PathItem spec.PathItem
 }
 
