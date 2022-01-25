@@ -16,6 +16,10 @@ import (
 	"go.uber.org/fx"
 )
 
+var (
+	HttpModule = DefaultHttpOptionBuilder
+)
+
 func DefaultHttpOptionBuilder() fx.Option {
 	return NewDefaultHttpSuit().BuildOption()
 }

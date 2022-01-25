@@ -14,9 +14,12 @@ import (
 )
 
 var (
-	_ couple.IServerRequest = (*HttpServerRequest)(nil)
+	_ IHttpServerRequest = (*HttpServerRequest)(nil)
 )
 
+type IHttpServerRequest interface {
+	couple.IServerRequest
+}
 type HttpServerRequest struct {
 	Request *http.Request
 }
@@ -24,7 +27,6 @@ type HttpServerRequest struct {
 func NewHttpServerRequest(request *http.Request) *HttpServerRequest {
 	return &HttpServerRequest{Request: request}
 }
-
 
 func (h *HttpServerRequest) ContentLength() int64 {
 	return h.Request.ContentLength
@@ -34,3 +36,6 @@ func (h *HttpServerRequest) GetHeader(name string) string {
 	return h.Request.Header.Get(name)
 }
 
+func (h *HttpServerRequest) GetParameter(key string) string {
+	return h.Request.URL.Query().Get(key)
+}

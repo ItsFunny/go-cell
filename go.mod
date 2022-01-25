@@ -3,6 +3,11 @@ module github.com/itsfunny/go-cell
 go 1.16
 
 require (
+	github.com/cosmos/cosmos-sdk v0.39.2
+	github.com/ethereum/go-ethereum v1.10.8
+	github.com/okex/exchain-ethereum-compatible v1.1.1-0.20220106042715-f20163fbb4af
+)
+require (
 	github.com/Kubuxu/go-os-helper v0.0.1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/go-chi/chi v1.5.4 // indirect

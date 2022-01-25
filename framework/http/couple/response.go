@@ -63,6 +63,9 @@ func NewHttpServerResponse(ctx context.Context, writer http.ResponseWriter) *Htt
 
 func (this *HttpServerResponse) OnFireResult() {
 	ret, _ := this.Promise.GetForever()
+	if nil==ret{
+		return
+	}
 	for k, v := range this.Header {
 		this.Writer.w.Header().Set(k, v)
 	}

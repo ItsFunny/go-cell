@@ -16,6 +16,7 @@ import (
 type IServerRequest interface {
 	ContentLength() int64
 	GetHeader(name string) string
+	GetParameter(key string) string
 }
 type IServerResponse interface {
 	SetOrExpired() bool
