@@ -39,7 +39,7 @@ func main() {
 	app := application.New(context.Background(),
 		demo.DemoExtensionModule,
 		demo.Demo2ExtensionModule,
-		http.DefaultHttpOptionBuilder,
+		http.HttpModule,
 		di.CommandOptionBuilder(demoCmd1))
 	app.Run(os.Args)
 }

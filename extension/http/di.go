@@ -17,10 +17,10 @@ import (
 )
 
 var (
-	HttpModule = DefaultHttpOptionBuilder
+	HttpModule = defaultHttpOptionBuilder
 )
 
-func DefaultHttpOptionBuilder() fx.Option {
+func defaultHttpOptionBuilder() fx.Option {
 	return NewDefaultHttpSuit().BuildOption()
 }
 
