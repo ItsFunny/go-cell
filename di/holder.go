@@ -24,10 +24,7 @@ type HttpCommandConstructorHolder struct {
 
 type ReactorHolder struct {
 	fx.In
-	// Servers     []server.IServer                `group:"server"`
-	// Proxies     []proxy.IFrameworkProxy         `group:"proxy"`
-	// Dispatchers []dispatcher.ICommandDispatcher `group:"dispatcher"`
-	Commands    []reactor.ICommand              `group:"command"`
+	Commands []reactor.ICommand `group:"command"`
 }
 
 type DispatcherHolder struct {

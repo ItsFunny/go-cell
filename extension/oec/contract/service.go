@@ -14,6 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/itsfunny/go-cell/base/core/services"
+	"github.com/itsfunny/go-cell/component/listener"
 	"github.com/itsfunny/go-cell/extension/oec/config"
 	error2 "github.com/itsfunny/go-cell/extension/oec/error"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
@@ -51,12 +52,15 @@ type ContractServiceImpl struct {
 	accounts map[string]*Account
 
 	cfg *config.OECConfig
+
+	listener listener.IListenerComponent
 }
 
-func NewContractServiceImpl() IContractService {
+func NewContractServiceImpl(l listener.IListenerComponent) IContractService {
 	ret := &ContractServiceImpl{}
 	ret.BaseService = services.NewBaseService(nil, logsdk.NewModule("contract", 1), ret)
 	ret.accounts = make(map[string]*Account)
+	ret.listener=l
 
 	return ret
 }

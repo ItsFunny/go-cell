@@ -21,6 +21,7 @@ const (
 	FxCommand            = "command"
 	FxSelectorGroup      = "httpSelector"
 	FxHttpCommandHandler = "httpCommandHandler"
+	FxComponent          = "component"
 )
 
 type OptionBuilder func() fx.Option
@@ -30,6 +31,19 @@ func RegisterExtension(constructor interface{}) fx.Option {
 		Group:  FxExtension,
 		Target: constructor,
 	})
+}
+
+func RegisterComponent(constructor ...interface{}) fx.Option {
+	ops := make([]fx.Option, 0)
+	for _, con := range constructor {
+		ops = append(ops, fx.Provide(
+			fx.Annotated{
+				Group:  FxComponent,
+				Target: con,
+			},
+		))
+	}
+	return fx.Options(ops...)
 }
 
 func RegisterServer(constructor interface{}) fx.Option {
