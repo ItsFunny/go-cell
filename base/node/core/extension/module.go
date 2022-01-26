@@ -27,7 +27,7 @@ var (
 		fx.Provide(NewExtensionManager),
 		reactorModule,
 		extensionModule,
-		// internalModule,
+		internalModule,
 	)
 	extensionModule = fx.Options(
 		fx.Invoke(start),

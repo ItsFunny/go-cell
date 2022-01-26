@@ -34,16 +34,17 @@ func RegisterExtension(constructor interface{}) fx.Option {
 }
 
 func RegisterComponent(constructor ...interface{}) fx.Option {
-	ops := make([]fx.Option, 0)
-	for _, con := range constructor {
-		ops = append(ops, fx.Provide(
-			fx.Annotated{
-				Group:  FxComponent,
-				Target: con,
-			},
-		))
-	}
-	return fx.Options(ops...)
+	//ops := make([]fx.Option, 0)
+	//for _, con := range constructor {
+	//	ops = append(ops, fx.Provide(
+	//		fx.Annotated{
+	//			Group:  FxComponent,
+	//			Target: con,
+	//		},
+	//	))
+	//}
+	//return fx.Options(ops...)
+	return fx.Provide(constructor)
 }
 
 func RegisterServer(constructor interface{}) fx.Option {

@@ -16,7 +16,6 @@ import (
 	"github.com/itsfunny/go-cell/base/core/eventbus"
 	"github.com/itsfunny/go-cell/base/core/options"
 	"github.com/itsfunny/go-cell/base/core/services"
-	"github.com/itsfunny/go-cell/component/base"
 	"github.com/itsfunny/go-cell/di"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
 )
@@ -24,7 +23,6 @@ import (
 type NodeExtensionManager struct {
 	*services.BaseService
 	Extensions  []INodeExtension
-	Components  []base.IComponent
 	UnImportSet map[string]struct{}
 	AllOps      map[string]*options.OptionWrapper
 	Ctx         *NodeContext
@@ -35,12 +33,11 @@ type NodeExtensionManager struct {
 	onClose func(err error)
 }
 
-func NewExtensionManager(bus IApplicationEventBus, e Extensions, h di.ReactorHolder, c Components) *NodeExtensionManager {
+func NewExtensionManager(bus IApplicationEventBus, e Extensions, h di.ReactorHolder) *NodeExtensionManager {
 	ret := &NodeExtensionManager{}
 	ret.BaseService = services.NewBaseService(nil, extensionManagerModule, ret)
 	ret.Ctx = &NodeContext{}
 	ret.Ctx.Extensions = e.Extensions
-	ret.Components = c.Components
 	ret.Ctx.Commands = h.Commands
 	ret.bus = bus
 	ret.Extensions = e.Extensions
