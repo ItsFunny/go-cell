@@ -10,6 +10,7 @@ type Account struct {
 	address  common.Address
 	Contract *Contract
 	readyFlag    bool
+	contractAddress map[string]common.Address
 }
 
 func (this Account) ready() bool {

@@ -11,5 +11,5 @@ package listener
 import "github.com/itsfunny/go-cell/di"
 
 var (
-	DefaultListenerModule = di.RegisterComponent(DefaultNewListenerComponent)
+	DefaultListenerModule = di.RegisterComponent(NewDefaultListenerComponent)
 )

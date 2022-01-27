@@ -23,9 +23,7 @@ func newBenchCommand(s contract.IContractService) reactor.ICommand {
 		},
 		PostRun: nil,
 		RunType: reactor.RunTypeHttpGet,
-		Options: []options.Option{
-
-		},
+		Options: []options.Option{},
 		MetaData: reactor.MetaData{
 			Description: "压测",
 		},

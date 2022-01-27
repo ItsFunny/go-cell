@@ -47,20 +47,27 @@ type IContractService interface {
 
 type ContractServiceImpl struct {
 	*services.BaseService
-	client *ethclient.Client
+	client   *ethclient.Client
+	wsClient *ethclient.Client
 
 	accounts map[string]*Account
+	cache    *ContractCache
 
 	cfg *config.OECConfig
 
 	listener listener.IListenerComponent
+
+	blockC chan *types.Header
+	watch  bool
 }
 
 func NewContractServiceImpl(l listener.IListenerComponent) IContractService {
 	ret := &ContractServiceImpl{}
 	ret.BaseService = services.NewBaseService(nil, logsdk.NewModule("contract", 1), ret)
 	ret.accounts = make(map[string]*Account)
-	ret.listener=l
+	ret.listener = l
+	ret.blockC = make(chan *types.Header, 100)
+	ret.cache = newContractCache()
 
 	return ret
 }
@@ -70,12 +77,25 @@ func (this *ContractServiceImpl) OnStart(ctx *services.StartCTX) error {
 	if nil == cfg {
 		return errors.New("config is nil")
 	}
+
+	if err := this.initContracts(cfg); nil != err {
+		return err
+	}
+	
 	client, err := ethclient.Dial(cfg.RPCUrl)
 	if nil != err {
 		return err
 	}
 	this.client = client
 	this.cfg = cfg
+
+	wsC, err := ethclient.Dial(cfg.WSUrl)
+	if nil == err {
+		this.wsClient = wsC
+	}
+	if err := this.listenBlockEvent(); nil != err {
+		return err
+	}
 	return this.initAdmin()
 }
 func (this *ContractServiceImpl) initAdmin() error {
@@ -98,7 +118,36 @@ func (this *ContractServiceImpl) initAdmin() error {
 	this.accounts[this.cfg.AdminMoniker] = account
 	return this.Deploy(this.cfg.AdminMoniker, 3)
 }
-
+func (this *ContractServiceImpl) initContracts(cfg *config.OECConfig) error {
+	_, err := this.cache.newNode(cfg.ContractName, cfg.ABIHexString, cfg.BinHexString)
+	if nil != err {
+		return err
+	}
+	return nil
+}
+func (this *ContractServiceImpl) listenBlockEvent() error {
+	if this.wsClient == nil {
+		return nil
+	}
+	// go
+	head, err := this.client.SubscribeNewHead(this.GetContext(), this.blockC)
+	if nil != err {
+		return err
+	}
+	this.watch = true
+	go func() {
+		for {
+			select {
+			case err := <-head.Err():
+				this.Logger.Error("监听block失败", "err", err.Error())
+				return
+			case h := <-this.blockC:
+				this.Logger.Info("收到新的block", "height", h.Number, "hash", h.Hash())
+			}
+		}
+	}()
+	return nil
+}
 func (this *ContractServiceImpl) GetAccountBalance(moniker string, blockNumber int64) (string, error) {
 	account, err := this.getAccount(moniker)
 	if nil != err {
@@ -136,7 +185,7 @@ func (this *ContractServiceImpl) Deploy(moniker string, waitTimes int) error {
 		return err
 	}
 
-	unsignedTx, err := this.deployContractTx(nonce, contract)
+	unsignedTx, err := this.deployContractTx(nonce, this.cfg.ContractName)
 	if nil != err {
 		return err
 	}
@@ -309,6 +358,7 @@ func (this *ContractServiceImpl) Transfer(from string, to string, amountV int64)
 
 	return nil
 }
+
 func printReceipt(re *types.Receipt) string {
 	return fmt.Sprintf("blockNumber=%d,blockHash=%s,txHash=%s,contractAddress=%s,gasUsed=%d",
 		re.BlockNumber, re.BlockHash.String(), re.TxHash.String(), re.ContractAddress.String(), re.GasUsed)
@@ -403,15 +453,19 @@ func (this *ContractServiceImpl) getAccount(moniker string) (*Account, error) {
 	return account, nil
 }
 
-func (this *ContractServiceImpl) deployContractTx(nonce uint64, contract *Contract) (*types.Transaction, error) {
+func (this *ContractServiceImpl) deployContractTx(nonce uint64, name string) (*types.Transaction, error) {
 	value := big.NewInt(0)
+	node := this.cache.getNode(name)
+	if node == nil {
+		return nil, errors.New("asd")
+	}
 	// Constructor
-	input, err := contract.Abi.Pack("")
+	input, err := node.Abi.Pack("")
 	if err != nil {
 		log.Printf("contract.abi.Pack err: %s", err)
 		return nil, err
 	}
-	data := append(contract.ByteCode, input...)
+	data := append(node.ByteCode, input...)
 	return types.NewContractCreation(nonce, value, this.cfg.GasLimit, big.NewInt(this.cfg.GasPrice), data), err
 }
 
@@ -442,9 +496,15 @@ func (this *ContractServiceImpl) RegisterAccount(moniker string) (string, error)
 	prvBytes := crypto.FromECDSA(privateKey)
 	ret = hex.EncodeToString(prvBytes)
 	account = &Account{
-		key:     privateKey,
-		address: senderAddress,
+		key:             privateKey,
+		address:         senderAddress,
+		contractAddress: make(map[string]common.Address),
 	}
+	//node,err:=this.cache.newNode(this.cfg.ContractName,this.cfg.ABIHexString, this.cfg.BinHexString)
+	//if nil!=err{
+	//	return ret,err
+	//}
+
 	c, _ := NewContract(this.cfg.ContractName, "", this.cfg.ABIHexString, this.cfg.BinHexString)
 	account.Contract = c
 	this.accounts[moniker] = account

@@ -18,7 +18,7 @@ type listenerComponent struct {
 	pubsub   *PubSub
 }
 
-func DefaultNewListenerComponent(opts ...Opt) *listenerComponent {
+func NewDefaultListenerComponent() listener.IListenerComponent {
 	return NewListenerComponent(256)
 }
 func NewListenerComponent(cap int, opts ...Opt) *listenerComponent {

@@ -16,6 +16,8 @@ type Contract struct {
 	ByteCode []byte
 }
 
+
+
 func NewContract(name, address string, abiFileHex string, binHexCodes string) (*Contract, error) {
 	abiBytes, err := hex.DecodeString(abiFileHex)
 	if nil != err {
