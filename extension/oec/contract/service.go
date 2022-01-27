@@ -81,7 +81,7 @@ func (this *ContractServiceImpl) OnStart(ctx *services.StartCTX) error {
 	if err := this.initContracts(cfg); nil != err {
 		return err
 	}
-	
+
 	client, err := ethclient.Dial(cfg.RPCUrl)
 	if nil != err {
 		return err
@@ -130,7 +130,7 @@ func (this *ContractServiceImpl) listenBlockEvent() error {
 		return nil
 	}
 	// go
-	head, err := this.client.SubscribeNewHead(this.GetContext(), this.blockC)
+	head, err := this.wsClient.SubscribeNewHead(this.GetContext(), this.blockC)
 	if nil != err {
 		return err
 	}
@@ -370,7 +370,6 @@ func (this *ContractServiceImpl) getReceipt(hash common.Hash, waitTimes int) (*t
 		err     error
 	)
 	for err == nil {
-		time.Sleep(time.Second * time.Duration(waitTimes))
 		receipt, err = this.client.TransactionReceipt(context.Background(), hash)
 		this.Logger.Info("TransactionReceipt retry", "times", retry, "hash", hash.String(), "err", err)
 		fmt.Printf("TransactionReceipt retry: %d, err: %s, tx hash<%s>\n", retry, err, hash.String())
@@ -383,6 +382,7 @@ func (this *ContractServiceImpl) getReceipt(hash common.Hash, waitTimes int) (*t
 		} else {
 			break
 		}
+		time.Sleep(time.Second * time.Duration(waitTimes))
 	}
 	return receipt, nil
 }
