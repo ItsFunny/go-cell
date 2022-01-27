@@ -7,9 +7,11 @@ require (
 	github.com/ethereum/go-ethereum v1.10.8
 	github.com/okex/exchain-ethereum-compatible v1.1.1-0.20220106042715-f20163fbb4af
 )
+
 require (
 	github.com/Kubuxu/go-os-helper v0.0.1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
+	github.com/emirpasic/gods v1.12.0
 	github.com/go-chi/chi v1.5.4 // indirect
 	github.com/go-openapi/spec v0.20.4
 	github.com/mattn/go-colorable v0.1.12 // indirect
