@@ -11,8 +11,11 @@ type Account struct {
 	Contract *Contract
 	readyFlag    bool
 	contractAddress map[string]common.Address
+	moniker string
+	gasPrice int64
 }
 
 func (this Account) ready() bool {
 	return this.readyFlag
 }
+func newAccount(){}

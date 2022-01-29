@@ -33,7 +33,16 @@ func transfer(s contract.IContractService, req reactor.IBuzzContext) error {
 	from := opt[from].(string)
 	to := opt[to].(string)
 	am := opt[amount].(int)
-	return s.Transfer(from, to, int64(am))
+	resp, e := s.Transfer(contract.TransferReq{
+		From:    from,
+		To:      to,
+		AmountV: int64(am),
+	})
+	if nil != e {
+		return e
+	}
+	_, e = resp.Promise.GetForever()
+	return e
 }
 func balance(s contract.IContractService, req reactor.IBuzzContext) (string, error) {
 	opt := req.GetCommandContext().Options
@@ -47,4 +56,41 @@ func importAccount(s contract.IContractService, req reactor.IBuzzContext) (strin
 	moniker := opt[moniker].(string)
 	prvK := opt[prvHex].(string)
 	return s.Import(moniker, prvK)
+}
+
+func oneToMore(s contract.IContractService, req reactor.IBuzzContext) error {
+	opt := req.GetCommandContext().Options
+	from := opt[from].(string)
+	toLimit := opt[toLimitCount].(int)
+	_, err := s.OneToMore(contract.OneToMoreReq{
+		From:           from,
+		ToAccountLimit: toLimit,
+	})
+	return err
+}
+func demoTest(s contract.IContractService) error {
+	s.DemoTest()
+	return nil
+}
+
+func transferEachOther(s contract.IContractService, req reactor.IBuzzContext) error {
+	opt := req.GetCommandContext().Options
+	from := opt[from].(string)
+	to := opt[to].(string)
+	am := opt[amount].(int)
+	return s.TransferEachOther(contract.TransferReq{
+		From:    from,
+		To:      to,
+		AmountV: int64(am),
+	})
+}
+
+func bench(s contract.IContractService, req reactor.IBuzzContext) (contract.BenchResp, error) {
+	opt := req.GetCommandContext().Options
+	tran := opt[transactionLimit].(int)
+	acc := opt[accountLimit].(int)
+	return s.Bench(contract.BenchReq{
+		TransactionLimit: tran,
+		AccountLimit:     acc,
+	})
 }

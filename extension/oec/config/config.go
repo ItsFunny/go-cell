@@ -12,6 +12,7 @@ type OECConfig struct {
 	GasLimit     uint64
 	GasPrice     int64 //= 100000000 // 0.1 gwei
 
+	TxPriceBump float64
 	//
 	AdminMoniker         string
 	DefaultTransferCount int64
@@ -32,6 +33,7 @@ func NewDefaultOECConfig() *OECConfig {
 		GasPrice:             100000000,
 		AdminMoniker:         "captain",
 		DefaultTransferCount: 1000000000000000,
+		TxPriceBump: 20,
 	}
 	return ret
 }

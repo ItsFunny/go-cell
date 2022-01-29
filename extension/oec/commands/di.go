@@ -11,5 +11,8 @@ var (
 		newBalanceCommand,
 		newImportAccountCommand,
 		newBenchCommand,
+		newOneToMoreAccount,
+		newDemoTestCommand,
+		newTransferEachOtherCmd,
 	)
 )
