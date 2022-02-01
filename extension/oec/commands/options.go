@@ -14,6 +14,8 @@ var (
 
 	transactionLimit = "transactionLimit"
 	accountLimit     = "accountLimit"
+
+	hexBlockHash = "hexBlockHash"
 )
 var (
 	monikerOption      = options.StringOption(moniker, "moniker", "别名")
@@ -26,4 +28,6 @@ var (
 
 	transactionLimitOption = options.IntOption(transactionLimit, transactionLimit, "交易总数限制").WithDefault(10)
 	accountLimitOption     = options.IntOption(accountLimit, accountLimit, "账户数限制")
+
+	hexBlockHashOption = options.StringOption(hexBlockHash, hexBlockHash, "block的hex hash")
 )

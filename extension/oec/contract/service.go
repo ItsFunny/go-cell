@@ -24,7 +24,9 @@ import (
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
 	"github.com/okex/exchain-ethereum-compatible/utils"
 	"log"
+	"math"
 	"math/big"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -39,7 +41,7 @@ type IContractService interface {
 	services.IBaseService
 	Deploy(moniker string, waitTimes int) error
 
-	RegisterAccount(moniker string) (string, error)
+	RegisterAccount(req RegisterAccountReq) (RegisterAccountResp, error)
 
 	DemoWriteContract(moniker string) error
 	DemoReadPrint(moniker string, args ...interface{}) (*big.Int, error)
@@ -51,13 +53,18 @@ type IContractService interface {
 
 	Import(moniker string, prvHex string) (string, error)
 
-	OneToMore(req OneToMoreReq) (OneToMoreResp, error)
+	//OneToMore(req OneToMoreReq) (OneToMoreResp, error)
 
 	DemoTest()
 
 	TransferEachOther(req TransferReq) error
 
 	Bench(req BenchReq) (BenchResp, error)
+
+	// block
+	GetBlockByHash(hexHash string) (*types.Block, error)
+	GetBlockByNumber(number int64) (*types.Block, error)
+	CodeAt(moniker string, blockNumber int64) ([]byte, error)
 }
 
 type ContractServiceImpl struct {
@@ -65,7 +72,7 @@ type ContractServiceImpl struct {
 	client   *ethclient.Client
 	wsClient *ethclient.Client
 
-	accounts map[string]*Account
+	accounts *accountCache
 	cache    *ContractCache
 
 	cfg *config.OECConfig
@@ -86,7 +93,7 @@ type ContractServiceImpl struct {
 func NewContractServiceImpl(l listener.IListenerComponent) IContractService {
 	ret := &ContractServiceImpl{}
 	ret.BaseService = services.NewBaseService(nil, logsdk.NewModule("contract", 1), ret)
-	ret.accounts = make(map[string]*Account)
+	ret.accounts = newAccountCache()
 	ret.listener = l
 	ret.blockC = make(chan *types.Header, 100)
 	ret.cache = newContractCache()
@@ -121,7 +128,13 @@ func (this *ContractServiceImpl) OnStart(ctx *services.StartCTX) error {
 	if err := this.listenBlockEvent(); nil != err {
 		return err
 	}
-	return this.initAdmin()
+	err = this.initAdmin()
+	if nil != err {
+		return err
+	}
+
+	go this.cleanRoutine()
+	return nil
 }
 func (this *ContractServiceImpl) initAdmin() error {
 	key := "8ff3ca2d9985c3a52b459e2f6e7822b23e1af845961e22128d5f372fb9aa5f17"
@@ -142,7 +155,7 @@ func (this *ContractServiceImpl) initAdmin() error {
 		moniker:  this.cfg.AdminMoniker,
 		gasPrice: this.cfg.GasPrice,
 	}
-	this.accounts[this.cfg.AdminMoniker] = account
+	this.accounts.addOne(this.cfg.AdminMoniker, account)
 	return this.Deploy(this.cfg.AdminMoniker, 3)
 }
 func (this *ContractServiceImpl) initContracts(cfg *config.OECConfig) error {
@@ -187,10 +200,25 @@ func (this *ContractServiceImpl) onBlockCreated(h *types.Header) {
 	if h.TxHash == geneissHash {
 		return
 	}
-	b, e := this.client.BlockByNumber(this.GetContext(), h.Number)
+	download := func(quit bool) (*types.Block, error) {
+		return this.client.BlockByNumber(this.GetContext(), h.Number)
+	}
+	b, e := download(false)
 	if nil != e {
-		this.Logger.Error("download block failed", "err", e)
-		return
+		limit := 10
+		retryT := 0
+		if strings.Contains("server returned empty transaction list but block header indicates transactions", e.Error()) {
+			limit = math.MaxInt32
+		}
+		for e != nil {
+			if retryT > limit {
+				this.Logger.Error("download block failed", "err", e)
+				return
+			}
+			retryT++
+			b, e = download(false)
+			time.Sleep(time.Millisecond * 100)
+		}
 	}
 	this.Logger.Info("收到新的block", "height", h.Number, "hash", h.Hash(), "交易数量为", b.Transactions().Len())
 
@@ -219,8 +247,8 @@ func (this *ContractServiceImpl) GetAccountBalance(moniker string, blockNumber i
 }
 
 func (this *ContractServiceImpl) Deploy(moniker string, waitTimes int) error {
-	account, exist := this.accounts[moniker]
-	if !exist {
+	account := this.accounts.get(moniker)
+	if account == nil {
 		return error2.AccountNotExists
 	}
 
@@ -276,9 +304,9 @@ func (this *ContractServiceImpl) Deploy(moniker string, waitTimes int) error {
 }
 
 func (this *ContractServiceImpl) DemoWriteContract(moniker string) error {
-	account, exist := this.accounts[moniker]
-	if !exist {
-		return errors.New("account not exists")
+	account, err := this.getAccount(moniker)
+	if err != nil {
+		return err
 	}
 	if account.Contract == nil {
 		return errors.New("have not deployed yet")
@@ -536,8 +564,8 @@ func (this *ContractServiceImpl) ReadContract(moniker string, funcName string, a
 }
 
 func (this *ContractServiceImpl) getAccount(moniker string) (*Account, error) {
-	account, exist := this.accounts[moniker]
-	if !exist {
+	account := this.accounts.get(moniker)
+	if account == nil {
 		return nil, error2.AccountNotExists
 	}
 
@@ -567,10 +595,11 @@ func (this *ContractServiceImpl) createKey() (*ecdsa.PrivateKey, error) {
 	return privateKey, err
 }
 
-func (this *ContractServiceImpl) RegisterAccount(moniker string) (string, error) {
-	ret := ""
-	account, exist := this.accounts[moniker]
-	if exist {
+func (this *ContractServiceImpl) RegisterAccount(req RegisterAccountReq) (RegisterAccountResp, error) {
+	moniker := req.Moniker
+	account, _ := this.getAccount(moniker)
+	ret := RegisterAccountResp{}
+	if account != nil {
 		return ret, error2.AccountAlreadyExists
 	}
 
@@ -585,7 +614,7 @@ func (this *ContractServiceImpl) RegisterAccount(moniker string) (string, error)
 	}
 	senderAddress := crypto.PubkeyToAddress(*pubkeyECDSA)
 	prvBytes := crypto.FromECDSA(privateKey)
-	ret = hex.EncodeToString(prvBytes)
+	ret.PrvHexString = hex.EncodeToString(prvBytes)
 	account = &Account{
 		key:             privateKey,
 		address:         senderAddress,
@@ -593,20 +622,22 @@ func (this *ContractServiceImpl) RegisterAccount(moniker string) (string, error)
 		moniker:         moniker,
 		gasPrice:        this.cfg.GasPrice,
 	}
-	//node,err:=this.cache.newNode(this.cfg.ContractName,this.cfg.ABIHexString, this.cfg.BinHexString)
-	//if nil!=err{
-	//	return ret,err
-	//}
+	ret.Address = account.address.String()
+	ret.Moniker = moniker
 
 	c, _ := NewContract(this.cfg.ContractName, "", this.cfg.ABIHexString, this.cfg.BinHexString)
 	account.Contract = c
-	this.accounts[moniker] = account
+	this.accounts.addOne(moniker, account)
 
 	// transfer
 	if moniker != this.cfg.AdminMoniker {
 		//this.transfer()
+		from := req.TransferFrom
+		if len(from) == 0 {
+			from = this.cfg.AdminMoniker
+		}
 		p, err := this.Transfer(TransferReq{
-			From:    this.cfg.AdminMoniker,
+			From:    from,
 			To:      moniker,
 			AmountV: this.cfg.DefaultTransferCount,
 		})
@@ -623,8 +654,8 @@ func (this *ContractServiceImpl) RegisterAccount(moniker string) (string, error)
 
 func (this *ContractServiceImpl) Import(moniker string, prvHex string) (string, error) {
 	ret := ""
-	_, exist := this.accounts[moniker]
-	if exist {
+	acc, _ := this.getAccount(moniker)
+	if acc != nil {
 		return ret, error2.AccountAlreadyExists
 	}
 	key := prvHex
@@ -643,7 +674,7 @@ func (this *ContractServiceImpl) Import(moniker string, prvHex string) (string, 
 		key:     privateKey,
 		address: senderAddress,
 	}
-	this.accounts[this.cfg.AdminMoniker] = account
+	this.accounts.addOne(this.cfg.AdminMoniker, account)
 	return this.GetAccountBalance(moniker, 0)
 }
 
@@ -653,7 +684,9 @@ type ResultWrapper struct {
 }
 
 func (this *ContractServiceImpl) DemoTest() {
-	_, err := this.RegisterAccount("qwe")
+	_, err := this.RegisterAccount(RegisterAccountReq{
+		Moniker: "qwe",
+	})
 	if nil != err {
 		return
 	}
@@ -721,58 +754,58 @@ func (this *ContractServiceImpl) onTransferReceived(to, from string, amount int6
 }
 
 // 一对多
-func (this *ContractServiceImpl) OneToMore(req OneToMoreReq) (OneToMoreResp, error) {
-	ret := OneToMoreResp{}
-	acc, err := this.getAccount(req.From)
-	if nil != err {
-		return ret, err
-	}
-	limit := req.ToAccountLimit
-	if len(this.accounts)-1 < req.ToAccountLimit {
-		limit = len(this.accounts) - 1
-	}
-
-	accounts := make([]*Account, limit)
-	count := 0
-	for k, acc := range this.accounts {
-		if count == limit {
-			break
-		}
-		if k == req.From {
-			continue
-		}
-		accounts[count] = acc
-		count++
-	}
-	results := make([]ResultWrapper, limit)
-	price := acc.gasPrice
-
-	for i, _ := range accounts {
-		acc := accounts[i]
-
-		transfer, err := this.Transfer(TransferReq{
-			From:     req.From,
-			To:       acc.moniker,
-			AmountV:  1000,
-			GasPrice: int64(float64(price) * (1 + this.cfg.TxPriceBump)),
-		})
-		if nil != err {
-			results[i] = ResultWrapper{success: false}
-			continue
-		}
-		results[i] = ResultWrapper{
-			success: false,
-			p:       transfer.Promise,
-		}
-	}
-	wg := sync.WaitGroup{}
-	wg.Add(limit)
-	wg.Wait()
-	//1210000000
-	//1100000000
-	acc.gasPrice = price + int64(10*limit)
-	return ret, nil
-}
+//func (this *ContractServiceImpl) OneToMore(req OneToMoreReq) (OneToMoreResp, error) {
+//	ret := OneToMoreResp{}
+//	acc, err := this.getAccount(req.From)
+//	if nil != err {
+//		return ret, err
+//	}
+//	limit := req.ToAccountLimit
+//	if this.accounts.size()-1 < req.ToAccountLimit {
+//		limit = this.accounts.size()-1
+//	}
+//
+//	accounts := make([]*Account, limit)
+//	count := 0
+//	for k, acc := range this.accounts {
+//		if count == limit {
+//			break
+//		}
+//		if k == req.From {
+//			continue
+//		}
+//		accounts[count] = acc
+//		count++
+//	}
+//	results := make([]ResultWrapper, limit)
+//	price := acc.gasPrice
+//
+//	for i, _ := range accounts {
+//		acc := accounts[i]
+//
+//		transfer, err := this.Transfer(TransferReq{
+//			From:     req.From,
+//			To:       acc.moniker,
+//			AmountV:  1000,
+//			GasPrice: int64(float64(price) * (1 + this.cfg.TxPriceBump)),
+//		})
+//		if nil != err {
+//			results[i] = ResultWrapper{success: false}
+//			continue
+//		}
+//		results[i] = ResultWrapper{
+//			success: false,
+//			p:       transfer.Promise,
+//		}
+//	}
+//	wg := sync.WaitGroup{}
+//	wg.Add(limit)
+//	wg.Wait()
+//	//1210000000
+//	//1100000000
+//	acc.gasPrice = price + int64(10*limit)
+//	return ret, nil
+//}
 
 // limit为并发数
 // 账号之前互相发送交易 ,如 有100个账户,则会 50个账户,互相之间互发交易,账户之间是同步的,
@@ -784,20 +817,22 @@ func (this *ContractServiceImpl) Bench(req BenchReq) (BenchResp, error) {
 	limit := req.TransactionLimit
 	ret := BenchResp{}
 	// 1. 注册account
-	for len(this.accounts) < accountCount {
-		_, err := this.RegisterAccount(fmt.Sprintf("index=%d", this.index))
+	for this.accounts.size() < accountCount {
+		_, err := this.RegisterAccount(RegisterAccountReq{
+			Moniker:      fmt.Sprintf("index%d", this.index),
+			TransferFrom: "",
+		})
 		if nil != err {
 			return ret, err
 		}
 		this.index++
 	}
 
-
-
 	// 2. 收集所有的account
 	accounts := make([]*Account, accountCount)
 	i := 0
-	for _, acc := range this.accounts {
+	accs := this.accounts.getAccounts()
+	for _, acc := range accs {
 		accounts[i] = acc
 		i++
 	}
@@ -805,41 +840,62 @@ func (this *ContractServiceImpl) Bench(req BenchReq) (BenchResp, error) {
 	// 3.互相发送交易
 	ret.BeginBlock = this.curBlockNumber
 	wg := sync.WaitGroup{}
-	wg.Add(len(accounts))
+	wg.Add(limit)
 	failedCount := int32(0)
-	succCount := int32(320)
+	succCount := int32(0)
 	for i := 0; i < len(accounts); i++ {
 		go func(index int) {
-			defer wg.Done()
 			cur := accounts[index]
-			for j := 0; j < len(accounts); j++ {
-				if index == j {
-					continue
-				}
-				if !sem.TryAcquire(1) {
-					return
-				}
-				err := this.syncTransfer(TransferReq{
-					From:    cur.moniker,
-					To:      accounts[j].moniker,
-					AmountV: 100,
-				})
-				if nil != err {
-					atomic.AddInt32(&failedCount, 1)
-					this.Logger.Error("failed", "err", err)
-				} else {
-					atomic.AddInt32(&succCount, 1)
+			for {
+				for j := 0; j < len(accounts); j++ {
+					if index == j {
+						continue
+					}
+					if !sem.TryAcquire(1) {
+						return
+					}
+					f := func() {
+						defer wg.Done()
+						err := this.syncTransfer(TransferReq{
+							From:    cur.moniker,
+							To:      accounts[j].moniker,
+							AmountV: 100,
+						})
+						if nil != err {
+							atomic.AddInt32(&failedCount, 1)
+							this.Logger.Error("failed", "err", err)
+						} else {
+							cc := atomic.AddInt32(&succCount, 1)
+							this.Logger.Info("success", "count", cc)
+						}
+
+					}
+					f()
 				}
 			}
 		}(i)
 	}
 	wg.Wait()
-
 	ret.Success = succCount
 	ret.Fail = failedCount
-	ret.FinalBlock = this.curBlockNumber
+	ret.FinalBlock = atomic.LoadInt64(&this.curBlockNumber)
 
 	return ret, nil
+}
+func makeSempahore(limit int) chan struct{} {
+	ret := make(chan struct{}, limit)
+	for i := 0; i < limit; i++ {
+		ret <- struct{}{}
+	}
+	return ret
+}
+func tryAcquire(s chan struct{}) bool {
+	select {
+	case <-s:
+		return true
+	default:
+		return false
+	}
 }
 
 func (this *ContractServiceImpl) syncTransfer(req TransferReq) error {
@@ -852,4 +908,55 @@ func (this *ContractServiceImpl) syncTransfer(req TransferReq) error {
 		return err
 	}
 	return nil
+}
+
+func (this *ContractServiceImpl) GetBlockByHash(hexHash string) (*types.Block, error) {
+	h := common.HexToHash(hexHash)
+	return this.client.BlockByHash(this.GetContext(), h)
+}
+
+func (this *ContractServiceImpl) GetBlockByNumber(number int64) (*types.Block, error) {
+	return this.client.BlockByNumber(this.GetContext(), big.NewInt(number))
+}
+
+func (this *ContractServiceImpl) CodeAt(moniker string, blockNumber int64) ([]byte, error) {
+	account, err := this.getAccount(moniker)
+	if nil != err {
+		return nil, err
+	}
+	return this.client.CodeAt(this.GetContext(), account.address, big.NewInt(blockNumber))
+}
+
+type promiseHashWrapper struct {
+	p    *promiseWrapper
+	hash common.Hash
+}
+
+func (this *ContractServiceImpl) cleanRoutine() {
+	tt := time.NewTimer(time.Minute * 3)
+	for {
+		select {
+		case <-tt.C:
+			this.txCache.mtx.RLock()
+			copys := make([]*promiseHashWrapper, len(this.txCache.txs))
+			i := 0
+			for h, v := range this.txCache.txs {
+				copys[i] = &promiseHashWrapper{p: v, hash: h}
+				i++
+			}
+			this.txCache.mtx.RUnlock()
+
+			now := time.Now().Add(time.Minute * 2)
+			dels := make([]common.Hash, 0)
+			for _, v := range copys {
+				if v.p.registerT.After(now) {
+					this.Logger.Error("超时未收到通知", "removeTransaction listener", v.hash)
+					v.p.p.Fail(errors.New("time out"))
+					dels = append(dels, v.hash)
+				}
+			}
+			// delete
+			this.txCache.batchRemoveListener(dels...)
+		}
+	}
 }

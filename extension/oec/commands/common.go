@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/itsfunny/go-cell/base/reactor"
 	"github.com/itsfunny/go-cell/extension/oec/contract"
 	error2 "github.com/itsfunny/go-cell/extension/oec/error"
@@ -10,16 +11,18 @@ func autoRegisterAndDeploy(s contract.IContractService, ctx reactor.IBuzzContext
 	prvStr, err := register(s, ctx)
 	if nil != err {
 		if err != error2.AccountAlreadyExists {
-			return prvStr, err
+			return prvStr.PrvHexString, err
 		}
 	}
-	return prvStr, deploy(s, ctx)
+	return prvStr.PrvHexString, deploy(s, ctx)
 }
 
-func register(s contract.IContractService, ctx reactor.IBuzzContext) (string, error) {
+func register(s contract.IContractService, ctx reactor.IBuzzContext) (contract.RegisterAccountResp, error) {
 	ops := ctx.GetCommandContext().Options
 	mon := ops[moniker].(string)
-	return s.RegisterAccount(mon)
+	return s.RegisterAccount(contract.RegisterAccountReq{
+		Moniker:      mon,
+	})
 }
 
 func deploy(s contract.IContractService, req reactor.IBuzzContext) error {
@@ -58,16 +61,16 @@ func importAccount(s contract.IContractService, req reactor.IBuzzContext) (strin
 	return s.Import(moniker, prvK)
 }
 
-func oneToMore(s contract.IContractService, req reactor.IBuzzContext) error {
-	opt := req.GetCommandContext().Options
-	from := opt[from].(string)
-	toLimit := opt[toLimitCount].(int)
-	_, err := s.OneToMore(contract.OneToMoreReq{
-		From:           from,
-		ToAccountLimit: toLimit,
-	})
-	return err
-}
+//func oneToMore(s contract.IContractService, req reactor.IBuzzContext) error {
+//	opt := req.GetCommandContext().Options
+//	from := opt[from].(string)
+//	toLimit := opt[toLimitCount].(int)
+//	_, err := s.OneToMore(contract.OneToMoreReq{
+//		From:           from,
+//		ToAccountLimit: toLimit,
+//	})
+//	return err
+//}
 func demoTest(s contract.IContractService) error {
 	s.DemoTest()
 	return nil
@@ -93,4 +96,26 @@ func bench(s contract.IContractService, req reactor.IBuzzContext) (contract.Benc
 		TransactionLimit: tran,
 		AccountLimit:     acc,
 	})
+}
+
+func blockByHash(s contract.IContractService, req reactor.IBuzzContext) (*types.Block, error) {
+	opt := req.GetCommandContext().Options
+	hexH := opt[hexBlockHash].(string)
+	return s.GetBlockByHash(hexH)
+}
+
+func blockByNumber(s contract.IContractService, req reactor.IBuzzContext) (*types.Block, error) {
+	opt := req.GetCommandContext().Options
+	n := opt[blockNumber].(int64)
+	return s.GetBlockByNumber(n)
+}
+func codeAt(s contract.IContractService, req reactor.IBuzzContext) (string, error) {
+	opt := req.GetCommandContext().Options
+	mon := opt[moniker].(string)
+	bl := opt[blockNumber].(int64)
+	at, err := s.CodeAt(mon, bl)
+	if nil != err {
+		return "", err
+	}
+	return string(at), nil
 }

@@ -11,8 +11,11 @@ var (
 		newBalanceCommand,
 		newImportAccountCommand,
 		newBenchCommand,
-		newOneToMoreAccount,
+		//newOneToMoreAccount,
 		newDemoTestCommand,
 		newTransferEachOtherCmd,
+		newBlockByHash,
+		newCodeAtCommand,
+		newBlockByNumberCmd,
 	)
 )

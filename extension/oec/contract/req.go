@@ -18,4 +18,11 @@ type OneToMoreResp struct {
 type BenchReq struct {
 	TransactionLimit        int
 	AccountLimit int
+
+}
+
+
+type RegisterAccountReq struct {
+	Moniker string
+	TransferFrom string
 }

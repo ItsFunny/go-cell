@@ -7,9 +7,14 @@ type TransferResp struct {
 }
 
 type BenchResp struct {
-	Success int32
-	Fail    int32
+	Success    int32
+	Fail       int32
 	BeginBlock int64
 	FinalBlock int64
+}
 
+type RegisterAccountResp struct {
+	PrvHexString string
+	Moniker      string
+	Address string
 }
