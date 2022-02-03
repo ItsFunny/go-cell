@@ -1,5 +1,8 @@
 # github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d
 github.com/ChainSafe/go-schnorrkel
+# github.com/ChengjinWu/gojson v0.0.0-20181113073026-04749cc2d015
+## explicit
+github.com/ChengjinWu/gojson
 # github.com/Kubuxu/go-os-helper v0.0.1
 ## explicit
 # github.com/KyleBanks/depth v1.2.1

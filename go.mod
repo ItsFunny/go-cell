@@ -9,6 +9,7 @@ require (
 )
 
 require (
+	github.com/ChengjinWu/gojson v0.0.0-20181113073026-04749cc2d015
 	github.com/Kubuxu/go-os-helper v0.0.1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/emirpasic/gods v1.12.0
