@@ -1,5 +1,8 @@
 {
   "types": {
+    "test-asd2": {
+      "parent": "test-asd"
+    },
     "test-asd": {
       "parent": "Default"
     },

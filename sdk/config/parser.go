@@ -44,11 +44,11 @@ func (j *JSONParser) ParseFrom(configuration *Configuration, value interface{}, 
 		return nil, err
 	}
 
-	jsonValue := j.newJsonValue(configuration, moduleName, obj)
+	jsonValue := j.newJsonValue(configuration, moduleName, obj,data)
 	return jsonValue, nil
 }
 
-func (j *JSONParser) newJsonValue(cfg *Configuration, moduleName string, jsonObject interface{}) *ConfigValueJson {
+func (j *JSONParser) newJsonValue(cfg *Configuration, moduleName string, jsonObject interface{},originBytes []byte) *ConfigValueJson {
 	key := &JSONKey{ModuleName: moduleName, Obj: jsonObject}
 	v := j.jsonValues[key]
 	if nil != v {
@@ -62,7 +62,7 @@ func (j *JSONParser) newJsonValue(cfg *Configuration, moduleName string, jsonObj
 			return cfg.getConfigValue(moduleObj.GetString()).(*ConfigValueJson)
 		}
 	}
-	jsonValue := newConfigValueJson(jsonObject, cfg, moduleName)
+	jsonValue := newConfigValueJson(jsonObject, cfg, moduleName,originBytes)
 	j.jsonValues[key] = jsonValue
 	return jsonValue
 }

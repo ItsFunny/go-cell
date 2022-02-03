@@ -1,5 +1,12 @@
 package config
 
+import (
+	"encoding/json"
+)
+
+//type IUnmarshal interface {
+//	Unmarshal(v IConfigValue) error
+//}
 type IConfigValue interface {
 	GetArrayObject(index int) interface{}
 	GetObjectKeys() []string
@@ -7,7 +14,7 @@ type IConfigValue interface {
 	GetModuleName() string
 	AsValueList() []IConfigValue
 	// TODO
-	AsObject() interface{}
+	AsObject(m interface{})error
 	AsBoolean() bool
 	AsByte() byte
 	AsInt32() int32
@@ -37,13 +44,15 @@ type ConfigValueJson struct {
 	*BaseConfigValue
 	parseer IConfigurationParser
 
+	originBytes []byte
 	data interface{}
 }
 
-func newConfigValueJson(data interface{},cfg *Configuration, moduleName string)*ConfigValueJson{
-	ret:=&ConfigValueJson{}
-	ret.BaseConfigValue=newBaseConfigValue(cfg,ret,moduleName)
-	ret.data=data
+func newConfigValueJson(data interface{}, cfg *Configuration, moduleName string,originBytes []byte) *ConfigValueJson {
+	ret := &ConfigValueJson{}
+	ret.BaseConfigValue = newBaseConfigValue(cfg, ret, moduleName)
+	ret.data = data
+	ret.originBytes=originBytes
 	return ret
 }
 
@@ -72,8 +81,8 @@ func (c *ConfigValueJson) AsValueList() []IConfigValue {
 	panic("implement me")
 }
 
-func (c *ConfigValueJson) AsObject() interface{} {
-	panic("implement me")
+func (c *ConfigValueJson) AsObject(u interface{})error {
+	return json.Unmarshal(c.originBytes,u)
 }
 
 func (c *ConfigValueJson) AsBoolean() bool {
