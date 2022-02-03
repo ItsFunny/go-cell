@@ -1,7 +1,13 @@
 package utils
 
-import "os"
+import (
+	"errors"
+	"os"
+)
 
-func GetAbsolutePath(p string)string{
-
+func CheckFileExists(p string) bool {
+	if _, err := os.Stat(p); errors.Is(err, os.ErrNotExist) {
+		return false
+	}
+	return true
 }

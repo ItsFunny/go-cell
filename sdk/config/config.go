@@ -1,8 +1,9 @@
 package config
 
 import (
-	"encoding/json"
+	"github.com/ChengjinWu/gojson"
 	"github.com/emirpasic/gods/lists/arraylist"
+	"github.com/itsfunny/go-cell/base/common/utils"
 	"io/ioutil"
 	"path/filepath"
 	"sync"
@@ -25,12 +26,14 @@ type Configuration struct {
 	configType  string
 	initialized bool
 }
-func NewConfiguration()*Configuration{
-	ret:=&Configuration{
+
+func NewConfiguration() *Configuration {
+	ret := &Configuration{
 		parser:          make(map[string]IConfigurationParser),
 		configModuleMap: make(map[string][]string),
 		modules:         make(map[string]*ConfigModule),
 	}
+	ret.init()
 	return ret
 }
 func (this *Configuration) init() {
@@ -51,10 +54,22 @@ func (this *Configuration) initialize(rootPath string, configType string) {
 		panic(err)
 	}
 	rootCfg := new(rootConfig)
-	err = json.Unmarshal(bytes, rootCfg)
+	obj, err := gojson.FromBytes(bytes)
+	//err = json.Unmarshal(bytes, rootCfg)
 	if nil != err {
 		panic(err)
 	}
+	rootCfg.Types = obj.GetJsonObject("types")
+	rootCfg.DefaultType = obj.GetJsonObject("defaultType").GetString()
+	rootCfg.Configs = obj.GetJsonObject("configs").GetJsonArray()
+	rootCfg.Plugins = obj.GetJsonObject("plugins")
+	//configTypes := obj.GetJsonObject("configTypes").GetString()
+	//m:=make(map[string]string)
+	//err=json.Unmarshal([]byte(configTypes),&m)
+	//if nil!=err{
+	//	panic(err)
+	//}
+
 	this.configType = configType
 	repos[this.repoRoot] = rootCfg
 
@@ -69,8 +84,8 @@ func (this *Configuration) initialize(rootPath string, configType string) {
 	inheritance := this.buildInheritanceList(types)
 	this.buildModulePathMap(repos, inheritance)
 
-	for _, v := range types {
-		this.configTypes = append(this.configTypes, v)
+	for k, _ := range types {
+		this.configTypes = append(this.configTypes, k)
 	}
 
 	this.refresher = newConfigRefresher(REFRESH_CHECK_INTERVAL_SECONDS, this)
@@ -83,7 +98,10 @@ func (this *Configuration) buildModulePathMap(repoMap map[string]*rootConfig, co
 		for _, v2 := range pluginModules {
 			moduleFilePathUnderConfigType := ""
 			for _, typeDe := range configTypeInheritance {
-				tmpPath := k + string(filepath.Separator) + typeDe + v2.ModuleFullPath
+				tmpPath := k + string(filepath.Separator) + typeDe + string(filepath.Separator) + v2.ModuleFullPath
+				if !utils.CheckFileExists(tmpPath) {
+					tmpPath = ""
+				}
 				if len(v2.ModuleDuePath) == 0 {
 					v2.ModuleDuePath = tmpPath
 				}

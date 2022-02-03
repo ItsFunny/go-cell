@@ -3,51 +3,59 @@ package config
 import "github.com/ChengjinWu/gojson"
 
 type rootConfig struct {
-	types         *gojson.JsonObject
-	defaultType   string
-	configs       []*gojson.JsonObject
-	plugins       *gojson.JsonObject
-	configTypes   map[string]string
-	configModules map[string]*ConfigModule
-	configPlugins []string
+	Types         *gojson.JsonObject       `json:"types"`
+	DefaultType   string                   `json:"defaultType"`
+	Configs       []*gojson.JsonObject     `json:"configs"`
+	Plugins       *gojson.JsonObject       `json:"plugins"`
+	ConfigTypes   map[string]string        `json:"configTypes"`
+	ConfigModules map[string]*ConfigModule `json:"configModules"`
+	ConfigPlugins []string                 `json:"configPlugins"`
 }
 
 func (this *rootConfig) getModules() map[string]*ConfigModule {
-	if len(this.configModules) == 0 {
+	if len(this.ConfigModules) == 0 {
 
 	}
-	this.configModules = make(map[string]*ConfigModule)
+	this.ConfigModules = make(map[string]*ConfigModule)
 
-	for i := 0; i < len(this.configs); i++ {
-		obj := this.configs[i]
+	for i := 0; i < len(this.Configs); i++ {
+		obj := this.Configs[i]
 		module := obj.GetJsonObject("modules")
-		schema := module.GetJsonObject("schema").GetString()
-		if len(schema) == 0 {
-			schema = "json"
+		schemaJsonObj := obj.GetJsonObject("schema")
+		schema := "json"
+		if schemaJsonObj.Value != nil && len(schemaJsonObj.GetString()) != 0 {
+			schema = schemaJsonObj.GetString()
 		}
+
 		for k, v := range module.Attributes {
-			this.configModules[k] = newConfigModule(v.GetString(), nil, schema)
+			this.ConfigModules[k] = newConfigModule(v.GetString(), nil, schema)
 		}
 	}
-	return this.configModules
+	return this.ConfigModules
 }
 
 func (this *rootConfig) getConfigTypes() map[string]string {
-	ret := make(map[string]string)
-	if this.configTypes != nil {
-		return this.configTypes
+	if this.ConfigTypes != nil {
+		return this.ConfigTypes
 	}
-	this.configTypes = make(map[string]string)
+	this.ConfigTypes = make(map[string]string)
 
-	attr := this.types.Attributes
+	attr := this.Types.Attributes
 	for k, v := range attr {
-		parent := v.GetJsonObject("parent").GetString()
-		this.configTypes[k] = parent
+		p := v.GetJsonObject("parent")
+		if p == nil || p.Value == nil {
+			if k == "Default" {
+				this.ConfigTypes[k] = ""
+			}
+			continue
+		}
+		parent := p.GetString()
+		this.ConfigTypes[k] = parent
 	}
-	return ret
+	return this.ConfigTypes
 }
 
 // TODO
-func(this *rootConfig)getPluginPathes(filePath string)[]string{
+func (this *rootConfig) getPluginPathes(filePath string) []string {
 	return nil
 }
