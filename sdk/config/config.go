@@ -16,7 +16,6 @@ var (
 type Configuration struct {
 	mtx             sync.RWMutex
 	parser          map[string]IConfigurationParser
-	refresher       IConfigRefresher
 	configModuleMap map[string][]string
 
 	modules map[string]*ConfigModule
@@ -25,20 +24,26 @@ type Configuration struct {
 	repoRoot    string
 	configType  string
 	initialized bool
+	manager     *Manager
 }
 
-func NewConfiguration() *Configuration {
+func NewConfiguration(m *Manager) *Configuration {
 	ret := &Configuration{
 		parser:          make(map[string]IConfigurationParser),
 		configModuleMap: make(map[string][]string),
 		modules:         make(map[string]*ConfigModule),
 	}
+	ret.manager = m
 	ret.init()
 	return ret
+}
+func (this *Configuration) flush() {
+
 }
 func (this *Configuration) init() {
 	this.registerParser("json", newJSONParser())
 }
+
 func (this *Configuration) initialize(rootPath string, configType string) {
 	this.mtx.Lock()
 	defer this.mtx.Unlock()
@@ -63,33 +68,19 @@ func (this *Configuration) initialize(rootPath string, configType string) {
 	rootCfg.DefaultType = obj.GetJsonObject("defaultType").GetString()
 	rootCfg.Configs = obj.GetJsonObject("configs").GetJsonArray()
 	rootCfg.Plugins = obj.GetJsonObject("plugins")
-	//configTypes := obj.GetJsonObject("configTypes").GetString()
-	//m:=make(map[string]string)
-	//err=json.Unmarshal([]byte(configTypes),&m)
-	//if nil!=err{
-	//	panic(err)
-	//}
-
 	this.configType = configType
 	repos[this.repoRoot] = rootCfg
 
 	types := rootCfg.getConfigTypes()
-	//if (!types.containsKey(this.configType))
 	if _, exist := types[this.configType]; !exist {
 		panic("asd")
 	}
-
-	//plugins:=rootCfg.getPluginPathes(rootConfigPath)
-
 	inheritance := this.buildInheritanceList(types)
 	this.buildModulePathMap(repos, inheritance)
 
 	for k, _ := range types {
 		this.configTypes = append(this.configTypes, k)
 	}
-
-	this.refresher = newConfigRefresher(REFRESH_CHECK_INTERVAL_SECONDS, this)
-	this.refresher.start()
 	this.initialized = true
 }
 func (this *Configuration) buildModulePathMap(repoMap map[string]*rootConfig, configTypeInheritance []string) {

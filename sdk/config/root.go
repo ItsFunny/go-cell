@@ -13,8 +13,8 @@ type rootConfig struct {
 }
 
 func (this *rootConfig) getModules() map[string]*ConfigModule {
-	if len(this.ConfigModules) == 0 {
-
+	if len(this.ConfigModules) != 0 {
+		return this.ConfigModules
 	}
 	this.ConfigModules = make(map[string]*ConfigModule)
 

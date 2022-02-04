@@ -2,7 +2,7 @@
   "defaultProperty": {
     "publicAddress": "demo.com",
     "ports": {
-      "1": 123
+      "1": 8000
     }
   },
   "nodes": [
