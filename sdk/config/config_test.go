@@ -8,12 +8,12 @@ import (
 
 func TestInalize(t *testing.T) {
 	m := NewManager("/Users/lvcong/go/src/github.com/itsfunny/go-cell/sdk/config/demo/config", "test-asd")
-	m.initialize()
+	m.Initialize()
 	type A struct {
 		ServerAddr string `json:"serverAddr"`
 	}
 	a := &A{}
-	err := m.GetCurrentConfiguration().getConfigValue("nacos.properties").AsObject(a)
+	err := m.GetCurrentConfiguration().GetConfigValue("nacos.properties").AsObject(a)
 	fmt.Println(err)
 	fmt.Println(a)
 }
@@ -21,12 +21,12 @@ func TestInalize(t *testing.T) {
 // 会读取最新的配置文件
 func TestIndentent(t *testing.T) {
 	m := NewManager("/Users/lvcong/go/src/github.com/itsfunny/go-cell/sdk/config/demo/config", "test-asd2")
-	m.initialize()
+	m.Initialize()
 	type A struct {
 		ServerAddr string `json:"serverAddr"`
 	}
 	a := &A{}
-	err := m.GetCurrentConfiguration().getConfigValue("nacos.properties").AsObject(a)
+	err := m.GetCurrentConfiguration().GetConfigValue("nacos.properties").AsObject(a)
 	fmt.Println(err)
 	fmt.Println(a)
 	time.Sleep(time.Minute * 100)

@@ -17,6 +17,7 @@ import (
 	"github.com/itsfunny/go-cell/base/core/options"
 	"github.com/itsfunny/go-cell/base/core/services"
 	"github.com/itsfunny/go-cell/di"
+	"github.com/itsfunny/go-cell/sdk/config"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
 )
 
@@ -94,6 +95,10 @@ func (m *NodeExtensionManager) handleMsg(data interface{}) {
 	}
 }
 func (m *NodeExtensionManager) onPrepared(e ApplicationEnvironmentPreparedEvent) {
+	logsdk.SetGlobalLogLevel(logsdk.DebugLevel)
+	defer func() {
+		logsdk.SetGlobalLogLevel(logsdk.InfoLevel)
+	}()
 	m.Ctx.Args = e.Args
 	if err := m.initCommandLine(); nil != err {
 		m.Logger.Error("init command failed", "err", err)
@@ -152,7 +157,6 @@ func (m *NodeExtensionManager) onReady(e ApplicationReadyEvent) {
 }
 
 func (m *NodeExtensionManager) initCommandLine() error {
-	logsdk.SetGlobalLogLevel(logsdk.DebugLevel)
 	args := m.Ctx.GetArgs()
 	opsMap := make(map[string]options.Option)
 	for _, ext := range m.Extensions {
@@ -172,6 +176,20 @@ func (m *NodeExtensionManager) initCommandLine() error {
 			}
 		}
 	}
+
+	internalOptions := []options.Option{homeOption, configTypeOption}
+	for _, op := range internalOptions {
+		_, exist := opsMap[op.Name()]
+		if exist {
+			panic("xxx")
+		}
+		opsMap[op.Name()] = homeOption
+		m.AllOps[op.Name()] = &options.OptionWrapper{
+			Option: op,
+			Value:  op.Default(),
+		}
+	}
+
 	optR, err := options.Parse(args, opsMap)
 	if nil != err {
 		return err
@@ -195,6 +213,19 @@ func (m *NodeExtensionManager) fillCtx() error {
 	} else {
 		m.Ctx.IP = wp.Value.(string)
 	}
+
+	homePath := ""
+	configTypeV := m.AllOps[configType].Value.(string)
+
+	homeWp := m.AllOps[home]
+	if homeWp == nil {
+		// TODO
+	} else {
+		homePath = homeWp.Value.(string)
+	}
+	m.Ctx.ConfigManager = config.NewManager(homePath, configTypeV)
+	m.Ctx.ConfigManager.Initialize()
+
 	return nil
 }
 

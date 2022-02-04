@@ -59,7 +59,7 @@ func (j *JSONParser) newJsonValue(cfg *Configuration, moduleName string, jsonObj
 	case *gojson.JsonObject:
 		moduleObj := vv.GetJsonObject("module")
 		if moduleObj != nil && moduleObj.Value != nil && len(moduleObj.GetString()) > 0 {
-			return cfg.getConfigValue(moduleObj.GetString()).(*ConfigValueJson)
+			return cfg.GetConfigValue(moduleObj.GetString()).(*ConfigValueJson)
 		}
 	}
 	jsonValue := newConfigValueJson(jsonObject, cfg, moduleName,originBytes)

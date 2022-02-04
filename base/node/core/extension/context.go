@@ -11,6 +11,7 @@ package extension
 import (
 	"github.com/itsfunny/go-cell/base/core/options"
 	"github.com/itsfunny/go-cell/base/reactor"
+	"github.com/itsfunny/go-cell/sdk/config"
 )
 
 var (
@@ -28,6 +29,7 @@ type INodeContext interface {
 	SetMetaData(m map[string]string)
 	GetMetaData() map[string]string
 	GetIp() string
+	GetConfigManager() *config.Manager
 }
 
 type NodeContext struct {
@@ -43,6 +45,7 @@ type NodeContext struct {
 	Extensions       []INodeExtension
 	Commands         []reactor.ICommand
 	IP               string
+	ConfigManager    *config.Manager
 }
 
 func (n *NodeContext) GetCommands() []reactor.ICommand {
@@ -87,4 +90,8 @@ func (n *NodeContext) GetMetaData() map[string]string {
 
 func (n *NodeContext) GetIp() string {
 	return n.IP
+}
+
+func (n *NodeContext) GetConfigManager() *config.Manager {
+	return n.ConfigManager
 }

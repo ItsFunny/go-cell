@@ -10,7 +10,6 @@ package extension
 
 import (
 	"context"
-	"github.com/itsfunny/go-cell/base/core/options"
 	"github.com/itsfunny/go-cell/base/core/services"
 	"github.com/itsfunny/go-cell/component/base"
 	"github.com/itsfunny/go-cell/component/listener/v1"
@@ -20,7 +19,6 @@ import (
 )
 
 var (
-	ipOption               = options.StringOption("ip", "i", "ip address").WithDefault("127.0.0.1")
 	extensionManagerModule = logsdk.NewModule("manager", 1)
 
 	ExtensionManagerModule = fx.Options(

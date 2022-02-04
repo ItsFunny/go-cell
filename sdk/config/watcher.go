@@ -61,23 +61,25 @@ func (watcher *RecursiveWatcher) run(debug bool) {
 					// eg. stat .subl513.tmp : no such file or directory
 					logrusplugin.Error("failed", "err", err)
 				} else if fi.IsDir() {
-					if debug{
+					if debug {
 						logrusplugin.Info("detected new dir ", "name", fi.Name())
 					}
 					if !shouldIgnoreFile(filepath.Base(event.Name)) {
 						watcher.AddFolder(event.Name, true)
 					}
 				} else {
-					if debug{
+					if debug {
 						logrusplugin.Info("detected new file ", "name", event.Name)
 					}
-					watcher.OnFileCreateOrModified(event.Name)
+					if !shouldIgnoreFile(filepath.Base(event.Name)) {
+						watcher.OnFileCreateOrModified(event.Name)
+					}
 				}
 			}
 
 			if event.Op&fsnotify.Write == fsnotify.Write {
 				// modified a file, assuming that you don't modify folders
-				if debug{
+				if debug {
 					logrusplugin.InfoF("Detected file modification %s", event.Name)
 				}
 				watcher.OnFileCreateOrModified(event.Name)
@@ -112,5 +114,5 @@ func Subfolders(path string) (paths []string) {
 // shouldIgnoreFile determines if a file should be ignored.
 // File names that begin with "." or "_" are ignored by the go tool.
 func shouldIgnoreFile(name string) bool {
-	return strings.HasPrefix(name, ".") || strings.HasPrefix(name, "_")
+	return strings.HasPrefix(name, ".") || strings.HasPrefix(name, "_") || strings.Contains(name, "~")
 }

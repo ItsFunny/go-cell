@@ -48,7 +48,7 @@ func NewManager(rootPath string, configType string) *Manager {
 
 	return ret
 }
-func (this *Manager) initialize() {
+func (this *Manager) Initialize() {
 	this.mtx.Lock()
 	defer this.mtx.Unlock()
 
@@ -64,6 +64,24 @@ func (this *Manager) initialize() {
 	this.refresher.start()
 }
 
+func (this *Manager) RegisterListener(module string, l func()) {
+	this.mtx.Lock()
+	defer this.mtx.Unlock()
+	if this.newCfg != nil {
+		this.cur.flush()
+		this.cur = this.newCfg
+		this.newCfg = nil
+	}
+	cfg := this.cur
+	m := cfg.getModule(module)
+	if m == nil {
+		logrusplugin.MError(managerModule, "module not exists", "name", module)
+		return
+	}
+	p := cfg.getParser(m.Schema)
+	this.refresher.RegisterListener(module, l, p)
+}
+
 func (this *Manager) onFile(f string) {
 	logrusplugin.MInfo(managerModule, "detected new file,begin refresh configuration ", "name", f)
 	this.refreshConfiguration()
@@ -72,7 +90,7 @@ func (this *Manager) onFile(f string) {
 		if len(v.ModuleDuePath) == 0 {
 			continue
 		}
-		if v.ModuleFullPath==f || v.ModuleDuePath==f{
+		if v.ModuleFullPath == f || v.ModuleDuePath == f {
 			this.refresher.OnModuleChanged(k)
 		}
 	}

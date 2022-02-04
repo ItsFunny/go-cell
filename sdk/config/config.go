@@ -125,7 +125,7 @@ func (this *Configuration) buildInheritanceList(configTypes map[string]string) [
 func (this *Configuration) registerParser(schema string, parser IConfigurationParser) {
 	this.parser[schema] = parser
 }
-func (this *Configuration) getConfigValue(moduleName string) IConfigValue {
+func (this *Configuration) GetConfigValue(moduleName string) IConfigValue {
 	module := this.getModule(moduleName)
 	if module.configValue != nil {
 		return module.configValue
@@ -138,6 +138,13 @@ func (this *Configuration) getConfigValue(moduleName string) IConfigValue {
 	return module.configValue
 }
 
+func (this *Configuration) getParser(schema string) IConfigurationParser {
+	p := this.parser[schema]
+	if p == nil {
+		panic("proasd")
+	}
+	return p
+}
 func (this *Configuration) getModule(moduleName string) *ConfigModule {
 	m := this.modules[moduleName]
 	if m == nil {
