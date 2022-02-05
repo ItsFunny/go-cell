@@ -42,6 +42,8 @@ func NewExtensionManager(bus IApplicationEventBus, e Extensions, h di.ReactorHol
 	ret.Ctx.Commands = h.Commands
 	ret.bus = bus
 	ret.Extensions = e.Extensions
+	ret.AllOps=make(map[string]*options.OptionWrapper)
+	ret.UnImportSet=make(map[string]struct{})
 
 	return ret
 }

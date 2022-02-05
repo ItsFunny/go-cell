@@ -1,0 +1,23 @@
+{
+  "types": {
+    "test-asd2": {
+      "parent": "test-asd"
+    },
+    "test-asd": {
+      "parent": "Default"
+    },
+    "Default": {
+      "parent": null
+    }
+  },
+  "defaultType": "Default",
+  "configs": [
+    {
+      "modules": {
+      },
+      "schema": null
+    }
+  ],
+  "plugins": {
+  }
+}

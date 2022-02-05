@@ -68,8 +68,10 @@ type IContractService interface {
 }
 
 type ContractServiceImpl struct {
+	mtx sync.RWMutex
 	*services.BaseService
-	client   *ethclient.Client
+	clients map[string]*ethclient.Client
+	//client   *ethclient.Client
 	wsClient *ethclient.Client
 
 	accounts *accountCache
@@ -85,7 +87,7 @@ type ContractServiceImpl struct {
 	txCache *txCache
 	blockC  chan *types.Header
 	watch   bool
-	index   int
+	index   int64
 
 	curBlockNumber int64
 }
@@ -100,6 +102,7 @@ func NewContractServiceImpl(l listener.IListenerComponent) IContractService {
 	ret.blockListenerRoutines = v2.NewV2RoutinePoolExecutorComponent()
 	ret.txRoutines = v2.NewV2RoutinePoolExecutorComponent(v2.WithSize(2048))
 	ret.txCache = newTxCache()
+	ret.clients = make(map[string]*ethclient.Client)
 
 	return ret
 }
@@ -113,15 +116,18 @@ func (this *ContractServiceImpl) OnStart(ctx *services.StartCTX) error {
 	if err := this.initContracts(cfg); nil != err {
 		return err
 	}
-
-	client, err := ethclient.Dial(cfg.RPCUrl)
-	if nil != err {
-		return err
+	nodes := cfg.GetRPCNodes()
+	for _, node := range nodes {
+		client, err := ethclient.Dial(node.Url)
+		if nil != err {
+			continue
+		}
+		this.clients[node.Name] = client
 	}
-	this.client = client
 	this.cfg = cfg
 
-	wsC, err := ethclient.Dial(cfg.WSUrl)
+	node := cfg.GetOneWebSocketNode()
+	wsC, err := ethclient.Dial(node.Url)
 	if nil == err {
 		this.wsClient = wsC
 	}
@@ -152,14 +158,14 @@ func (this *ContractServiceImpl) initAdmin() error {
 	account := &Account{
 		key:      privateKey,
 		address:  senderAddress,
-		moniker:  this.cfg.AdminMoniker,
-		gasPrice: this.cfg.GasPrice,
+		moniker:  this.cfg.Contract.AdminMoniker,
+		gasPrice: this.cfg.Contract.GasPrice,
 	}
-	this.accounts.addOne(this.cfg.AdminMoniker, account)
-	return this.Deploy(this.cfg.AdminMoniker, 3)
+	this.accounts.addOne(this.cfg.Contract.AdminMoniker, account)
+	return this.Deploy(this.cfg.Contract.AdminMoniker, 3)
 }
 func (this *ContractServiceImpl) initContracts(cfg *config.OECConfig) error {
-	_, err := this.cache.newNode(cfg.ContractName, cfg.ABIHexString, cfg.BinHexString)
+	_, err := this.cache.newNode(cfg.Contract.ContractName, cfg.Contract.ABIHexString, cfg.Contract.BinHexString)
 	if nil != err {
 		return err
 	}
@@ -183,13 +189,8 @@ func (this *ContractServiceImpl) listenBlockEvent() error {
 				return
 			case h := <-this.blockC:
 				this.curBlockNumber = h.Number.Int64()
-				this.blockListenerRoutines.AddJob(false, routine.Job{
-					Pre: nil,
-					Handler: func() error {
-						this.onBlockCreated(h)
-						return nil
-					},
-					Post: nil,
+				this.blockListenerRoutines.AddJob(func() {
+					this.onBlockCreated(h)
 				})
 			}
 		}
@@ -201,7 +202,7 @@ func (this *ContractServiceImpl) onBlockCreated(h *types.Header) {
 		return
 	}
 	download := func(quit bool) (*types.Block, error) {
-		return this.client.BlockByNumber(this.GetContext(), h.Number)
+		return this.getDefaultClient().BlockByNumber(this.GetContext(), h.Number)
 	}
 	b, e := download(false)
 	if nil != e {
@@ -237,7 +238,7 @@ func (this *ContractServiceImpl) GetAccountBalance(moniker string, blockNumber i
 	if blockNumber > 0 {
 		b = big.NewInt(blockNumber)
 	}
-	at, err := this.client.BalanceAt(context.Background(), account.address, b)
+	at, err := this.getDefaultClient().BalanceAt(context.Background(), account.address, b)
 
 	if nil != err {
 		return "", err
@@ -252,19 +253,19 @@ func (this *ContractServiceImpl) Deploy(moniker string, waitTimes int) error {
 		return error2.AccountNotExists
 	}
 
-	contract, err := NewContract(this.cfg.ContractName, "", this.cfg.ABIHexString, this.cfg.BinHexString)
+	contract, err := NewContract(this.cfg.Contract.ContractName, "", this.cfg.Contract.ABIHexString, this.cfg.Contract.BinHexString)
 	if nil != err {
 		this.Logger.Errorf("contract failed", "err", err)
 		return err
 	}
 
-	chainID := big.NewInt(this.cfg.ChainId)
-	nonce, err := this.client.PendingNonceAt(context.Background(), account.address)
+	chainID := big.NewInt(this.cfg.Contract.ChainId)
+	nonce, err := this.getDefaultClient().PendingNonceAt(context.Background(), account.address)
 	if nil != err {
 		return err
 	}
 
-	unsignedTx, err := this.deployContractTx(nonce, this.cfg.ContractName)
+	unsignedTx, err := this.deployContractTx(nonce, this.cfg.Contract.ContractName)
 	if nil != err {
 		return err
 	}
@@ -275,7 +276,7 @@ func (this *ContractServiceImpl) Deploy(moniker string, waitTimes int) error {
 	}
 
 	// 3. send rawTx
-	err = this.client.SendTransaction(context.Background(), signedTx)
+	err = this.getDefaultClient().SendTransaction(context.Background(), signedTx)
 	if err != nil {
 		this.Logger.Error("SendTransaction", "err", err)
 		return err
@@ -314,7 +315,7 @@ func (this *ContractServiceImpl) DemoWriteContract(moniker string) error {
 
 	contract := account.Contract
 	// 0. get the value of nonce, based on address
-	nonce, err := this.client.PendingNonceAt(context.Background(), account.address)
+	nonce, err := this.getDefaultClient().PendingNonceAt(context.Background(), account.address)
 	if err != nil {
 		log.Printf("failed to fetch the value of nonce from network: %+v", err)
 		return err
@@ -326,7 +327,7 @@ func (this *ContractServiceImpl) DemoWriteContract(moniker string) error {
 	var amount *big.Int
 
 	// 0.5 get the gasPrice
-	gasPrice := big.NewInt(this.cfg.GasPrice)
+	gasPrice := big.NewInt(this.cfg.Contract.GasPrice)
 
 	this.Logger.Info(fmt.Sprintf(
 		"==================================================\n"+
@@ -350,17 +351,17 @@ func (this *ContractServiceImpl) DemoWriteContract(moniker string) error {
 		amount = big.NewInt(0)
 	}
 
-	unsignedTx := types.NewTransaction(nonce, contract.Addr, amount, this.cfg.GasLimit, gasPrice, data)
+	unsignedTx := types.NewTransaction(nonce, contract.Addr, amount, this.cfg.Contract.GasLimit, gasPrice, data)
 
 	// 2. sign unsignedTx -> rawTx
-	signedTx, err := types.SignTx(unsignedTx, types.NewEIP155Signer(big.NewInt(this.cfg.ChainId)), account.key)
+	signedTx, err := types.SignTx(unsignedTx, types.NewEIP155Signer(big.NewInt(this.cfg.Contract.ChainId)), account.key)
 	if err != nil {
 		this.Logger.Errorf("failed to sign the unsignedTx offline: %+v", err)
 		return err
 	}
 
 	// 3. send rawTx
-	err = this.client.SendTransaction(context.Background(), signedTx)
+	err = this.getDefaultClient().SendTransaction(context.Background(), signedTx)
 	if err != nil {
 		this.Logger.Error(err.Error())
 		return err
@@ -384,7 +385,7 @@ func (this *ContractServiceImpl) Transfer(req TransferReq) (*TransferResp, error
 	}
 	contract := fromAccount.Contract
 	// 0. get the value of nonce, based on address
-	nonce, err := this.client.PendingNonceAt(context.Background(), fromAccount.address)
+	nonce, err := this.getDefaultClient().PendingNonceAt(context.Background(), fromAccount.address)
 	if err != nil {
 		log.Printf("failed to fetch the value of nonce from network: %+v", err)
 		return nil, err
@@ -410,7 +411,7 @@ func (this *ContractServiceImpl) Transfer(req TransferReq) (*TransferResp, error
 		return nil, err
 	}
 
-	unsignedTx := types.NewTransaction(nonce, toAccount.address, amount, this.cfg.GasLimit, gasPrice, data)
+	unsignedTx := types.NewTransaction(nonce, toAccount.address, amount, this.cfg.Contract.GasLimit, gasPrice, data)
 
 	p, err := this.asyncSendTransaction(fromAccount.key, unsignedTx)
 	if nil != err {
@@ -425,7 +426,7 @@ func (this *ContractServiceImpl) asyncSendTransaction(key *ecdsa.PrivateKey,
 	//unsignedTx := types.NewTransaction(nonce, toAddr, amount, this.cfg.GasLimit, gasPrice, data)
 	ret := promise.NewPromise(this.GetContext())
 	// 2. sign unsignedTx -> rawTx
-	signedTx, err := types.SignTx(unsignedTx, types.NewEIP155Signer(big.NewInt(this.cfg.ChainId)), key)
+	signedTx, err := types.SignTx(unsignedTx, types.NewEIP155Signer(big.NewInt(this.cfg.Contract.ChainId)), key)
 	if err != nil {
 		this.Logger.Errorf("failed to sign the unsignedTx offline: %+v", err)
 		return nil, err
@@ -442,36 +443,32 @@ func (this *ContractServiceImpl) asyncSendTransaction(key *ecdsa.PrivateKey,
 	p := this.txCache.registerListener(this.GetContext(), hash)
 
 	// 3. send rawTx
-	err = this.client.SendTransaction(context.Background(), signedTx)
+	err = this.getDefaultClient().SendTransaction(context.Background(), signedTx)
 	if err != nil {
 		this.txCache.removeListener(hash)
 		this.Logger.Error(err.Error())
 		return nil, err
 	}
 
-	this.txRoutines.AddJob(false, routine.Job{
-		Pre: nil,
-		Handler: func() error {
-			_, err = p.GetForever()
-			if nil != err {
-				ret.Fail(err)
-				return nil
-			}
-			receipt, err := this.getReceipt(hash, 100)
-			if nil != err {
-				this.Logger.Error("transfer failed", "err", err)
-				ret.Fail(err)
-				return nil
-			}
-			if receipt.Status != types.ReceiptStatusSuccessful {
-				this.Logger.Error("receipt failed", "hash", hash, "info", printReceipt(receipt))
-				ret.Fail(errors.New("receipt failed"))
-				return nil
-			}
-			ret.Send(nil)
-			return nil
-		},
-		Post: nil,
+	this.txRoutines.AddJob(func() {
+		_, err = p.GetForever()
+		if nil != err {
+			ret.Fail(err)
+			return
+		}
+		receipt, err := this.getReceipt(hash, 100)
+		if nil != err {
+			this.Logger.Error("transfer failed", "err", err)
+			ret.Fail(err)
+			return
+		}
+		if receipt.Status != types.ReceiptStatusSuccessful {
+			this.Logger.Error("receipt failed", "hash", hash, "info", printReceipt(receipt))
+			ret.Fail(errors.New("receipt failed"))
+			return
+		}
+		ret.Send(nil)
+		return
 	})
 
 	return ret, nil
@@ -489,7 +486,7 @@ func (this *ContractServiceImpl) getReceipt(hash common.Hash, waitTimes int) (*t
 		err     error
 	)
 	for err == nil {
-		receipt, err = this.client.TransactionReceipt(context.Background(), hash)
+		receipt, err = this.getDefaultClient().TransactionReceipt(context.Background(), hash)
 		this.Logger.Info("TransactionReceipt retry", "times", retry, "hash", hash.String(), "err", err)
 		if err != nil {
 			retry++
@@ -551,7 +548,7 @@ func (this *ContractServiceImpl) ReadContract(moniker string, funcName string, a
 		Data: data,
 	}
 
-	output, err := this.client.CallContract(context.Background(), msg, nil)
+	output, err := this.getDefaultClient().CallContract(context.Background(), msg, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -585,7 +582,7 @@ func (this *ContractServiceImpl) deployContractTx(nonce uint64, name string) (*t
 		return nil, err
 	}
 	data := append(node.ByteCode, input...)
-	return types.NewContractCreation(nonce, value, this.cfg.GasLimit, big.NewInt(this.cfg.GasPrice), data), err
+	return types.NewContractCreation(nonce, value, this.cfg.Contract.GasLimit, big.NewInt(this.cfg.Contract.GasPrice), data), err
 }
 
 func (this *ContractServiceImpl) createKey() (*ecdsa.PrivateKey, error) {
@@ -620,26 +617,26 @@ func (this *ContractServiceImpl) RegisterAccount(req RegisterAccountReq) (Regist
 		address:         senderAddress,
 		contractAddress: make(map[string]common.Address),
 		moniker:         moniker,
-		gasPrice:        this.cfg.GasPrice,
+		gasPrice:        this.cfg.Contract.GasPrice,
 	}
 	ret.Address = account.address.String()
 	ret.Moniker = moniker
 
-	c, _ := NewContract(this.cfg.ContractName, "", this.cfg.ABIHexString, this.cfg.BinHexString)
+	c, _ := NewContract(this.cfg.Contract.ContractName, "", this.cfg.Contract.ABIHexString, this.cfg.Contract.BinHexString)
 	account.Contract = c
 	this.accounts.addOne(moniker, account)
 
 	// transfer
-	if moniker != this.cfg.AdminMoniker {
+	if moniker != this.cfg.Contract.AdminMoniker {
 		//this.transfer()
 		from := req.TransferFrom
 		if len(from) == 0 {
-			from = this.cfg.AdminMoniker
+			from = this.cfg.Contract.AdminMoniker
 		}
 		p, err := this.Transfer(TransferReq{
 			From:    from,
 			To:      moniker,
-			AmountV: this.cfg.DefaultTransferCount,
+			AmountV: this.cfg.Contract.DefaultTransferCount,
 		})
 		if nil != err {
 			return ret, err
@@ -674,7 +671,7 @@ func (this *ContractServiceImpl) Import(moniker string, prvHex string) (string, 
 		key:     privateKey,
 		address: senderAddress,
 	}
-	this.accounts.addOne(this.cfg.AdminMoniker, account)
+	this.accounts.addOne(this.cfg.Contract.AdminMoniker, account)
 	return this.GetAccountBalance(moniker, 0)
 }
 
@@ -695,7 +692,7 @@ func (this *ContractServiceImpl) DemoTest() {
 	go func() {
 		defer wg.Done()
 		transfer, err2 := this.Transfer(TransferReq{
-			From:    this.cfg.AdminMoniker,
+			From:    this.cfg.Contract.AdminMoniker,
 			To:      "qwe",
 			AmountV: 100,
 		})
@@ -709,7 +706,7 @@ func (this *ContractServiceImpl) DemoTest() {
 		defer wg.Done()
 		transfer, err2 := this.Transfer(TransferReq{
 			From:    "qwe",
-			To:      this.cfg.AdminMoniker,
+			To:      this.cfg.Contract.AdminMoniker,
 			AmountV: 100,
 		})
 		if nil != err2 {
@@ -816,16 +813,61 @@ func (this *ContractServiceImpl) Bench(req BenchReq) (BenchResp, error) {
 	accountCount := req.AccountLimit
 	limit := req.TransactionLimit
 	ret := BenchResp{}
-	// 1. 注册account
-	for this.accounts.size() < accountCount {
-		_, err := this.RegisterAccount(RegisterAccountReq{
-			Moniker:      fmt.Sprintf("index%d", this.index),
-			TransferFrom: "",
-		})
-		if nil != err {
-			return ret, err
+
+	wgCount := accountCount - this.accounts.size()
+	if wgCount > 0 {
+		wg := sync.WaitGroup{}
+		wg.Add(wgCount)
+		// 1. 注册account
+		ch := make(chan string, 100)
+		errC := make(chan error, 1)
+		semM := make(map[string]semaphore.Semaphore)
+		semM[this.cfg.Contract.AdminMoniker] = semaphore.New(1)
+
+		for i := 0; i < wgCount; i++ {
+			f := func() {
+				defer wg.Done()
+				from := this.cfg.Contract.AdminMoniker
+				select {
+				case from = <-ch:
+					//semM[from].Acquire(context.Background(), 1)
+					defer func() {
+						ch <- from
+					}()
+				case <-errC:
+					return
+				default:
+
+				}
+				m := semM[from]
+				m.Acquire(context.Background(), 1)
+				defer m.Release(1)
+				newAccountName := fmt.Sprintf("index%d", atomic.AddInt64(&this.index, 1))
+				_, err := this.RegisterAccount(RegisterAccountReq{
+					Moniker:      newAccountName,
+					TransferFrom: from,
+				})
+				if nil != err {
+					errC <- err
+					return
+				}
+				semM[newAccountName] = semaphore.New(1)
+				ch <- newAccountName
+				ch <- from
+			}
+			if i >= 5 {
+				go f()
+			} else {
+				f()
+				select {
+				case e := <-errC:
+					return ret, e
+				default:
+
+				}
+			}
 		}
-		this.index++
+		wg.Wait()
 	}
 
 	// 2. 收集所有的account
@@ -912,11 +954,11 @@ func (this *ContractServiceImpl) syncTransfer(req TransferReq) error {
 
 func (this *ContractServiceImpl) GetBlockByHash(hexHash string) (*types.Block, error) {
 	h := common.HexToHash(hexHash)
-	return this.client.BlockByHash(this.GetContext(), h)
+	return this.getDefaultClient().BlockByHash(this.GetContext(), h)
 }
 
 func (this *ContractServiceImpl) GetBlockByNumber(number int64) (*types.Block, error) {
-	return this.client.BlockByNumber(this.GetContext(), big.NewInt(number))
+	return this.getDefaultClient().BlockByNumber(this.GetContext(), big.NewInt(number))
 }
 
 func (this *ContractServiceImpl) CodeAt(moniker string, blockNumber int64) ([]byte, error) {
@@ -924,7 +966,7 @@ func (this *ContractServiceImpl) CodeAt(moniker string, blockNumber int64) ([]by
 	if nil != err {
 		return nil, err
 	}
-	return this.client.CodeAt(this.GetContext(), account.address, big.NewInt(blockNumber))
+	return this.getDefaultClient().CodeAt(this.GetContext(), account.address, big.NewInt(blockNumber))
 }
 
 type promiseHashWrapper struct {
@@ -959,4 +1001,18 @@ func (this *ContractServiceImpl) cleanRoutine() {
 			this.txCache.batchRemoveListener(dels...)
 		}
 	}
+}
+
+///
+func (this *ContractServiceImpl) getOneClient(name string) *ethclient.Client {
+	if len(name) == 0 {
+		for _, v := range this.clients {
+			return v
+		}
+	}
+	return this.clients[name]
+}
+
+func (this *ContractServiceImpl) getDefaultClient() *ethclient.Client {
+	return this.getOneClient(config.Default)
 }

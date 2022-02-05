@@ -50,9 +50,9 @@ func NewV2RoutinePoolExecutorComponent(opts ...Option) *routineComponentV2 {
 	return r
 }
 
-func (r *routineComponentV2) AddJob(enableRoutine bool, job routine.Job) {
+func (r *routineComponentV2) AddJob(job func()) {
 	if err := r.pool.Submit(func() {
-		job.WrapHandler()()
+		job()
 		atomic.AddInt32(&r.size, -1)
 	}); nil != err {
 		r.Logger.Warn("添加job失败", "err", err.Error())

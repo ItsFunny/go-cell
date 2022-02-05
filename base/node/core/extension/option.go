@@ -8,6 +8,6 @@ var (
 	ip         = "ip"
 
 	ipOption         = options.StringOption(ip, ip, "ip address").WithDefault("127.0.0.1")
-	homeOption       = options.StringOption(home, home, "配置文件根路径")
+	homeOption       = options.StringOption(home, home, "配置文件根路径").WithRequired(true)
 	configTypeOption = options.StringOption(configType, configType, configType).WithDefault("Default")
 )

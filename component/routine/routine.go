@@ -9,40 +9,21 @@ import (
 type TaskHandler func() error
 type IRoutineComponent interface {
 	base.IComponent
-	AddJob(enableRoutine bool, job Job)
+	AddJob(f func())
 	JobsCount() int32
 }
 
-type Job struct {
-	Pre     func()
-	Handler TaskHandler
-	Post    func()
-}
-
-func (this Job) WrapHandler() TaskHandler {
-	return func() error {
-		if nil != this.Pre {
-			this.Pre()
-		}
-		defer func() {
-			if nil != this.Post {
-				this.Post()
-			}
-		}()
-		return this.Handler()
-	}
-}
 
 type defaultRoutinePool struct {
 	*base.BaseComponent
 	size int32
 }
 
-func (d *defaultRoutinePool) AddJob(enableRoutine bool, job Job) {
+func (d *defaultRoutinePool) AddJob(f func()) {
 	atomic.AddInt32(&d.size, 1)
 	go func() {
 		defer atomic.AddInt32(&d.size, -1)
-		job.WrapHandler()()
+		f()
 	}()
 }
 

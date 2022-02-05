@@ -20,7 +20,6 @@ const (
 )
 
 type Promise struct {
-	// TODO ,或许可以优化到 context中
 	value interface{}
 	done  chan struct{}
 
