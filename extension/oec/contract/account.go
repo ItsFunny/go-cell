@@ -14,6 +14,7 @@ type Account struct {
 	contractAddress map[string]common.Address
 	moniker         string
 	gasPrice        int64
+	balance string
 }
 
 func (this Account) ready() bool {

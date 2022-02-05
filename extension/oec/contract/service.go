@@ -84,10 +84,11 @@ type ContractServiceImpl struct {
 	blockListenerRoutines routine.IRoutineComponent
 	txRoutines            routine.IRoutineComponent
 
-	txCache *txCache
-	blockC  chan *types.Header
-	watch   bool
-	index   int64
+	txCache       *txCache
+	transferCache *transferCache
+	blockC        chan *types.Header
+	watch         bool
+	index         int64
 
 	curBlockNumber int64
 }
@@ -103,6 +104,7 @@ func NewContractServiceImpl(l listener.IListenerComponent) IContractService {
 	ret.txRoutines = v2.NewV2RoutinePoolExecutorComponent(v2.WithSize(2048))
 	ret.txCache = newTxCache()
 	ret.clients = make(map[string]*ethclient.Client)
+	ret.transferCache = newTransferCache()
 
 	return ret
 }
@@ -418,6 +420,7 @@ func (this *ContractServiceImpl) Transfer(req TransferReq) (*TransferResp, error
 		return nil, err
 	}
 	ret := &TransferResp{Promise: p}
+	this.transferCache.recordOne(fromAccount.moniker, toAccount.moniker, amountV)
 	return ret, nil
 }
 
@@ -630,22 +633,31 @@ func (this *ContractServiceImpl) RegisterAccount(req RegisterAccountReq) (Regist
 	if moniker != this.cfg.Contract.AdminMoniker {
 		//this.transfer()
 		from := req.TransferFrom
-		if len(from) == 0 {
+		amount := this.cfg.Contract.DefaultTransferCount
+		if len(from) == 0 || from == this.cfg.Contract.AdminMoniker {
 			from = this.cfg.Contract.AdminMoniker
+			amount *= 400
 		}
 		p, err := this.Transfer(TransferReq{
 			From:    from,
 			To:      moniker,
-			AmountV: this.cfg.Contract.DefaultTransferCount,
+			AmountV: amount,
 		})
 		if nil != err {
 			return ret, err
 		}
 		_, err = p.Promise.GetForever()
+		balance, err := this.GetAccountBalance(moniker, 0)
+		if nil != err {
+			this.Logger.Error("获取account balance 失败", "err", err)
+		} else {
+			account.balance = balance
+		}
+		this.Logger.Info("register account", "moniker", moniker)
+
 		return ret, err
 	}
 
-	this.Logger.Info("register account", "moniker", moniker)
 	return ret, nil
 }
 
@@ -824,21 +836,29 @@ func (this *ContractServiceImpl) Bench(req BenchReq) (BenchResp, error) {
 		semM := make(map[string]semaphore.Semaphore)
 		semM[this.cfg.Contract.AdminMoniker] = semaphore.New(1)
 
+		beforeConcurrent := make([]string, 0)
+		sleepMils := time.Second * 4
 		for i := 0; i < wgCount; i++ {
-			f := func() {
+			f := func(concurrent bool) {
 				defer wg.Done()
 				from := this.cfg.Contract.AdminMoniker
-				select {
-				case from = <-ch:
-					//semM[from].Acquire(context.Background(), 1)
-					defer func() {
-						ch <- from
-					}()
-				case <-errC:
-					return
-				default:
-
+				var sleepFunc func(exit bool)
+				sleepFunc = func(exit bool) {
+					select {
+					case from = <-ch:
+						//semM[from].Acquire(context.Background(), 1)
+					case <-errC:
+						return
+					default:
+						if exit {
+							return
+						}
+						time.Sleep(sleepMils)
+						sleepFunc(true)
+					}
 				}
+				sleepFunc(false)
+
 				m := semM[from]
 				m.Acquire(context.Background(), 1)
 				defer m.Release(1)
@@ -848,22 +868,42 @@ func (this *ContractServiceImpl) Bench(req BenchReq) (BenchResp, error) {
 					TransferFrom: from,
 				})
 				if nil != err {
-					errC <- err
+					select {
+					case errC <- err:
+					default:
+					}
 					return
 				}
 				semM[newAccountName] = semaphore.New(1)
 				ch <- newAccountName
 				ch <- from
 			}
-			if i >= 5 {
-				go f()
+			if i >= 10 {
+				if i == 10 {
+					for _, v := range beforeConcurrent {
+						ch <- v
+					}
+					time.Sleep(time.Second * 3)
+				}
+				go f(true)
 			} else {
-				f()
+				ch <- this.cfg.Contract.AdminMoniker
+				f(false)
 				select {
 				case e := <-errC:
 					return ret, e
 				default:
-
+				}
+			BeforeConcurrent:
+				for {
+					select {
+					case n1 := <-ch:
+						if n1 != this.cfg.Contract.AdminMoniker {
+							beforeConcurrent = append(beforeConcurrent, n1)
+						}
+					default:
+						break BeforeConcurrent
+					}
 				}
 			}
 		}
@@ -878,6 +918,7 @@ func (this *ContractServiceImpl) Bench(req BenchReq) (BenchResp, error) {
 		accounts[i] = acc
 		i++
 	}
+	time.Sleep(time.Second * 3)
 	sem := semaphore.New(limit)
 	// 3.互相发送交易
 	ret.BeginBlock = this.curBlockNumber
