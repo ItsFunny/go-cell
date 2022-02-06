@@ -9,6 +9,7 @@
 package watcher
 
 import (
+	"github.com/itsfunny/go-cell/structure/channel"
 	"sync/atomic"
 )
 
@@ -24,11 +25,11 @@ const (
 )
 
 type IOperationData interface {
-	IData
+	channel.IData
 }
 type operationWrapper struct {
 	id int32
-	data IData
+	data channel.IData
 }
 
 
@@ -64,5 +65,5 @@ func (r routineCClose) ID() interface{} {
 
 
 type flushWrapper struct {
-	v IData
+	v channel.IData
 }

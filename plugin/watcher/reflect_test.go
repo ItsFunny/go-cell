@@ -10,9 +10,7 @@ package watcher
 
 import (
 	"fmt"
-	"gitlab.ebidsun.com/chain/droplib/base/log/common"
-	logcomponent "gitlab.ebidsun.com/chain/droplib/base/log/v2/component"
-	"gitlab.ebidsun.com/chain/droplib/libs/channel"
+	"github.com/itsfunny/go-cell/structure/channel"
 	"github.com/stretchr/testify/require"
 	"math"
 	"testing"
@@ -28,7 +26,7 @@ func Test_ReflectBaseUse(t *testing.T) {
 func Test_ReflectSleep(t *testing.T) {
 	w := newReflectChannelWatcher(DefaultForeverOpt)
 	w.BStart()
-	ms, wp := mockChannels(func(v IData) {
+	ms, wp := mockChannels(func(v channel.IData) {
 	}, 2)
 	w.WatchMemberChanged(ms[0])
 	time.Sleep(time.Second * 5)
@@ -49,7 +47,7 @@ func Test_Reflect100Routine(t *testing.T) {
 	testWithN(t, testN{
 		count:        1,
 		routineLimit: 100,
-		consumerF: func(v IData) {
+		consumerF: func(v channel.IData) {
 			time.Sleep(time.Second)
 		},
 		channelWatcherF: func() ChannelWatcher {
@@ -65,7 +63,7 @@ func Test_AsyncReflect100Routine(t *testing.T) {
 	testWithN(t, testN{
 		count:        1,
 		routineLimit: 100,
-		consumerF: func(v IData) {
+		consumerF: func(v channel.IData) {
 			time.Sleep(time.Second)
 		},
 		channelWatcherF: func() ChannelWatcher {
@@ -137,7 +135,6 @@ func Test_MoreReflectRollBack(t *testing.T) {
 	}
 }
 func Test_ReflectConcurrentUpgrade(t *testing.T) {
-	logcomponent.SetGlobalLogLevel(common.InfoLevel)
 	commonTestNCounts(t, 100, func() {
 		back := mockUpgrade(4096, func() ChannelWatcher {
 			return newReflectChannelWatcher(DefaultForeverOpt)

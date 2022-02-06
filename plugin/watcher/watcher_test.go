@@ -9,10 +9,8 @@
 package watcher
 
 import (
-	"gitlab.ebidsun.com/chain/droplib/base/log/common"
-	logcomponent "gitlab.ebidsun.com/chain/droplib/base/log/v2/component"
-	"gitlab.ebidsun.com/chain/droplib/libs/channel"
-	rand "gitlab.ebidsun.com/chain/droplib/libs/random"
+	"github.com/itsfunny/go-cell/base/common/utils"
+	"github.com/itsfunny/go-cell/structure/channel"
 	"math"
 	"testing"
 	"time"
@@ -37,7 +35,7 @@ var specificWartchers = []struct {
 }
 
 func Test_SmallJob(t *testing.T) {
-	channels, wp := mockChannels(func(v IData) {
+	channels, wp := mockChannels(func(v channel.IData) {
 	}, 100)
 	for _, wh := range specificWartchers {
 		t.Run(wh.name, func(t *testing.T) {
@@ -56,7 +54,7 @@ func Test_SmallJob(t *testing.T) {
 func Test_LongJob(t *testing.T) {
 	debug_async = false
 	defaultTestSleepInterval = math.MaxInt32
-	channels, wp := mockChannels(func(v IData) {
+	channels, wp := mockChannels(func(v channel.IData) {
 		time.Sleep(time.Second * 10)
 	}, 100)
 	for _, wh := range specificWartchers {
@@ -79,7 +77,7 @@ func TestRoutineToReflect(t *testing.T) {
 	reflectNoRollback := ReflectNoRollbackOption()
 	watcher := NewChannelWatcher(routeUpgrade, reflectNoRollback)
 	watcher.BStart()
-	channels, wp := mockChannels(func(v IData) {
+	channels, wp := mockChannels(func(v channel.IData) {
 		time.Sleep(time.Second * 1)
 	}, 2)
 
@@ -119,13 +117,12 @@ func TestRoutineToReflect(t *testing.T) {
 // }=>
 
 func TestConcurrent(t *testing.T) {
-	logcomponent.SetGlobalLogLevel(common.DebugLevel)
 	defaultTestSleepInterval = 600
 	commonTestNCounts(t, 50, func() {
 		debug_async = true
 		watcher := NewChannelWatcher()
 		watcher.BStart()
-		channels, wp := mockChannels(func(v IData) {
+		channels, wp := mockChannels(func(v channel.IData) {
 			time.Sleep(time.Millisecond * 2)
 		}, 8092)
 		for i := 0; i < len(channels); i++ {
@@ -139,15 +136,14 @@ func TestConcurrent(t *testing.T) {
 }
 
 func TestRandomJobConcurrent(t *testing.T) {
-	logcomponent.SetGlobalLogLevel(common.DebugLevel)
 	defaultTestSleepInterval = 6000
 	commonTestNCounts(t, 50, func() {
 		debug_async = true
 
 		watcher := NewChannelWatcher()
 		watcher.BStart()
-		channels, wp := mockChannels(func(v IData) {
-			time.Sleep(time.Millisecond * (time.Duration(rand.RandInt32(10, 3000))))
+		channels, wp := mockChannels(func(v channel.IData) {
+			time.Sleep(time.Millisecond * (time.Duration(utils.RandInt32(10, 3000))))
 		}, 4096)
 		for i := 0; i < len(channels); i++ {
 			go func(index int) {

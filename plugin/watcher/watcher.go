@@ -11,6 +11,7 @@ package watcher
 import (
 	"github.com/itsfunny/go-cell/base/core/services"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
+	"github.com/itsfunny/go-cell/structure/channel"
 	"sync"
 	"sync/atomic"
 )
@@ -21,13 +22,13 @@ var (
 
 type IWatcher interface {
 	services.IBaseService
-	RegisterNewChannel(name string, c <-chan IData, f DataConsumer)
+	RegisterNewChannel(name string, c <-chan channel.IData, f DataConsumer)
 }
 type channelWatcher struct {
 	*services.BaseService
 	old          []*c
 	in           chan ChannelMember
-	increment    IChan
+	increment    channel.IChan
 	mset         map[string]struct{}
 	upgradeTimes int32
 	mtx          sync.Mutex
@@ -54,7 +55,7 @@ func newW(forever bool, opts ...Option) *channelWatcher {
 	option := GetOption(opts...)
 	r := &channelWatcher{
 		in:        make(chan ChannelMember, option.ChannelCap),
-		increment: NewLinkedBlockQueue(),
+		increment: channel.NewLinkedBlockQueue(),
 		mset:      make(map[string]struct{}),
 	}
 	r.option = &option
@@ -73,7 +74,7 @@ func NewForeverWatcher(wType WatcherType, opts ...Option) *channelWatcher {
 	}
 	return r
 }
-func (this *channelWatcher) RegisterNewChannel(name string, c <-chan IData, f DataConsumer) {
+func (this *channelWatcher) RegisterNewChannel(name string, c <-chan channel.IData, f DataConsumer) {
 	this.in <- ChannelMember{
 		name:     name,
 		c:        c,
@@ -114,7 +115,7 @@ func (this *channelWatcher) start() {
 func (this *channelWatcher) run() {
 	var m ChannelMember
 	var special bool
-	var v IData
+	var v channel.IData
 	for {
 		v = this.increment.Take()
 		if v == nil {
@@ -144,7 +145,7 @@ func (this *channelWatcher) upgradeAdd(m ChannelMember) {
 	}
 }
 
-func (this *channelWatcher) routineSpecial(con DataConsumer, c <-chan IData) {
+func (this *channelWatcher) routineSpecial(con DataConsumer, c <-chan channel.IData) {
 	go func() {
 		for {
 			select {

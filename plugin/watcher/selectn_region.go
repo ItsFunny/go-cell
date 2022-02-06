@@ -14,6 +14,7 @@ import (
 	"github.com/itsfunny/go-cell/component/listener"
 	"github.com/itsfunny/go-cell/component/routine"
 	logrusplugin "github.com/itsfunny/go-cell/sdk/log/logrus"
+	"github.com/itsfunny/go-cell/structure/channel"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -24,10 +25,10 @@ const (
 	notifyc_reuse
 )
 
-var emptyObj IData
+var emptyObj channel.IData
 
 type chWp struct {
-	c        <-chan IData
+	c        <-chan channel.IData
 	consumer DataConsumer
 	name     string
 	newM     bool
@@ -98,7 +99,7 @@ type baseRegion struct {
 
 func (this *baseRegion) Shutdown() {
 }
-func (this *baseRegion) execute(index int, data IData) {
+func (this *baseRegion) execute(index int, data channel.IData) {
 	if this.chs[index].consumer.Async() {
 		cop := this.chs[index].consumer
 		this.getRoutinePool().AddJob(func() {
@@ -354,7 +355,7 @@ func (this *baseRegion) Inc(v int32) {
 func (this *baseRegion) Chs() []*selectNC {
 	return this.chs
 }
-func (this *baseRegion) wrapV(v IData) IData {
+func (this *baseRegion) wrapV(v channel.IData) channel.IData {
 	return v
 }
 
@@ -372,7 +373,7 @@ func (this *select1Region) onStartRegion(c context.Context) {
 				this.getListener().NotifyListener(nil, strconv.Itoa(this.id))
 			}
 		}()
-		var v IData
+		var v channel.IData
 		var ok bool
 		for {
 			select {
@@ -436,7 +437,7 @@ func (this *select2Region) onStartRegion(c context.Context) {
 				this.getListener().NotifyListener(nil, strconv.Itoa(this.id))
 			}
 		}()
-		var v IData
+		var v channel.IData
 		var ok bool
 		for {
 			select {
@@ -509,7 +510,7 @@ func (this *select4Region) onStartRegion(c context.Context) {
 				this.getListener().NotifyListener(nil, strconv.Itoa(this.id))
 			}
 		}()
-		var v IData
+		var v channel.IData
 		var ok bool
 		for {
 			select {
@@ -593,7 +594,7 @@ func (this *select8Region) onStartRegion(c context.Context) {
 				this.getListener().NotifyListener(nil, strconv.Itoa(this.id))
 			}
 		}()
-		var v IData
+		var v channel.IData
 		var ok bool
 		for {
 			select {
@@ -700,7 +701,7 @@ func (this *select16Region) onStartRegion(c context.Context) {
 				this.getListener().NotifyListener(nil, strconv.Itoa(this.id))
 			}
 		}()
-		var v IData
+		var v channel.IData
 		var ok bool
 		for {
 			select {
@@ -852,7 +853,7 @@ func (this *select32Region) onStartRegion(c context.Context) {
 				this.getListener().NotifyListener(nil, strconv.Itoa(this.id))
 			}
 		}()
-		var v IData
+		var v channel.IData
 		var ok bool
 		for {
 			select {

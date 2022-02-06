@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/itsfunny/go-cell/base/core/services"
+	"github.com/itsfunny/go-cell/structure/channel"
 	"github.com/itsfunny/go-cell/structure/maps/linkedhashmap"
 	"reflect"
 	"runtime"
@@ -56,41 +57,41 @@ func (this *routingChannelWatcher) OnStart(ctx *services.StartCTX) error {
 	return nil
 }
 
-func (this *routingChannelWatcher) GetChannelShims(cap int) (map[ChannelID]*ChannelWp, int) {
-	r := make(map[ChannelID]*ChannelWp)
+func (this *routingChannelWatcher) GetChannelShims(cap int) (map[channel.ChannelID]*ChannelWp, int) {
+	r := make(map[channel.ChannelID]*ChannelWp)
 	r[route_update_notify_chid] = &ChannelWp{
-		ch: &Channel{
+		ch: &channel.Channel{
 			Id: route_update_notify_chid,
-			Ch: make(chan IData, cap),
+			Ch: make(chan channel.IData, cap),
 		},
-		flush: func(v IData) {
+		flush: func(v channel.IData) {
 			this.handleMsg(flushWrapper{v: v})
 		},
 	}
 	r[upgradeRollbackNotifyC] = &ChannelWp{
-		ch: &Channel{
+		ch: &channel.Channel{
 			Id: upgradeRollbackNotifyC,
-			Ch: make(chan IData, 10),
+			Ch: make(chan channel.IData, 10),
 		},
-		flush: func(v IData) {
+		flush: func(v channel.IData) {
 			this.handleMsg(v)
 		},
 	}
 	r[reuse_notifyc] = &ChannelWp{
-		ch: &Channel{
+		ch: &channel.Channel{
 			Id: reuse_notifyc,
-			Ch: make(chan IData, cap),
+			Ch: make(chan channel.IData, cap),
 		},
-		flush: func(v IData) {
+		flush: func(v channel.IData) {
 			this.handleMsg(flushWrapper{v: v})
 		},
 	}
 	r[memberNotifyC] = &ChannelWp{
-		ch: &Channel{
+		ch: &channel.Channel{
 			Id: memberNotifyC,
-			Ch: make(chan IData, cap),
+			Ch: make(chan channel.IData, cap),
 		},
-		flush: func(v IData) {
+		flush: func(v channel.IData) {
 			this.handleMsg(flushWrapper{v: v})
 		},
 	}
@@ -249,7 +250,7 @@ func (this *routingChannelWatcher) reuseC(m ChannelMember, existC *c) error {
 
 func (this *routingChannelWatcher) opt() {
 	trick := false
-	handleNewMember := func(v IData) {
+	handleNewMember := func(v channel.IData) {
 		msg := v.(routineAddMemberWrapper)
 		if trick {
 			this.addDelta(msg.m)
@@ -279,7 +280,7 @@ func (this *routingChannelWatcher) opt() {
 			}
 		}
 	}
-	handleUpgrade := func(v IData) {
+	handleUpgrade := func(v channel.IData) {
 		if trick {
 			panic(PROGRAMA_ERROR)
 		}

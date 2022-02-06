@@ -11,11 +11,12 @@ package watcher
 import (
 	"context"
 	"fmt"
+	"github.com/itsfunny/go-cell/base/common/utils"
+	"github.com/itsfunny/go-cell/base/core/services"
+	logsdk "github.com/itsfunny/go-cell/sdk/log"
+	logrusplugin "github.com/itsfunny/go-cell/sdk/log/logrus"
+	"github.com/itsfunny/go-cell/structure/channel"
 	"github.com/stretchr/testify/require"
-	logplugin "gitlab.ebidsun.com/chain/droplib/base/log"
-	"gitlab.ebidsun.com/chain/droplib/base/services/models"
-	"gitlab.ebidsun.com/chain/droplib/libs/channel"
-	rand "gitlab.ebidsun.com/chain/droplib/libs/random"
 	"math"
 	"os"
 	"strconv"
@@ -26,26 +27,29 @@ import (
 	"time"
 )
 
+func init(){
+	logsdk.SetGlobalLogLevel(logsdk.DebugLevel)
+}
 type MockVerify struct {
-	m map[IData]struct{}
+	m map[channel.IData]struct{}
 }
 
-var defaultReceiverF = func(id string, v IData) {
+var defaultReceiverF = func(id string, v channel.IData) {
 	debugPrint(fmt.Sprintf("id=%s,收到:%v", id, v))
 }
 var defaultTestSleepInterval = 20
 
 type mockConsumer struct {
-	f                 func(v IData)
+	f                 func(v channel.IData)
 	stopCallBackLimit int
 	async             bool
-	callBackQueue     chan IData
+	callBackQueue     chan channel.IData
 }
 
 func (m *mockConsumer) Async() bool {
 	return m.async
 }
-func (m *mockConsumer) Handle(i IData) {
+func (m *mockConsumer) Handle(i channel.IData) {
 	m.f(i)
 	m.callBackQueue <- i
 	m.stopCallBackLimit--
@@ -54,16 +58,16 @@ func (m *mockConsumer) Handle(i IData) {
 	}
 }
 
-var callBackQueueFuncWrapper = func(q chan IData, f func(vv IData)) func(IData) {
-	return func(i IData) {
+var callBackQueueFuncWrapper = func(q chan channel.IData, f func(vv channel.IData)) func(channel.IData) {
+	return func(i channel.IData) {
 		f(i)
 		q <- i
 	}
 }
 
-func listenNew(name string, v ...IData) (chan IData, ChannelMember) {
+func listenNew(name string, v ...channel.IData) (chan channel.IData, ChannelMember) {
 	cc := asChan(v...)
-	forTest := make(chan IData)
+	forTest := make(chan channel.IData)
 	r := ChannelMember{
 		name:     name,
 		c:        cc,
@@ -78,9 +82,9 @@ func (V VString) ID() interface{} {
 	return V
 }
 
-func exceptedWithPanic(f func(id string, v IData), sleepSeoncds int, id string, excepted []IData, r <-chan IData) (chan int, map[IData]struct{}) {
+func exceptedWithPanic(f func(id string, v channel.IData), sleepSeoncds int, id string, excepted []channel.IData, r <-chan channel.IData) (chan int, map[channel.IData]struct{}) {
 	n := make(chan int)
-	m := make(map[IData]struct{})
+	m := make(map[channel.IData]struct{})
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(sleepSeoncds))
 		defer cancel()
@@ -91,7 +95,7 @@ func exceptedWithPanic(f func(id string, v IData), sleepSeoncds int, id string, 
 		for {
 			select {
 			case <-ctx.Done():
-				logplugin.Error(fmt.Sprintf("超时没有等到全部结果,剩余个数%d,%v", len(m), m))
+				logrusplugin.Error(fmt.Sprintf("超时没有等到全部结果,剩余个数%d,%v", len(m), m))
 				n <- len(m)
 				return
 			case v, ok := <-r:
@@ -121,7 +125,7 @@ func exceptedWithPanic(f func(id string, v IData), sleepSeoncds int, id string, 
 
 type TestWp struct {
 	notify   <-chan int
-	m        map[IData]struct{}
+	m        map[channel.IData]struct{}
 	name     string
 	finished bool
 }
@@ -172,22 +176,22 @@ func (this *TestWp) BlockWaitPanic() {
 	this.finished = true
 }
 
-var defaultEmptyFunc = func(v IData) {}
+var defaultEmptyFunc = func(v channel.IData) {}
 
-func newMockTest(f func(v IData), receiverF func(id string, v IData), name string, excepted ...IData) (*TestWp, ChannelMember) {
+func newMockTest(f func(v channel.IData), receiverF func(id string, v channel.IData), name string, excepted ...channel.IData) (*TestWp, ChannelMember) {
 	if f == nil {
 		f = defaultEmptyFunc
 	}
 	if nil == receiverF {
 		receiverF = defaultReceiverF
 	}
-	newE := make([]IData, len(excepted))
+	newE := make([]channel.IData, len(excepted))
 	for i := 0; i < len(excepted); i++ {
 		newE[i] = VString(name + "_" + string(excepted[i].(VString)))
 	}
 	excepted = newE
 	cc := asChan(excepted...)
-	callBack := make(chan IData)
+	callBack := make(chan channel.IData)
 	con := &mockConsumer{
 		f:                 f,
 		stopCallBackLimit: len(excepted),
@@ -213,24 +217,24 @@ type testN struct {
 	async           bool
 	count           int
 	routineLimit    int
-	consumerF       func(v IData)
+	consumerF       func(v channel.IData)
 	channelWatcherF func() ChannelWatcher
 	// 收到msg的时候的func
-	receiverF     func(id string, v IData)
+	receiverF     func(id string, v channel.IData)
 	sleepInterval int
 }
 
-func asValues(n, count int) [][]IData {
-	values := make([][]IData, n)
+func asValues(n, count int) [][]channel.IData {
+	values := make([][]channel.IData, n)
 	for i := 0; i < n; i++ {
-		values[i] = make([]IData, 10)
+		values[i] = make([]channel.IData, 10)
 		for j := 0; j < 10; j++ {
 			values[i][j] = VString("_" + strconv.Itoa(count) + "_" + strconv.Itoa(i*10+j))
 		}
 	}
 	return values
 }
-func testWithN(t *testing.T, req testN, opts ...models.StartOption) {
+func testWithN(t *testing.T, req testN, opts ...services.StartOption) {
 	if req.sleepInterval > 0 {
 		defaultTestSleepInterval = req.sleepInterval
 	} else if req.sleepInterval < 0 {
@@ -266,7 +270,7 @@ func testWithN(t *testing.T, req testN, opts ...models.StartOption) {
 	// }
 	// require.Equal(t, 0, watcher.Size())
 	cost := time.Now().Sub(startT)
-	logplugin.Warn(fmt.Sprintf("任务结束,耗时:%f秒,%d毫秒", cost.Seconds(), cost.Milliseconds()))
+	logrusplugin.Warn(fmt.Sprintf("任务结束,耗时:%f秒,%d毫秒", cost.Seconds(), cost.Milliseconds()))
 }
 
 func Test_LocalConst(t *testing.T) {
@@ -315,7 +319,7 @@ func mockUpgrade(n int, f func() ChannelWatcher, ops ...Option) ChannelWatcher {
 	// set := make(map[string]struct{})
 	for i := 0; i < n; i++ {
 		go func(index int) {
-			test, member := newMockTest(func(v IData) {
+			test, member := newMockTest(func(v channel.IData) {
 				// time.Sleep(time.Millisecond * time.Duration(rand.RandInt32(200, 2000)))
 				time.Sleep(time.Millisecond * 20)
 			}, nil, "test"+strconv.Itoa(index), values[index]...)
@@ -352,7 +356,7 @@ func mockRollBack(n int, f func() ChannelWatcher, ops ...Option) ChannelWatcher 
 	wg.Add(n)
 	for i := 0; i < n; i++ {
 		go func(index int) {
-			test, member := newMockTest(func(v IData) {
+			test, member := newMockTest(func(v channel.IData) {
 				time.Sleep(time.Millisecond * 1000)
 			}, nil, "test"+strconv.Itoa(index), values[index]...)
 			for watcher.WatchMemberChanged(member) {
@@ -398,7 +402,7 @@ func mockTestDeleta(f func(opt Opt) ChannelWatcher, rollBack bool) {
 	opt.SpinTimeMills = 3000
 	watcher := f(opt)
 	watcher.BStart()
-	mems, wp := mockChannels(func(v IData) {
+	mems, wp := mockChannels(func(v channel.IData) {
 		time.Sleep(time.Second)
 	}, 1)
 	watcher.WatchMemberChanged(mems[0])
@@ -414,8 +418,8 @@ func commonTestSmallJob(t *testing.T, f func() ChannelWatcher) {
 	testWithN(t, testN{
 		count:        1,
 		routineLimit: 100,
-		consumerF: func(v IData) {
-			time.Sleep(time.Millisecond * time.Duration(rand.RandInt32(100, 1500)))
+		consumerF: func(v channel.IData) {
+			time.Sleep(time.Millisecond * time.Duration(utils.RandInt32(100, 1500)))
 		},
 		channelWatcherF: f,
 		receiverF:       nil,

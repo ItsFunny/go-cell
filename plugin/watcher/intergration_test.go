@@ -10,11 +10,10 @@ package watcher
 
 import (
 	"fmt"
-	logplugin "gitlab.ebidsun.com/chain/droplib/base/log"
-	"gitlab.ebidsun.com/chain/droplib/base/log/common"
-	logcomponent "gitlab.ebidsun.com/chain/droplib/base/log/v2/component"
-	"gitlab.ebidsun.com/chain/droplib/libs/channel"
-	rand "gitlab.ebidsun.com/chain/droplib/libs/random"
+	"github.com/itsfunny/go-cell/base/common/utils"
+	logsdk "github.com/itsfunny/go-cell/sdk/log"
+	logrusplugin "github.com/itsfunny/go-cell/sdk/log/logrus"
+	"github.com/itsfunny/go-cell/structure/channel"
 	"math"
 	_ "net/http/pprof"
 	"strconv"
@@ -126,7 +125,7 @@ func TestOneUpgrade(t *testing.T) {
 }
 
 func TestConcurrentUpgrade(t *testing.T) {
-	logcomponent.SetGlobalLogLevel(common.WarnLevel)
+	logsdk.SetGlobalLogLevel(logsdk.WarnLevel)
 
 	for _, w := range watchers {
 		if strings.Contains(w.name, "selectn") {
@@ -156,37 +155,36 @@ func TestMoreConcurrentUpgrade(t *testing.T) {
 
 // 测试随机的rollBack 和upgrade
 func TestFrequencyRollbackUpgrade(t *testing.T) {
-	logcomponent.SetGlobalLogLevel(common.InfoLevel)
 	commonTestNCounts(t, 10, func() {
 		opts := foreverOptions()
 		wh := watchers[0].f()
 		defaultTestSleepInterval = math.MaxInt32
 		wh.BStart()
 		// 100个 member
-		members, wp := mockChannels(func(v IData) {
+		members, wp := mockChannels(func(v channel.IData) {
 			time.Sleep(time.Second)
 		}, 1024)
 		go func() {
 			upgrade := false
 			index := 0
 			add := func(w ChannelWatcher) {
-				for i := 0; i < rand.Intn(5) && index < len(members); i++ {
+				for i := 0; i < utils.Intn(5) && index < len(members); i++ {
 					retryCount := 0
 					for w.WatchMemberChanged(members[index]) {
 						if retryCount >= 5 {
 							return
 						}
-						logplugin.Info("添加member重试", "name", members[index].name)
+						logrusplugin.Info("添加member重试", "name", members[index].name)
 						time.Sleep(time.Millisecond * 150)
 						retryCount++
 					}
-					logplugin.Info("添加member", "name", members[index].name, "index", index)
+					logrusplugin.Info("添加member", "name", members[index].name, "index", index)
 					index++
 				}
 			}
 			changeCount := 0
 			for {
-				time.Sleep(time.Millisecond * time.Duration(rand.RandInt32(100, 1500)))
+				time.Sleep(time.Millisecond * time.Duration(utils.RandInt32(100, 1500)))
 				if changeCount%5 == 0 {
 					switch wh.(type) {
 					case *selectNChannelWatcher:
@@ -208,26 +206,26 @@ func TestFrequencyRollbackUpgrade(t *testing.T) {
 				add(wh)
 				changeCount++
 				if index >= len(members) {
-					logplugin.Info("退出")
+					logrusplugin.Info("退出")
 					return
 				}
 			}
 		}()
 		wp.BlockWaitPanic()
+		fmt.Println("========")
 	})
 }
 
 func TestSelectNRollbackUpgrade(t *testing.T) {
 	debug_async = true
-	logcomponent.SetGlobalLogLevel(common.InfoLevel)
 	commonTestNCounts(t, 3, func() {
 		opts := foreverOptions()
 		wh := watchers[1].f()
 		defaultTestSleepInterval = math.MaxInt32
 		wh.BStart()
 		// 100个 member
-		members, wp := mockChannels(func(v IData) {
-			time.Sleep(time.Millisecond * time.Duration(rand.RandInt32(100, 1300)))
+		members, wp := mockChannels(func(v channel.IData) {
+			time.Sleep(time.Millisecond * time.Duration(utils.RandInt32(100, 1300)))
 			// time.Sleep(time.Second)
 		}, 4096)
 		index := 0
@@ -241,11 +239,11 @@ func TestSelectNRollbackUpgrade(t *testing.T) {
 						if retryCount >= 5 {
 							return
 						}
-						logplugin.Info("添加member重试", "name", members[index].name)
+						logrusplugin.Info("添加member重试", "name", members[index].name)
 						time.Sleep(time.Millisecond * 150)
 						retryCount++
 					}
-					logplugin.Info("add member", "name", members[index].name, "index", index)
+					logrusplugin.Info("add member", "name", members[index].name, "index", index)
 					index++
 				}
 			}
@@ -261,7 +259,7 @@ func TestSelectNRollbackUpgrade(t *testing.T) {
 					}
 					add(wh)
 					if index >= len(members) {
-						logplugin.Info("退出")
+						logrusplugin.Info("退出")
 						return
 					}
 				}
@@ -294,11 +292,11 @@ func TestSelectNRollbackUpgrade(t *testing.T) {
 // 					if retryCount >= 5 {
 // 						return
 // 					}
-// 					logplugin.Info("添加member重试", "name", members[index].name)
+// 					logrusplugin.Info("添加member重试", "name", members[index].name)
 // 					time.Sleep(time.Millisecond * 150)
 // 					retryCount++
 // 				}
-// 				logplugin.Info("add member", "name", members[index].name, "index", index)
+// 				logrusplugin.Info("add member", "name", members[index].name, "index", index)
 // 				index++
 // 			}
 // 		}
@@ -314,7 +312,7 @@ func TestSelectNRollbackUpgrade(t *testing.T) {
 // 				}
 // 				add(wh)
 // 				if index >= len(members) {
-// 					logplugin.Info("退出")
+// 					logrusplugin.Info("退出")
 // 					return
 // 				}
 // 			}
@@ -330,7 +328,7 @@ func Test_RouteReflectRollbackUpgrade(t *testing.T) {
 	defaultTestSleepInterval = 10000
 	wh.BStart()
 	// 100个 member
-	members, wp := mockChannels(func(v IData) {
+	members, wp := mockChannels(func(v channel.IData) {
 		// time.Sleep(time.Millisecond * time.Duration(rand.RandInt32(100, 400)))
 		time.Sleep(time.Second * 1)
 	}, 4096)
@@ -346,11 +344,11 @@ func Test_RouteReflectRollbackUpgrade(t *testing.T) {
 					if retryCount >= 5 {
 						return
 					}
-					logplugin.Info("添加member重试", "name", members[index].name)
+					logrusplugin.Info("添加member重试", "name", members[index].name)
 					time.Sleep(time.Millisecond * 150)
 					retryCount++
 				}
-				logplugin.Info("add member", "name", members[index].name, "index", index)
+				logrusplugin.Info("add member", "name", members[index].name, "index", index)
 				index++
 			}
 		}
@@ -366,7 +364,7 @@ func Test_RouteReflectRollbackUpgrade(t *testing.T) {
 				}
 				add(wh)
 				if index >= len(members) {
-					logplugin.Info("退出")
+					logrusplugin.Info("退出")
 					return
 				}
 			}

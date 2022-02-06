@@ -11,9 +11,9 @@ package watcher
 import (
 	"context"
 	"fmt"
-	logplugin "gitlab.ebidsun.com/chain/droplib/base/log"
-	"gitlab.ebidsun.com/chain/droplib/base/services/models"
-	"gitlab.ebidsun.com/chain/droplib/libs/channel"
+	"github.com/itsfunny/go-cell/base/core/services"
+	logrusplugin "github.com/itsfunny/go-cell/sdk/log/logrus"
+	"github.com/itsfunny/go-cell/structure/channel"
 	"github.com/stretchr/testify/require"
 	"math"
 	"math/rand"
@@ -57,8 +57,8 @@ func Test_Merge(t *testing.T) {
 		chs[index] = make(chan struct{})
 		booleans[index] = false
 		go func(index int) {
-			var f func(v IData)
-			f = func(v IData) {
+			var f func(v channel.IData)
+			f = func(v channel.IData) {
 				if !booleans[index] {
 					booleans[index] = true
 					chs[index] <- struct{}{}
@@ -71,7 +71,7 @@ func Test_Merge(t *testing.T) {
 			watcher.WatchMemberChanged(member)
 			test.BlockWaitPanic()
 			wg.Done()
-			logplugin.InfoF("%s,done", name)
+			logrusplugin.InfoF("%s,done", name)
 		}(index)
 	wait:
 		for {
@@ -115,8 +115,8 @@ func Test_MergeMore(t *testing.T) {
 		chs[index] = make(chan struct{})
 		booleans[index] = false
 		go func(index int) {
-			var f func(v IData)
-			f = func(v IData) {
+			var f func(v channel.IData)
+			f = func(v channel.IData) {
 				if !booleans[index] {
 					booleans[index] = true
 					chs[index] <- struct{}{}
@@ -129,7 +129,7 @@ func Test_MergeMore(t *testing.T) {
 			watcher.WatchMemberChanged(member)
 			test.BlockWaitPanic()
 			wg.Done()
-			logplugin.InfoF("%s done", name)
+			logrusplugin.InfoF("%s done", name)
 		}(index)
 	wait:
 		for {
@@ -204,7 +204,7 @@ func Test_TestRandomSleepSelectNRoutine(t *testing.T) {
 	testWithN(t, testN{
 		count:        0,
 		routineLimit: 10,
-		consumerF: func(v IData) {
+		consumerF: func(v channel.IData) {
 			time.Sleep(time.Millisecond * time.Duration(rand.Intn(10000)))
 		},
 		channelWatcherF: func() ChannelWatcher {
@@ -216,11 +216,11 @@ func Test_TestRandomSleepSelectNRoutine(t *testing.T) {
 	fmt.Println("done")
 }
 
-func mockChannels(f func(v IData), n int) ([]ChannelMember, *groupTestWp) {
+func mockChannels(f func(v channel.IData), n int) ([]ChannelMember, *groupTestWp) {
 	chs := make([]ChannelMember, 0)
 	tests := make([]*TestWp, 0)
 	for i := 0; i < n; i++ {
-		values := make([]IData, 0)
+		values := make([]channel.IData, 0)
 		for j := 0; j < 10; j++ {
 			values = append(values, VString("_"+strconv.Itoa(0)+"_"+strconv.Itoa(i*10+j)))
 		}
@@ -237,11 +237,11 @@ func Test_WithPrepareChannels(t *testing.T) {
 	chs, r := mockChannels(nil, 100)
 	w := newSelectNChannelWatcher(DefaultForeverOpt)
 	cc := toChWp(chs)
-	w.BStart(models.CtxStartOpt(context.WithValue(context.Background(), "channels", &cc)))
+	w.BStart(services.CtxStartOpt(context.WithValue(context.Background(), "channels", &cc)))
 	now := time.Now()
 	r.BlockWaitPanic()
 	cost := time.Now().Sub(now)
-	logplugin.Info(fmt.Sprintf("done,耗时:%f秒,%d毫秒", cost.Seconds(), cost.Milliseconds()))
+	logrusplugin.Info(fmt.Sprintf("done,耗时:%f秒,%d毫秒", cost.Seconds(), cost.Milliseconds()))
 }
 func toChWp(chs []ChannelMember) []chWp {
 	cc := make([]chWp, 0)
@@ -259,11 +259,11 @@ func toChWp(chs []ChannelMember) []chWp {
 func Test_selectNChannelWatcher_rollBack(t *testing.T) {
 	defaultTestSleepInterval = math.MaxInt32
 	w := newSelectNChannelWatcher(DefaultForeverOpt)
-	chs, wp := mockChannels(func(v IData) {
+	chs, wp := mockChannels(func(v channel.IData) {
 		time.Sleep(time.Second * 1)
 	}, 1)
 	cc := toChWp(chs)
-	w.BStart(models.CtxStartOpt(context.WithValue(context.Background(), "channels", &cc)))
+	w.BStart(services.CtxStartOpt(context.WithValue(context.Background(), "channels", &cc)))
 	time.Sleep(time.Second)
 	w.RollBack()
 	wp.BlockWaitPanic()

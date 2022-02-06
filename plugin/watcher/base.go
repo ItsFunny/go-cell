@@ -17,6 +17,7 @@ import (
 	"github.com/itsfunny/go-cell/component/routine"
 	v2 "github.com/itsfunny/go-cell/component/routine/v2"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
+	"github.com/itsfunny/go-cell/structure/channel"
 	"github.com/itsfunny/go-cell/structure/lists/singlylinkedlist"
 	"math"
 	"reflect"
@@ -45,12 +46,12 @@ type ChannelWatcher interface {
 	Upgrade(ops ...Option) ChannelWatcher
 	OnUpgrade(opt Opt) (ChannelWatcher, []services.StartOption)
 
-	GetChannelShims(cap int) (map[ChannelID]*ChannelWp, int)
+	GetChannelShims(cap int) (map[channel.ChannelID]*ChannelWp, int)
 	Size() int
 }
 type ChannelMember struct {
 	name     string
-	c        <-chan IData
+	c        <-chan channel.IData
 	consumer DataConsumer
 }
 
@@ -67,9 +68,9 @@ type baseStatus struct {
 	waitStatusIntervalMillSeconds int
 }
 type ChannelWp struct {
-	ch              *Channel
+	ch              *channel.Channel
 	inFlightRoutine int32
-	flush           func(v IData)
+	flush           func(v channel.IData)
 }
 
 type baseChannelWatcher struct {
@@ -79,9 +80,9 @@ type baseChannelWatcher struct {
 
 	impl ChannelWatcher
 
-	facadedC    chan Envelope
+	facadedC    chan channel.Envelope
 	inFlight    int32
-	internalChs map[ChannelID]*ChannelWp
+	internalChs map[channel.ChannelID]*ChannelWp
 	deleta      *singlylinkedlist.List
 
 	listener    listener.IListenerComponent
@@ -89,7 +90,7 @@ type baseChannelWatcher struct {
 
 	operation chan operation
 
-	operationCache map[interface{}]IData
+	operationCache map[interface{}]channel.IData
 	debugC         chan struct{}
 
 	wg sync.WaitGroup
@@ -114,7 +115,7 @@ func newBaseChannelWatcher(name string, cImpl ChannelWatcher, upgradeLimit, roll
 	}
 	r := &baseChannelWatcher{
 		impl:              cImpl,
-		facadedC:          make(chan Envelope, 10),
+		facadedC:          make(chan channel.Envelope, 10),
 		internalChs:       nil,
 		internalFastQuitC: make(chan struct{}),
 		rollBackLimit:     rollbackLimit,
@@ -139,7 +140,7 @@ func newBaseChannelWatcher(name string, cImpl ChannelWatcher, upgradeLimit, roll
 	r.baseStatus = &baseStatus{
 		status: status_ok,
 	}
-	r.operationCache = make(map[interface{}]IData)
+	r.operationCache = make(map[interface{}]channel.IData)
 	r.debugC = make(chan struct{})
 	return r
 }
@@ -167,7 +168,7 @@ func (r rollback) ID() interface{} {
 	return "rollback"
 }
 
-func (this *baseChannelWatcher) inc(d IData) {
+func (this *baseChannelWatcher) inc(d channel.IData) {
 	size := atomic.AddInt32(&this.inFlight, 1)
 	if this.mode == mode_debug {
 		this.mtx.Lock()
@@ -176,7 +177,7 @@ func (this *baseChannelWatcher) inc(d IData) {
 		this.Logger.Debug("sendMsg", "size", size, "data", d, "dataType", reflect.TypeOf(d))
 	}
 }
-func (this *baseChannelWatcher) dec(data IData) {
+func (this *baseChannelWatcher) dec(data channel.IData) {
 	size := atomic.AddInt32(&this.inFlight, -1)
 	if this.mode == mode_debug {
 		this.mtx.Lock()
@@ -385,10 +386,10 @@ func (this *baseChannelWatcher) OnStart(ctx *services.StartCTX) error {
 	go this.dispath()
 	return this.impl.OnStart(ctx)
 }
-func (this *baseChannelWatcher) GetChannelShims(cap int) (map[ChannelID]*ChannelWp, int) {
+func (this *baseChannelWatcher) GetChannelShims(cap int) (map[channel.ChannelID]*ChannelWp, int) {
 	r, wg := this.impl.GetChannelShims(cap)
 	if r == nil {
-		r = make(map[ChannelID]*ChannelWp)
+		r = make(map[channel.ChannelID]*ChannelWp)
 	} else {
 		for k, v := range r {
 			if k == memberNotifyC {
@@ -401,8 +402,8 @@ func (this *baseChannelWatcher) GetChannelShims(cap int) (map[ChannelID]*Channel
 	}
 	return r, wg
 }
-func (this *baseChannelWatcher) wrapFlush(f func(v IData)) func(v IData) {
-	return func(v IData) {
+func (this *baseChannelWatcher) wrapFlush(f func(v channel.IData)) func(v channel.IData) {
+	return func(v channel.IData) {
 		f(v)
 	}
 }
@@ -453,17 +454,17 @@ func (this *baseChannelWatcher) dispath() {
 		}
 	}
 }
-func (this *baseChannelWatcher) sendMsg(chid ChannelID, data IData) {
+func (this *baseChannelWatcher) sendMsg(chid channel.ChannelID, data channel.IData) {
 	this.inc(data)
 	select {
-	case this.facadedC <- Envelope{
+	case this.facadedC <- channel.Envelope{
 		ChannelId: chid,
 		Data:      data,
 	}:
 	default:
 		this.Logger.Debug("消息阻塞", "channelId", chid, "data", data, "dataType", reflect.TypeOf(data))
 		this.routinePool.AddJob(func() {
-			this.facadedC <- Envelope{
+			this.facadedC <- channel.Envelope{
 				ChannelId: chid,
 				Data:      data,
 			}

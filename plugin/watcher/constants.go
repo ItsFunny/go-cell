@@ -8,6 +8,7 @@
 */
 package watcher
 
+import "github.com/itsfunny/go-cell/structure/channel"
 
 const (
 	mode_debug = iota+1
@@ -30,18 +31,18 @@ const (
 )
 
 const (
-	route_update_notify_chid ChannelID = "updateNotifyC"
+	route_update_notify_chid channel.ChannelID = "updateNotifyC"
 
-	upgradeRollbackNotifyC ChannelID = "upgradeRollbackNotifyC"
+	upgradeRollbackNotifyC channel.ChannelID = "upgradeRollbackNotifyC"
 
-	memberNotifyC ChannelID = "memberNotifyC"
+	memberNotifyC channel.ChannelID = "memberNotifyC"
 
-	reflect_notifyc ChannelID = "reflect_notifyc"
+	reflect_notifyc channel.ChannelID = "reflect_notifyc"
 
-	reuse_notifyc ChannelID = "reuse_notifyc"
+	reuse_notifyc channel.ChannelID = "reuse_notifyc"
 
-	selectn_notifyC       ChannelID = "notifyC"
-	selectn_region_notify ChannelID = "selectn_region_notify"
+	selectn_notifyC       channel.ChannelID = "notifyC"
+	selectn_region_notify channel.ChannelID = "selectn_region_notify"
 )
 
 var (

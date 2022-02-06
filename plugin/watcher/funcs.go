@@ -8,24 +8,25 @@
 */
 package watcher
 
+import "github.com/itsfunny/go-cell/structure/channel"
 
 type DataConsumer interface {
 	Async() bool
-	Handle(IData)
+	Handle(channel.IData)
 }
 
 type defaultFuncConsumer struct {
-	f     func(IData)
+	f     func(channel.IData)
 	async bool
 }
 
-func NewFuncConsumer(f func(IData)) DataConsumer {
+func NewFuncConsumer(f func(channel.IData)) DataConsumer {
 	r := &defaultFuncConsumer{f: f}
 	return r
 }
 func (d *defaultFuncConsumer) Async() bool {
 	return d.async
 }
-func (d *defaultFuncConsumer) Handle(i IData) {
+func (d *defaultFuncConsumer) Handle(i channel.IData) {
 	d.f(i)
 }

@@ -12,7 +12,6 @@ import (
 	"github.com/itsfunny/go-cell/sdk/log"
 	"github.com/itsfunny/go-cell/sdk/log/base"
 	"github.com/sirupsen/logrus"
-	logcomponent "gitlab.ebidsun.com/chain/droplib/base/log/v2/component"
 	"sync"
 )
 
@@ -67,13 +66,13 @@ func newModuleLogrusLogger( ) *moduleLogrusLogger {
 }
 
 func newLogrus(module logsdk.Module, wait bool) *logrusLogger {
-	if wait {
-		once.Do(func() {
-			logcomponent.InitLog()
-			logcomponent.NotifyAsReady()
-		})
-		logcomponent.WaitUntilReady(module.String())
-	}
+	//if wait {
+	//	once.Do(func() {
+	//		logcomponent.InitLog()
+	//		logcomponent.NotifyAsReady()
+	//	})
+	//	logcomponent.WaitUntilReady(module.String())
+	//}
 	r := &logrusLogger{}
 	r.Logger = base.NewCommonLogger(module, r)
 	r.log = logrus.New()

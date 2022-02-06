@@ -34,7 +34,7 @@ func NewListenerComponent(cap int, opts ...Opt) *listenerComponent {
 	return r
 }
 func (l *listenerComponent) OnStart(ctx *services.StartCTX) error {
-	l.pubsub.start()
+	go l.pubsub.start()
 	return nil
 }
 func (l *listenerComponent) RegisterListener(topic ...string) <-chan interface{} {

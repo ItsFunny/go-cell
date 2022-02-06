@@ -11,17 +11,18 @@ package watcher
 import (
 	"fmt"
 	"github.com/itsfunny/go-cell/base/core/services"
+	"github.com/itsfunny/go-cell/structure/channel"
 	"reflect"
 	"time"
 )
 
 type reflectC struct {
-	ch       <-chan IData
+	ch       <-chan channel.IData
 	consumer DataConsumer
 	name     string
 }
 
-func newReflectC(name string, cc <-chan IData, f DataConsumer) *reflectC {
+func newReflectC(name string, cc <-chan channel.IData, f DataConsumer) *reflectC {
 	r := &reflectC{
 		ch:       cc,
 		consumer: f,
@@ -77,14 +78,14 @@ func (this *reflectChannelWatcher) OnUpgrade(opt Opt) (ChannelWatcher, []service
 	r, ctx := fromReflectChannelWatcher(this, opt)
 	return r, []services.StartOption{services.SyncStartOpt, services.CtxStartOpt(ctx)}
 }
-func (this *reflectChannelWatcher) GetChannelShims(cap int) (map[ChannelID]*ChannelWp, int) {
-	r := make(map[ChannelID]*ChannelWp)
+func (this *reflectChannelWatcher) GetChannelShims(cap int) (map[channel.ChannelID]*ChannelWp, int) {
+	r := make(map[channel.ChannelID]*ChannelWp)
 	r[memberNotifyC] = &ChannelWp{
-		ch: &Channel{
+		ch: &channel.Channel{
 			Id: memberNotifyC,
-			Ch: make(chan IData, cap),
+			Ch: make(chan channel.IData, cap),
 		},
-		flush: func(v IData) {
+		flush: func(v channel.IData) {
 			member := v.(ChannelMember)
 			this.dec(v)
 			this.addDelta(member)
@@ -118,7 +119,7 @@ func (this *reflectChannelWatcher) reflect() {
 		cases[i] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ch.ch)}
 	}
 	memChan := this.internalChs[memberNotifyC].ch.Ch
-	add := func(data IData) {
+	add := func(data channel.IData) {
 		this.dec(data)
 		msg := data.(ChannelMember)
 		this.chs = append(this.chs, newReflectC(msg.name, msg.c, msg.consumer))
@@ -139,6 +140,7 @@ func (this *reflectChannelWatcher) reflect() {
 		default:
 			if len(this.chs) == 0 {
 				begin := time.Now()
+				// TODO
 				this.Logger.Info("sleeping", "currentSize", len(this.chs), "deltaSize", this.deleta.Size(), "memChanLen", len(memChan))
 				select {
 				case m := <-memChan:
@@ -159,7 +161,7 @@ func (this *reflectChannelWatcher) reflect() {
 			this.chs = append(this.chs[:index], this.chs[index+1:]...)
 			continue
 		}
-		msg := value.Interface().(IData)
+		msg := value.Interface().(channel.IData)
 		v := this.wrapV(msg)
 		cc := this.chs[index].consumer
 		this.execute(cc.Async(), func() {
@@ -170,10 +172,10 @@ func (this *reflectChannelWatcher) reflect() {
 func (this *reflectChannelWatcher) OnStop(ctx *services.StopCTX) {
 	this.chs = nil
 }
-func (this *reflectChannelWatcher) wrapV(v IData) IData {
+func (this *reflectChannelWatcher) wrapV(v channel.IData) channel.IData {
 	return v
 }
-func (this *reflectChannelWatcher) HandleMsg(v IData) {
+func (this *reflectChannelWatcher) HandleMsg(v channel.IData) {
 	switch v.(type) {
 
 	}

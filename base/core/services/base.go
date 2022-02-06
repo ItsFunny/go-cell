@@ -14,7 +14,6 @@ import (
 	"fmt"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
 	logrusplugin "github.com/itsfunny/go-cell/sdk/log/logrus"
-	"gitlab.ebidsun.com/chain/droplib/base/services/e"
 	"sync/atomic"
 	"time"
 )
@@ -131,7 +130,7 @@ func (bs *BaseService) BReady(ops ...ReadyOption) error {
 		go func() {
 			if err := bs.ready(ctx); nil != err {
 				bs.Logger.Error("ready失败,impl:", bs.impl, " error:", err.Error())
-				if err == e.FORCELOSE_ERROR {
+				if err == FORCELOSE_ERROR {
 					bs.BStop(StopCTXWithForce)
 				}
 			}
@@ -277,7 +276,7 @@ func (bs *BaseService) BStart(opts ...StartOption) error {
 		go func() {
 			if err := bs.start(ctx); nil != err {
 				bs.Logger.Error("启动失败,impl:", bs.impl, " error:", err.Error())
-				if err == e.FORCELOSE_ERROR {
+				if err == FORCELOSE_ERROR {
 					bs.BStop(StopCTXWithForce)
 				}
 			}
@@ -390,7 +389,7 @@ func (bs *BaseService) CtxWithValue(key interface{}, value interface{}) context.
 }
 
 func (bs *BaseService) Started() bool {
-	return atomic.LoadUint32(&bs.started) == STARTED
+	return atomic.LoadUint32(&bs.started) == FINAL_STARTED
 }
 
 func (bs *BaseService) GetContext() context.Context {

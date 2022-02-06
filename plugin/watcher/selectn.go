@@ -14,6 +14,7 @@ import (
 	"github.com/itsfunny/go-cell/component/listener"
 	"github.com/itsfunny/go-cell/component/routine"
 	logrusplugin "github.com/itsfunny/go-cell/sdk/log/logrus"
+	"github.com/itsfunny/go-cell/structure/channel"
 	"github.com/itsfunny/go-cell/structure/maps/linkedhashmap"
 	"github.com/sasha-s/go-deadlock"
 	"sort"
@@ -67,7 +68,7 @@ const (
 )
 
 type selectNC struct {
-	c            <-chan IData
+	c            <-chan channel.IData
 	status       uint32       // 4
 	name         string       // 4
 	consumer     DataConsumer // 4
@@ -175,7 +176,7 @@ func newSelectNChannelWatcher(opt Opt) *selectNChannelWatcher {
 
 	return r
 }
-func newSelectNC(name string, cc <-chan IData, f DataConsumer) *selectNC {
+func newSelectNC(name string, cc <-chan channel.IData, f DataConsumer) *selectNC {
 	r := &selectNC{
 		c:        cc,
 		status:   selectn_channel_status_ok,
@@ -211,10 +212,10 @@ func (this *selectNChannelWatcher) region() {
 }
 func (this *selectNChannelWatcher) opt() {
 	trick := false
-	handleRoutineGone := func(data IData) {
+	handleRoutineGone := func(data channel.IData) {
 		atomic.AddInt32(&this.routineSize, -1)
 	}
-	handleRegionCreate := func(data IData) {
+	handleRegionCreate := func(data channel.IData) {
 		regCreate := data.(regionCreateOperation)
 		toChs := *regCreate.toChs
 		if trick {
@@ -330,41 +331,41 @@ func (this *selectNChannelWatcher) opt() {
 		}
 	}
 }
-func (this *selectNChannelWatcher) GetChannelShims(cap int) (map[ChannelID]*ChannelWp, int) {
-	r := make(map[ChannelID]*ChannelWp)
+func (this *selectNChannelWatcher) GetChannelShims(cap int) (map[channel.ChannelID]*ChannelWp, int) {
+	r := make(map[channel.ChannelID]*ChannelWp)
 	r[selectn_region_notify] = &ChannelWp{
-		ch: &Channel{
+		ch: &channel.Channel{
 			Id: selectn_region_notify,
-			Ch: make(chan IData, cap),
+			Ch: make(chan channel.IData, cap),
 		},
-		flush: func(v IData) {
+		flush: func(v channel.IData) {
 			this.handleMsg(v)
 		},
 	}
 	r[upgradeRollbackNotifyC] = &ChannelWp{
-		ch: &Channel{
+		ch: &channel.Channel{
 			Id: upgradeRollbackNotifyC,
-			Ch: make(chan IData),
+			Ch: make(chan channel.IData),
 		},
-		flush: func(v IData) {
+		flush: func(v channel.IData) {
 			this.handleMsg(v)
 		},
 	}
 	r[selectn_notifyC] = &ChannelWp{
-		ch: &Channel{
+		ch: &channel.Channel{
 			Id: selectn_notifyC,
-			Ch: make(chan IData, cap),
+			Ch: make(chan channel.IData, cap),
 		},
-		flush: func(v IData) {
+		flush: func(v channel.IData) {
 			this.handleMsg(v)
 		},
 	}
 	r[memberNotifyC] = &ChannelWp{
-		ch: &Channel{
+		ch: &channel.Channel{
 			Id: memberNotifyC,
-			Ch: make(chan IData, 2),
+			Ch: make(chan channel.IData, 2),
 		},
-		flush: func(v IData) {
+		flush: func(v channel.IData) {
 			this.handleMsg(v)
 		},
 	}

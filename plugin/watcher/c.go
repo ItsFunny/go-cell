@@ -11,6 +11,7 @@ package watcher
 import (
 	"fmt"
 	"github.com/itsfunny/go-cell/component/listener"
+	"github.com/itsfunny/go-cell/structure/channel"
 	"sync/atomic"
 	"time"
 )
@@ -28,7 +29,7 @@ type c struct {
 	id int
 	// halt     <-chan byte
 	notifyC  chan struct{}
-	c        <-chan IData
+	c        <-chan channel.IData
 	listener <-chan interface{}
 	consumer DataConsumer
 	priority uint16
@@ -45,7 +46,7 @@ func releaseC(cc *c) {
 	cc.consumer = nil
 }
 
-func newC(name string, cc <-chan IData, f DataConsumer, ff func() <-chan interface{}) *c {
+func newC(name string, cc <-chan channel.IData, f DataConsumer, ff func() <-chan interface{}) *c {
 	r := &c{
 		notifyC:  make(chan struct{}),
 		c:        cc,

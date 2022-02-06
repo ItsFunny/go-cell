@@ -10,11 +10,12 @@ package watcher
 
 import (
 	"fmt"
+	"github.com/itsfunny/go-cell/structure/channel"
 	"sync"
 )
 
-func merge2(a, b <-chan IData) <-chan IData {
-	c := make(chan IData, 1)
+func merge2(a, b <-chan channel.IData) <-chan channel.IData {
+	c := make(chan channel.IData, 1)
 	go func() {
 		defer close(c)
 		for nil != a || nil != b {
@@ -38,13 +39,13 @@ func merge2(a, b <-chan IData) <-chan IData {
 	return c
 }
 
-func mergeN(chans ...<-chan IData) <-chan IData {
-	r := make(chan IData, 1)
+func mergeN(chans ...<-chan channel.IData) <-chan channel.IData {
+	r := make(chan channel.IData, 1)
 	go func() {
 		wg := sync.WaitGroup{}
 		wg.Add(len(chans))
 		for _, c := range chans {
-			go func(c <-chan IData) {
+			go func(c <-chan channel.IData) {
 				for v := range c {
 					r <- v
 				}
@@ -58,12 +59,12 @@ func mergeN(chans ...<-chan IData) <-chan IData {
 	return r
 }
 
-var intFunc = func(v IData) {
+var intFunc = func(v channel.IData) {
 	fmt.Println(v)
 }
 
-func asChan(vs ...IData) <-chan IData {
-	c := make(chan IData)
+func asChan(vs ...channel.IData) <-chan channel.IData {
+	c := make(chan channel.IData)
 	go func() {
 		for _, v := range vs {
 			c <- v
