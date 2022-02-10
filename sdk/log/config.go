@@ -14,9 +14,7 @@ import (
 	"sync"
 )
 
-
 var logManager *LogManager
-
 
 type LogManager struct {
 	status int32
@@ -31,6 +29,7 @@ type LogConfiguration struct {
 	LogLevel       Level
 	blackModuleSet map[string]struct{}
 	moduleLevel    map[string]Level
+	filter         LogFilter
 	// loggers map[string]v2.Logger
 }
 
@@ -41,6 +40,9 @@ func NewLogConfiguration() *LogConfiguration {
 		blackModuleSet: make(map[string]struct{}, 1),
 		moduleLevel:    make(map[string]Level, 1),
 		// loggers: make(map[string]v2.Logger),
+		filter: func(str string) bool {
+			return false
+		},
 	}
 	return r
 }
@@ -93,8 +95,10 @@ func (this *LogConfiguration) GetModuleLevel(m string) Level {
 	return this.LogLevel
 }
 
-
-
 func FindCaller(skip int) (string, bool) {
 	return logManager.cfg.FindCaller(skip)
+}
+
+func Filter(str string) bool {
+	return logManager.cfg.filter(str)
 }

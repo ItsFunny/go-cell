@@ -100,6 +100,9 @@ func (c ModuleLogger) mlog(m logsdk.Module, l logsdk.Level, msg string, keyvals 
 	//if logcomponent.IsLogLevelDisabled(l, m.String()) {
 	//	return
 	//}
+	if logsdk.Filter(msg){
+		return
+	}
 	var line interface{}
 	lineStr, ok := GetCodeLineNumber()
 	if ok {

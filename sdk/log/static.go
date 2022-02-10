@@ -16,6 +16,10 @@ func RegisterBlackList(pathes ...string) {
 	logManager.cfg.RegisterBlackList(pathes...)
 }
 
+func SetFilter(f LogFilter){
+	logManager.cfg.filter=f
+}
+
 func RegisterBlackModule(modules ...string) {
 	logManager.cfg.RegisterBlackModule(modules...)
 }
