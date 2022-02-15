@@ -228,7 +228,16 @@ func (l *moduleLogrusLogger) CWith(module logsdk.Module, fields map[string]inter
 			fields[k] = v
 		}
 	}
-	l2 := newLogrus(module, false)
+	mm := module
+	m, exist := fields["module"]
+	if exist {
+		mStr, ok := m.(string)
+		if ok {
+			delete(fields,"module")
+			mm = logsdk.NewModule(mStr,1)
+		}
+	}
+	l2 := newLogrus(mm, false)
 	l2.fields = fields
 	return l2
 }

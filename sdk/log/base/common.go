@@ -14,10 +14,8 @@ import (
 )
 
 var (
-	gModule           = logsdk.NewModuleWithLevel("GLOBAL", 1,logsdk.InfoLevel)
+	gModule = logsdk.NewModuleWithLevel("GLOBAL", 1, logsdk.InfoLevel)
 )
-
-
 
 // 格式为  时间 + [LOG_LEVEL] + (模块) + (代码处) + msg + kv
 
@@ -32,8 +30,8 @@ type ModuleLogger struct {
 
 func NewCommonLogger(module logsdk.Module, logger logsdk.IConcreteLogger) *CommonLogger {
 	r := &CommonLogger{
-		module: module,
-		ModuleLogger:ModuleLogger{logger: logger},
+		module:       module,
+		ModuleLogger: ModuleLogger{logger: logger},
 	}
 	return r
 }
@@ -100,7 +98,7 @@ func (c ModuleLogger) mlog(m logsdk.Module, l logsdk.Level, msg string, keyvals 
 	//if logcomponent.IsLogLevelDisabled(l, m.String()) {
 	//	return
 	//}
-	if logsdk.Filter(msg){
+	if logsdk.Filter(msg) {
 		return
 	}
 	var line interface{}
@@ -141,12 +139,9 @@ func (c ModuleLogger) MDebugf(m logsdk.Module, template string, keyvals ...inter
 	c.mlog(m, logsdk.DebugLevel, fmt.Sprintf(template, keyvals...))
 }
 
-
 func (c ModuleLogger) MWarn(m logsdk.Module, msg string, keyvals ...interface{}) {
 	c.mlog(m, logsdk.WarnLevel, msg, keyvals...)
 }
-
-
 
 func (c ModuleLogger) MWarningf(m logsdk.Module, template string, keyvals ...interface{}) {
 	c.mlog(m, logsdk.WarnLevel, fmt.Sprintf(template, keyvals...))
@@ -155,7 +150,6 @@ func (c ModuleLogger) MWarningf(m logsdk.Module, template string, keyvals ...int
 func (c ModuleLogger) MError(m logsdk.Module, msg string, keyvals ...interface{}) {
 	c.mlog(m, logsdk.ErrorLevel, msg, keyvals...)
 }
-
 
 func (c ModuleLogger) MErrorf(m logsdk.Module, template string, keyvals ...interface{}) {
 	c.mlog(m, logsdk.ErrorLevel, fmt.Sprintf(template, keyvals...))
@@ -168,6 +162,7 @@ func (c ModuleLogger) MWith(m logsdk.Module, fileds map[string]interface{}) logs
 func GetCodeLineNumber() (string, bool) {
 	return logsdk.FindCaller(3)
 }
+
 //
 // func (c ModuleLogger) Info(msg string, keyvals ...interface{}) {
 // 	c.mlog(gModule, logsdk.InfoLevel, msg, keyvals...)
