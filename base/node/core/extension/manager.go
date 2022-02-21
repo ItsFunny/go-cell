@@ -42,8 +42,8 @@ func NewExtensionManager(bus IApplicationEventBus, e Extensions, h di.ReactorHol
 	ret.Ctx.Commands = h.Commands
 	ret.bus = bus
 	ret.Extensions = e.Extensions
-	ret.AllOps=make(map[string]*options.OptionWrapper)
-	ret.UnImportSet=make(map[string]struct{})
+	ret.AllOps = make(map[string]*options.OptionWrapper)
+	ret.UnImportSet = make(map[string]struct{})
 
 	return ret
 }
@@ -220,7 +220,8 @@ func (m *NodeExtensionManager) fillCtx() error {
 	configTypeV := m.AllOps[configType].Value.(string)
 
 	homeWp := m.AllOps[home]
-	if homeWp == nil {
+	if homeWp == nil || homeWp.Value == nil {
+		return errors.New("--home ")
 		// TODO
 	} else {
 		homePath = homeWp.Value.(string)
