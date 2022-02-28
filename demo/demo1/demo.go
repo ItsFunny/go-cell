@@ -31,7 +31,7 @@ var demoCmd1 = &reactor.Command{
 		return nil
 	},
 	PostRun: map[reactor.RunType]func(response couple.IServerResponse) error{},
-	RunType: reactor.RunTypeHttp,
+	RunType: reactor.RunTypeHttpGet,
 	Options: nil,
 }
 
