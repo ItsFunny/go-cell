@@ -20,6 +20,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14
 	github.com/swaggo/swag v1.7.8
+	github.com/tendermint/tendermint v0.33.9
 	github.com/tidwall/gjson v1.12.1
 	go.uber.org/fx v1.16.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519

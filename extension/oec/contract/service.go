@@ -290,6 +290,13 @@ func (this *ContractServiceImpl) Deploy(moniker string, waitTimes int) error {
 		log.Printf("Hash tx err: %s", err)
 		return err
 	}
+	hash2 := signedTx.Hash()
+	this.Logger.Info("hash", "hash1", hash.String())
+	this.Logger.Info("hash", "hash2", hash2.String())
+	hash3, e := utils.LegacyHash(signedTx)
+	if nil == e {
+		this.Logger.Info("hash", "hash3", hash3.String())
+	}
 	// seconds
 	receipt, err := this.getReceipt(hash, waitTimes*1000)
 
