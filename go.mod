@@ -26,3 +26,10 @@ require (
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d
 )
+
+replace (
+	github.com/buger/jsonparser => github.com/buger/jsonparser v1.0.0 // imported by nacos-go-sdk, upgraded to v1.0.0 in case of a known vulnerable bug
+	github.com/ethereum/go-ethereum => github.com/okex/go-ethereum v1.10.8-oec3
+	github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4
+	github.com/tendermint/go-amino => github.com/okex/go-amino v0.15.1-exchain6
+)
