@@ -18,6 +18,10 @@ var (
 	logger logsdk.MLogger
 )
 
+func UnsafeChangeLogLevel(l logsdk.Level) {
+	logger.UnsafeChangeLogLevel(l)
+}
+
 func Info(msg string, kv ...interface{}) {
 	logger.Info(msg, kv...)
 }

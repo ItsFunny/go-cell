@@ -16,8 +16,8 @@ func RegisterBlackList(pathes ...string) {
 	logManager.cfg.RegisterBlackList(pathes...)
 }
 
-func SetFilter(f LogFilter){
-	logManager.cfg.filter=f
+func SetFilter(f LogFilter) {
+	logManager.cfg.filter = f
 }
 
 func RegisterBlackModule(modules ...string) {
@@ -28,6 +28,7 @@ func RegisterModuleLevel(m map[string]Level) {
 	logManager.cfg.RegisterModuleLevel(m)
 }
 
+//decrepted
 func SetGlobalLogLevel(l Level) {
 	logManager.cfg.SetGlobalLogLevel(l)
 }

@@ -31,6 +31,7 @@ type Logger interface {
 
 type MLogger interface {
 	Logger
+	UnsafeChangeLogLevel(l Level)
 	MInfo(m Module,msg string, keyvals ...interface{})
 	MPanicf(m Module,msg string, keyvals ...interface{})
 	MInfof(m Module,template string, keyvals ...interface{})
@@ -44,6 +45,7 @@ type MLogger interface {
 }
 
 type IConcreteLogger interface {
+	UnsafeChangeLogLevel(lev Level)
 	CDebug(module string, lineNo interface{}, msg string, keyvals ...interface{})
 	CInfo(module string, lineNo interface{}, msg string, keyvals ...interface{})
 	CWarn(module string, lineNo interface{}, msg string, keyvals ...interface{})

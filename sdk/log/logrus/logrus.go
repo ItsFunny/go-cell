@@ -39,9 +39,9 @@ func NewGlobalLogrusLogger() logsdk.MLogger {
 
 var once sync.Once
 
-func newModuleLogrusLogger( ) *moduleLogrusLogger {
+func newModuleLogrusLogger() *moduleLogrusLogger {
 	r := &moduleLogrusLogger{}
-	m:=logsdk.NewModule("global",1)
+	m := logsdk.NewModule("global", 1)
 	r.MLogger = base.NewCommonLogger(m, r)
 	r.log = logrus.New()
 	r.log.SetFormatter(NewTextFormmater())
@@ -59,8 +59,6 @@ func newModuleLogrusLogger( ) *moduleLogrusLogger {
 		ll = logrus.InfoLevel
 	}
 	r.log.SetLevel(ll)
-
-
 
 	return r
 }
@@ -92,6 +90,10 @@ func newLogrus(module logsdk.Module, wait bool) *logrusLogger {
 	}
 	r.log.SetLevel(ll)
 	return r
+}
+
+func (l *logrusLogger) UnsafeChangeLogLevel(lev logsdk.Level) {
+	l.log.SetLevel(lev.GetLogrusLevel())
 }
 
 func (l *logrusLogger) CInfo(module string, lineNo interface{}, msg string, keyvals ...interface{}) {
@@ -175,6 +177,10 @@ func (l *logrusLogger) buildFields(module string, lineNo interface{}, keyvals ..
 	return
 }
 
+func (l *moduleLogrusLogger) UnsafeChangeLogLevel(lev logsdk.Level) {
+	l.log.SetLevel(lev.GetLogrusLevel())
+}
+
 func (l *moduleLogrusLogger) CInfo(module string, lineNo interface{}, msg string, keyvals ...interface{}) {
 	fields, more := l.buildFields(module, lineNo, keyvals...)
 	if nil != more {
@@ -233,8 +239,8 @@ func (l *moduleLogrusLogger) CWith(module logsdk.Module, fields map[string]inter
 	if exist {
 		mStr, ok := m.(string)
 		if ok {
-			delete(fields,"module")
-			mm = logsdk.NewModule(mStr,1)
+			delete(fields, "module")
+			mm = logsdk.NewModule(mStr, 1)
 		}
 	}
 	l2 := newLogrus(mm, false)
@@ -264,4 +270,3 @@ func (l *moduleLogrusLogger) buildFields(module string, lineNo interface{}, keyv
 
 	return
 }
-

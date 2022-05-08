@@ -94,6 +94,10 @@ func (c CommonLogger) Warnf(format string, args ...interface{}) {
 	panic("implement me")
 }
 
+
+func(c ModuleLogger) UnsafeChangeLogLevel(l logsdk.Level) {
+	c.logger.UnsafeChangeLogLevel(l)
+}
 func (c ModuleLogger) mlog(m logsdk.Module, l logsdk.Level, msg string, keyvals ...interface{}) {
 	//if logcomponent.IsLogLevelDisabled(l, m.String()) {
 	//	return
@@ -119,7 +123,6 @@ func (c ModuleLogger) mlog(m logsdk.Module, l logsdk.Level, msg string, keyvals 
 		c.logger.CInfo(m.String(), line, msg, keyvals...)
 	}
 }
-
 func (c ModuleLogger) MInfo(m logsdk.Module, msg string, keyvals ...interface{}) {
 	c.mlog(m, logsdk.InfoLevel, msg, keyvals...)
 }

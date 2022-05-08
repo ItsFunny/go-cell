@@ -156,7 +156,7 @@ func (this *ContractServiceImpl) initAdmin() error {
 		return errors.New("asdd")
 	}
 	senderAddress := crypto.PubkeyToAddress(*pubkeyECDSA)
-
+	this.Logger.Info("address","info",senderAddress.String())
 	account := &Account{
 		key:      privateKey,
 		address:  senderAddress,
