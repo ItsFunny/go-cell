@@ -33,6 +33,10 @@ func (b *swaggerExtension) OnExtensionInit(ctx extension.INodeContext) error {
 		if cmd == swgCmd {
 			continue
 		}
+		supportType := cmd.SupportRunType()
+		if !supportType.SupportSwagger() {
+			continue
+		}
 		wrapper := cmd.ToSwaggerPath()
 		sg.Paths.Paths[wrapper.ID] = wrapper.PathItem
 	}
@@ -46,7 +50,7 @@ func (b *swaggerExtension) OnExtensionInit(ctx extension.INodeContext) error {
 			Version:     "2.0",
 		},
 	}
-	sg.Host=""
+	sg.Host = ""
 	ret, err := sg.MarshalJSON()
 	if nil != err {
 		return err

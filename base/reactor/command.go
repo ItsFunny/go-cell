@@ -22,11 +22,12 @@ var (
 type RunType int32
 
 const (
-	RunTypeHttp     = 1 << 0
-	RunTypeRpc      = 1 << 1
-	RunTypeCli      = 1 << 2
-	RunTypeHttpPost = 1<<3 | RunTypeHttp
-	RunTypeHttpGet  = 1<<4 | RunTypeHttp
+	RunTypeSwagger  = 1 << 0
+	RunTypeHttp     = 1<<1 | RunTypeSwagger
+	RunTypeRpc      = 1 << 2
+	RunTypeCli      = 1 << 3
+	RunTypeHttpPost = 1<<4 | RunTypeHttp
+	RunTypeHttpGet  = 1<<5 | RunTypeHttp
 )
 
 var cmdTypeDesc = map[RunType]string{
@@ -36,6 +37,10 @@ var cmdTypeDesc = map[RunType]string{
 
 func getRunTypeDesc(runT RunType) string {
 	return cmdTypeDesc[runT]
+}
+
+func (r RunType) SupportSwagger() bool {
+	return r&RunTypeSwagger >= RunTypeSwagger
 }
 
 type ICommand interface {

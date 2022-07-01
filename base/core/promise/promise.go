@@ -64,9 +64,11 @@ func (np *Promise) Send(nd interface{}) {
 	np.value = nd
 	close(np.done)
 }
+
 func (np *Promise) IsDone() bool {
 	return np.flag == done
 }
+
 func (np *Promise) IsCancel() bool {
 	if np.flag&enableCancel <= 0 {
 		return false
