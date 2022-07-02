@@ -18,6 +18,9 @@ var (
 	logger logsdk.MLogger
 )
 
+func init() {
+	logsdk.RegisterBlackList("base/common", "log/log.go", "base/log", "base/base", "log/config.go", "logrus/g_log.go")
+}
 func UnsafeChangeLogLevel(l logsdk.Level) {
 	logger.UnsafeChangeLogLevel(l)
 }
