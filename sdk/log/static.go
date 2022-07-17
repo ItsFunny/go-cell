@@ -12,6 +12,9 @@ func GetModuleLevel(m string) Level {
 	return logManager.cfg.GetModuleLevel(m)
 }
 
+func IsLogLevelDisabled(l Level, m string) bool {
+	return logManager.cfg.IsLogLevelDisabled(l, m)
+}
 func RegisterBlackList(pathes ...string) {
 	logManager.cfg.RegisterBlackList(pathes...)
 }
