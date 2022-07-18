@@ -24,12 +24,14 @@ type SubscriptionImpl struct {
 	canceled chan struct{}
 	mtx      sync.RWMutex
 	err      error
+	block    bool
 }
 
-func NewSubscription(outCapacity int) *SubscriptionImpl {
+func NewSubscription(outCapacity int, block bool) *SubscriptionImpl {
 	return &SubscriptionImpl{
 		out:      make(chan PubSubMessage, outCapacity),
 		canceled: make(chan struct{}),
+		block:    block,
 	}
 }
 func (this *SubscriptionImpl) GetOut() chan PubSubMessage {

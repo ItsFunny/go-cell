@@ -61,6 +61,9 @@ type CommonEventBusComponentImpl struct {
 
 	mtx           sync.RWMutex
 	subscriptions map[string]map[string]struct{} // subscriber -> query (string) -> empty struct
+
+	// if cap is gt blockLimit ,then send will be blocked
+	blockLimit int
 }
 type Option func(*CommonEventBusComponentImpl)
 
@@ -69,6 +72,11 @@ func BufferCapacity(cap int) Option {
 		if cap > 0 {
 			s.cmdsCap = cap
 		}
+	}
+}
+func BlockLimit(limit int) Option {
+	return func(s *CommonEventBusComponentImpl) {
+		s.blockLimit = limit
 	}
 }
 
@@ -151,7 +159,7 @@ func (s *CommonEventBusComponentImpl) subscribe(ctx context.Context, clientID st
 		return nil, ErrAlreadySubscribed
 	}
 
-	subscription := NewSubscription(outCapacity)
+	subscription := NewSubscription(outCapacity, outCapacity > s.blockLimit)
 	select {
 	case s.cmds <- cmd{op: sub, clientID: clientID, query: query, subscription: subscription}:
 		s.mtx.Lock()
@@ -324,10 +332,14 @@ func (state *state) send(msg interface{}, events map[string][]string) error {
 				if cap(subscription.GetOut()) == 0 {
 					subscription.GetOut() <- NewPubSubMessage(msg, events)
 				} else {
-					select {
-					case subscription.GetOut() <- NewPubSubMessage(msg, events):
-					default:
-						state.remove(clientID, qStr, ErrOutOfCapacity)
+					if subscription.block {
+						subscription.GetOut() <- NewPubSubMessage(msg, events)
+					} else {
+						select {
+						case subscription.GetOut() <- NewPubSubMessage(msg, events):
+						default:
+							state.remove(clientID, qStr, ErrOutOfCapacity)
+						}
 					}
 				}
 			}
