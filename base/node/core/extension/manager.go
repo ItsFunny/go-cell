@@ -37,7 +37,9 @@ type NodeExtensionManager struct {
 func NewExtensionManager(bus IApplicationEventBus, e Extensions, h di.ReactorHolder) *NodeExtensionManager {
 	ret := &NodeExtensionManager{}
 	ret.BaseService = services.NewBaseService(nil, extensionManagerModule, ret)
-	ret.Ctx = &NodeContext{}
+	ctx := &NodeContext{}
+	ctx.ExtensionManager = ret
+	ret.Ctx = ctx
 	ret.Ctx.Extensions = e.Extensions
 	ret.Ctx.Commands = h.Commands
 	ret.bus = bus
