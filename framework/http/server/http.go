@@ -30,6 +30,8 @@ var (
 		di.RegisterProxy(proxy.NewHttpFrameWorkProxy),
 		di.RegisterDispatcher(dispatcher.NewDefaultHttpDispatcher),
 	)
+
+	defaultPort = 8080
 )
 
 type IHttpServer interface {
@@ -65,7 +67,7 @@ func (s *HttpServer) OnStart(c *services.StartCTX) error {
 	s.blackList = make(map[string]struct{})
 	s.blackList["/favicon.ico"] = struct{}{}
 	ip := ""
-	port := 8080
+	port := defaultPort
 	addr := fmt.Sprintf("%s:%d", ip, port)
 	s.Logger.Info("http start up ", "addr", addr)
 	// FIXME
@@ -96,4 +98,8 @@ func (s *HttpServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 func (s *HttpServer) filter(uri string) bool {
 	_, exist := s.blackList[uri]
 	return exist
+}
+
+func SetDefaultPort(port int) {
+	defaultPort = port
 }
