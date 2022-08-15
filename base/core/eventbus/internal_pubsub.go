@@ -18,6 +18,14 @@ var (
 	ErrOutOfCapacity = errors.New("client is not pulling messages fast enough")
 )
 
+type SubscriptionOption func(s *SubscriptionImpl)
+
+var SubscribeWithBlock = func(b bool) SubscriptionOption {
+	return func(s *SubscriptionImpl) {
+		s.block = b
+	}
+}
+
 type SubscriptionImpl struct {
 	out chan PubSubMessage
 
@@ -27,12 +35,16 @@ type SubscriptionImpl struct {
 	block    bool
 }
 
-func NewSubscription(outCapacity int, block bool) *SubscriptionImpl {
-	return &SubscriptionImpl{
+func NewSubscription(outCapacity int, ops ...SubscriptionOption) *SubscriptionImpl {
+	ret := &SubscriptionImpl{
 		out:      make(chan PubSubMessage, outCapacity),
 		canceled: make(chan struct{}),
-		block:    block,
+		block:    false,
 	}
+	for _, v := range ops {
+		v(ret)
+	}
+	return ret
 }
 func (this *SubscriptionImpl) GetOut() chan PubSubMessage {
 	return this.out

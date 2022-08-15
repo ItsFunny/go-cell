@@ -16,9 +16,9 @@ import (
 // IInternalPubSubComponent
 type ICommonEventBus interface {
 	services.IBaseService
-	Subscribe(ctx context.Context, clientID string, query Query, outCapacity ...int) (Subscription, error)
+	Subscribe(ctx context.Context, subscriber string, query Query, outCapacity int, ops ...SubscriptionOption) (Subscription, error)
 	PublishWithEvents(ctx context.Context, msg interface{}, events map[string][]string) error
-	SubscribeUnbuffered(ctx context.Context, clientID string, query Query) (*SubscriptionImpl, error)
+	SubscribeUnbuffered(ctx context.Context, clientID string, query Query, ops ...SubscriptionOption) (*SubscriptionImpl, error)
 	Unsubscribe(ctx context.Context, subscriber string, query Query) error
 	UnsubscribeAll(ctx context.Context, subscriber string) error
 
@@ -35,4 +35,3 @@ type Query interface {
 	Matches(events map[string][]string) (bool, error)
 	String() string
 }
-

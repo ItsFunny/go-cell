@@ -62,8 +62,6 @@ type CommonEventBusComponentImpl struct {
 	mtx           sync.RWMutex
 	subscriptions map[string]map[string]struct{} // subscriber -> query (string) -> empty struct
 
-	// if cap is gt blockLimit ,then send will be blocked
-	blockLimit int
 }
 type Option func(*CommonEventBusComponentImpl)
 
@@ -72,11 +70,6 @@ func BufferCapacity(cap int) Option {
 		if cap > 0 {
 			s.cmdsCap = cap
 		}
-	}
-}
-func BlockLimit(limit int) Option {
-	return func(s *CommonEventBusComponentImpl) {
-		s.blockLimit = limit
 	}
 }
 
@@ -101,16 +94,10 @@ func NewCommonEventBusComponentImpl(options ...Option) ICommonEventBus {
 	return s
 }
 
-func (s *CommonEventBusComponentImpl) Subscribe(ctx context.Context, subscriber string, query Query, outCapacity ...int) (Subscription, error) {
-	outCap := 1
-	if len(outCapacity) > 0 {
-		if outCapacity[0] <= 0 {
-			panic("不可为空")
-		}
-		outCap = outCapacity[0]
-	}
+func (s *CommonEventBusComponentImpl) Subscribe(ctx context.Context, subscriber string, query Query, outCapacity int, ops ...SubscriptionOption) (Subscription, error) {
+	outCap := outCapacity
 
-	return s.subscribe(ctx, subscriber, query, outCap)
+	return s.subscribe(ctx, subscriber, query, outCap, ops...)
 }
 
 // func (s *CommonEventBusComponentImpl) GetBoundServices() []base.ILogicService {
@@ -144,11 +131,11 @@ func (s *CommonEventBusComponentImpl) NumClientSubscriptions(clientID string) in
 	return len(s.subscriptions[clientID])
 }
 
-func (s *CommonEventBusComponentImpl) SubscribeUnbuffered(ctx context.Context, clientID string, query Query) (*SubscriptionImpl, error) {
-	return s.subscribe(ctx, clientID, query, 0)
+func (s *CommonEventBusComponentImpl) SubscribeUnbuffered(ctx context.Context, clientID string, query Query, ops ...SubscriptionOption) (*SubscriptionImpl, error) {
+	return s.subscribe(ctx, clientID, query, 0, ops...)
 }
 
-func (s *CommonEventBusComponentImpl) subscribe(ctx context.Context, clientID string, query Query, outCapacity int) (*SubscriptionImpl, error) {
+func (s *CommonEventBusComponentImpl) subscribe(ctx context.Context, clientID string, query Query, outCapacity int, ops ...SubscriptionOption) (*SubscriptionImpl, error) {
 	s.mtx.RLock()
 	clientSubscriptions, ok := s.subscriptions[clientID]
 	if ok {
@@ -159,7 +146,7 @@ func (s *CommonEventBusComponentImpl) subscribe(ctx context.Context, clientID st
 		return nil, ErrAlreadySubscribed
 	}
 
-	subscription := NewSubscription(outCapacity, outCapacity > s.blockLimit)
+	subscription := NewSubscription(outCapacity, ops...)
 	select {
 	case s.cmds <- cmd{op: sub, clientID: clientID, query: query, subscription: subscription}:
 		s.mtx.Lock()
