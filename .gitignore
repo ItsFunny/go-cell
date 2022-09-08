@@ -2,3 +2,5 @@
 .idea
 vendor
 demo/useless
+*/.DS_Store
+*.Ds_Store

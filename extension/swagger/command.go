@@ -34,7 +34,7 @@ var swgCmd = &swaggerCommand{
 		ProtocolID: "/swagger/*",
 		PreRun:     nil,
 		PostRun:    nil,
-		RunType:    reactor.RunTypeHttp,
+		RunType:    reactor.RunTypeHttpGet,
 		Options:    nil,
 	},
 	ready:   false,
