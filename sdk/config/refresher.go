@@ -28,16 +28,16 @@ type ConfigRefreshData struct {
 	parser IConfigurationParser
 }
 
-func newConfigRefresher(interval int, path string, f func(f string), d func(dir string)) *ConfigRefresher {
+func newConfigRefresher(interval int, path string, f func(f string), d func(dir string)) (*ConfigRefresher, error) {
 	ret := &ConfigRefresher{}
 	ret.checkIntervalSeconds = interval
-	ret.configurationListeners=make(map[string]*ConfigRefreshData)
+	ret.configurationListeners = make(map[string]*ConfigRefreshData)
 	w, err := NewRecursiveWatcher(path, f, d)
 	if nil != err {
-		panic(err)
+		return ret, err
 	}
 	ret.w = w
-	return ret
+	return ret, nil
 }
 
 // func (this *ConfigRefresher) RegisterListener(moduleName string, filePath string, listener func(), parser IConfigurationParser) {

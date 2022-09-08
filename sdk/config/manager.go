@@ -52,10 +52,14 @@ func (this *Manager) Initialize() {
 	this.mtx.Lock()
 	defer this.mtx.Unlock()
 
-	this.refresher = newConfigRefresher(REFRESH_CHECK_INTERVAL_SECONDS,
+	ref, err := newConfigRefresher(REFRESH_CHECK_INTERVAL_SECONDS,
 		this.rootPath,
 		this.OnFileCreateOrModified,
 		this.OnDirCreate)
+	if nil != err {
+		return
+	}
+	this.refresher = ref
 	cur := this.GetCurrentConfiguration()
 	if cur.initialized {
 		panic("asdd")

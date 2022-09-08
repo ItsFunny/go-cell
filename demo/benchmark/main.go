@@ -64,6 +64,5 @@ func main() {
 	logsdk.SetGlobalLogLevel(logsdk.ErrorLevel)
 	app := application.New(context.Background(),
 		benchModule, http.HttpModule)
-	logsdk.SetGlobalLogLevel(logsdk.ErrorLevel)
 	app.Run(os.Args)
 }
