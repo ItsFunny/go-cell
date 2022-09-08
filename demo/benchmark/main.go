@@ -7,6 +7,7 @@ import (
 	"github.com/itsfunny/go-cell/base/reactor"
 	"github.com/itsfunny/go-cell/di"
 	"github.com/itsfunny/go-cell/extension/http"
+	logsdk "github.com/itsfunny/go-cell/sdk/log"
 	"go.uber.org/fx"
 	"os"
 	"strconv"
@@ -60,7 +61,9 @@ func newBenchMarkExtension() extension.INodeExtension {
 }
 
 func main() {
+	logsdk.SetGlobalLogLevel(logsdk.ErrorLevel)
 	app := application.New(context.Background(),
 		benchModule, http.HttpModule)
+	logsdk.SetGlobalLogLevel(logsdk.ErrorLevel)
 	app.Run(os.Args)
 }

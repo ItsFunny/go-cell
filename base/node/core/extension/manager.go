@@ -18,7 +18,6 @@ import (
 	"github.com/itsfunny/go-cell/base/core/services"
 	"github.com/itsfunny/go-cell/di"
 	"github.com/itsfunny/go-cell/sdk/config"
-	logsdk "github.com/itsfunny/go-cell/sdk/log"
 )
 
 type NodeExtensionManager struct {
@@ -99,10 +98,6 @@ func (m *NodeExtensionManager) handleMsg(data interface{}) {
 	}
 }
 func (m *NodeExtensionManager) onPrepared(e ApplicationEnvironmentPreparedEvent) {
-	logsdk.SetGlobalLogLevel(logsdk.DebugLevel)
-	defer func() {
-		logsdk.SetGlobalLogLevel(logsdk.InfoLevel)
-	}()
 	m.Ctx.Args = e.Args
 	if err := m.initCommandLine(); nil != err {
 		m.Logger.Error("init command failed", "err", err)
