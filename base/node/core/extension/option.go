@@ -3,7 +3,7 @@ package extension
 import "github.com/itsfunny/go-cell/base/core/options"
 
 var (
-	home       = "home"
+	home       = "cellHome"
 	configType = "configType"
 	ip         = "ip"
 
