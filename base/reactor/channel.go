@@ -9,6 +9,7 @@
 package reactor
 
 import (
+	"context"
 	"github.com/itsfunny/go-cell/sdk/pipeline"
 )
 
@@ -33,7 +34,7 @@ func NewDefaultChannel(handlers ...CommandHandler) *DefaultChannel {
 		pipeline: nil,
 	}
 	eng := pipeline.NewSingleEngine()
-	ret.pipeline=eng
+	ret.pipeline = eng
 	for _, handler := range handlers {
 		eng.RegisterFunc(nil, func(ctx *pipeline.Context) {
 			handler(ctx.Request.(ICommandSuit))
@@ -47,7 +48,7 @@ func NewDefaultChannel(handlers ...CommandHandler) *DefaultChannel {
 }
 
 func (d *DefaultChannel) ReadCommand(suit IHandlerSuit) {
-	d.pipeline.Serve(suit.(ICommandSuit))
+	d.pipeline.Serve(context.Background(), suit.(ICommandSuit))
 }
 
 var CommandFinalExecute CommandHandler = func(suit ICommandSuit) {

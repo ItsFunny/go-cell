@@ -8,7 +8,11 @@
 */
 package pipeline
 
-import "reflect"
+import (
+	"context"
+	"github.com/itsfunny/go-cell/base/core/promise"
+	"reflect"
+)
 
 var (
 	_ Pipeline = (*SingleEngine)(nil)
@@ -16,6 +20,6 @@ var (
 )
 
 type Pipeline interface {
-	Serve(data interface{})
+	Serve(ctx context.Context, data interface{}, ops ...promise.PromiseOntion)
 	RegisterFunc(d reflect.Type, fs ...HandlerFunc)
 }

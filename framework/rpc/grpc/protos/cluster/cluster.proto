@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+import "types/envelope.proto";
+
+option java_multiple_files = true;
+option java_package = "com.cell.grpc.cluster";
+option java_outer_classname = "ClusterProto";
+
+
+service BaseGrpc {
+    rpc sendRequest (GrpcRequest) returns (GrpcResponse) {}
+}
+
+message GrpcRequest {
+    common.Envelope envelope=1;
+}
+
+message GrpcResponse {
+    string message = 1;
+    int64 code=2;
+    bytes data=3;
+}
+
+
+

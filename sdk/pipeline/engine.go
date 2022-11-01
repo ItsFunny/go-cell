@@ -9,18 +9,22 @@
 package pipeline
 
 import (
+	"context"
+	"github.com/itsfunny/go-cell/base/core/promise"
 	"reflect"
 )
 
 type IContextFactory interface {
-	Create() *Context
+	Create(goCtx context.Context, ops ...promise.PromiseOntion) *Context
 	Release(c *Context)
 }
 type defaultContextFactory struct {
 }
 
-func (d defaultContextFactory) Create() *Context {
-	return &Context{}
+func (d defaultContextFactory) Create(goCtx context.Context, ops ...promise.PromiseOntion) *Context {
+	return &Context{
+		Promise: promise.NewPromise(goCtx),
+	}
 }
 
 func (d defaultContextFactory) Release(c *Context) {
@@ -60,8 +64,8 @@ func (this *SingleEngine) RegisterFunc(d reflect.Type, fs ...HandlerFunc) {
 	this.Handlers = this.combineHandlers(fs)
 }
 
-func (this *Engine) Serve(data interface{}) {
-	ctx := this.factory.Create()
+func (this *Engine) Serve(goCtx context.Context, data interface{}, ops ...promise.PromiseOntion) {
+	ctx := this.factory.Create(goCtx)
 	defer this.factory.Release(ctx)
 	hs, exist := this.interestGroup[reflect.TypeOf(data)]
 	if !exist {
@@ -73,8 +77,8 @@ func (this *Engine) Serve(data interface{}) {
 	this.handleCtx(ctx)
 }
 
-func (this *SingleEngine) Serve(data interface{}) {
-	ctx := this.factory.Create()
+func (this *SingleEngine) Serve(goCtx context.Context, data interface{}, ops ...promise.PromiseOntion) {
+	ctx := this.factory.Create(goCtx, ops...)
 	defer this.factory.Release(ctx)
 	ctx.reset()
 	ctx.Request = data

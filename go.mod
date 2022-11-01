@@ -13,11 +13,13 @@ require (
 	github.com/emirpasic/gods v1.12.0
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/go-openapi/spec v0.20.4
+	github.com/gogo/protobuf v1.3.2
+	github.com/gorilla/websocket v1.4.2
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d
 	github.com/sasha-s/go-deadlock v0.3.1
 	github.com/sirupsen/logrus v1.8.1
-	github.com/spf13/cobra v1.5.0 // indirect
+	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.7.0
 	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14
 	github.com/swaggo/swag v1.7.8
@@ -26,6 +28,7 @@ require (
 	go.uber.org/fx v1.16.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d
+	google.golang.org/grpc v1.28.1
 )
 
 replace (

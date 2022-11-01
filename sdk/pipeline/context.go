@@ -8,19 +8,22 @@
 */
 package pipeline
 
-import "github.com/itsfunny/go-cell/base/common/errs"
+import (
+	"github.com/itsfunny/go-cell/base/common/errs"
+	"github.com/itsfunny/go-cell/base/core/promise"
+)
 
 type Context struct {
 	index    int8
 	handlers HandlersChain
 	Errors   errorMsgs
 	Request  interface{}
-
+	Promise  *promise.Promise
 }
 
 func (c *Context) Next() {
 	c.index++
-	for ; c.index < int8(len(c.handlers));{
+	for c.index < int8(len(c.handlers)) {
 		c.handlers[c.index](c)
 		c.index++
 	}

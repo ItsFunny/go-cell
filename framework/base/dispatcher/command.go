@@ -9,6 +9,7 @@
 package dispatcher
 
 import (
+	context2 "context"
 	"errors"
 	"github.com/itsfunny/go-cell/base/common"
 	"github.com/itsfunny/go-cell/base/core/promise"
@@ -60,7 +61,7 @@ func (b *BaseCommandDispatcher) AddCommand(cmd reactor.ICommand) {
 		Command: cmd,
 	}
 	b.Commands[cmd.ID()] = wp
-	b.onAddCommandPipeline.Serve(wp)
+	b.onAddCommandPipeline.Serve(context2.Background(), wp)
 }
 
 func (b *BaseCommandDispatcher) CollectSummary(request couple.IServerRequest, wrapper *CommandWrapper) reactor.ISummary {
@@ -108,7 +109,7 @@ func (b *BaseCommandDispatcher) getCommandFromRequest(request couple.IServerRequ
 		Request:  request,
 		Promise:  promise.NewPromise(b.GetContext()),
 	}
-	b.selectorStrategy.Serve(req)
+	b.selectorStrategy.Serve(context2.Background(), req)
 	ret, e := req.Promise.Get(b.GetContext())
 	if nil != e {
 		return nil, e
