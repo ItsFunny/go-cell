@@ -20,6 +20,6 @@ var (
 )
 
 type Pipeline interface {
-	Serve(ctx context.Context, data interface{}, ops ...promise.PromiseOntion)
+	Serve(ctx context.Context, data interface{}, ops ...promise.PromiseOntion) *promise.Promise
 	RegisterFunc(d reflect.Type, fs ...HandlerFunc)
 }

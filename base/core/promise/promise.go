@@ -65,6 +65,15 @@ func (np *Promise) Send(nd interface{}) {
 	close(np.done)
 }
 
+func (np *Promise) TrySend(nd interface{}) {
+	if np.err != nil || np.value != nil {
+		return
+	}
+	np.flag = done
+	np.value = nd
+	close(np.done)
+}
+
 func (np *Promise) IsDone() bool {
 	return np.flag == done
 }

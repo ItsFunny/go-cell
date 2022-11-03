@@ -64,26 +64,28 @@ func (this *SingleEngine) RegisterFunc(d reflect.Type, fs ...HandlerFunc) {
 	this.Handlers = this.combineHandlers(fs)
 }
 
-func (this *Engine) Serve(goCtx context.Context, data interface{}, ops ...promise.PromiseOntion) {
+func (this *Engine) Serve(goCtx context.Context, data interface{}, ops ...promise.PromiseOntion) *promise.Promise {
 	ctx := this.factory.Create(goCtx)
 	defer this.factory.Release(ctx)
 	hs, exist := this.interestGroup[reflect.TypeOf(data)]
 	if !exist {
-		return
+		return nil
 	}
 	ctx.reset()
 	ctx.Request = data
 	ctx.handlers = hs.Handlers
 	this.handleCtx(ctx)
+	return ctx.Promise
 }
 
-func (this *SingleEngine) Serve(goCtx context.Context, data interface{}, ops ...promise.PromiseOntion) {
+func (this *SingleEngine) Serve(goCtx context.Context, data interface{}, ops ...promise.PromiseOntion) *promise.Promise {
 	ctx := this.factory.Create(goCtx, ops...)
 	defer this.factory.Release(ctx)
 	ctx.reset()
 	ctx.Request = data
 	ctx.handlers = this.Handlers
 	this.handleCtx(ctx)
+	return ctx.Promise
 }
 
 func (this *SingleEngine) handleCtx(c *Context) {
