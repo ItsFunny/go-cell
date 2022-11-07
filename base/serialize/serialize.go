@@ -8,8 +8,12 @@
 */
 package serialize
 
+import (
+	"github.com/itsfunny/go-cell/component/codec/types"
+)
+
 type ISerialize interface {
-	Read(archive IInputArchive)error
-	ToBytes() []byte
-	FromBytes([]byte)
+	Read(archive IInputArchive, cdc types.Codec) error
+	ToBytes(cdc types.Codec) ([]byte, error)
+	//FromBytes([]byte)
 }

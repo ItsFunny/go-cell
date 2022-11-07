@@ -11,6 +11,7 @@ package reactor
 import (
 	"github.com/itsfunny/go-cell/base/core/options"
 	"github.com/itsfunny/go-cell/base/couple"
+	"github.com/itsfunny/go-cell/component/codec"
 )
 
 type CommandContext struct {
@@ -22,6 +23,7 @@ type CommandContext struct {
 	IChannel IChannel
 	Command  ICommand
 	Options  options.OptMap
+	Codec    *codec.CodecComponent
 }
 
 type CommandContextFactory interface {

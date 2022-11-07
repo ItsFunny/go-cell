@@ -12,6 +12,7 @@ require (
 	github.com/ChengjinWu/gojson v0.0.0-20181113073026-04749cc2d015
 	github.com/emirpasic/gods v1.12.0
 	github.com/fsnotify/fsnotify v1.4.9
+	github.com/fxamacker/cbor/v2 v2.4.0 // indirect
 	github.com/go-openapi/spec v0.20.4
 	github.com/gogo/protobuf v1.3.2
 	github.com/gorilla/websocket v1.4.2

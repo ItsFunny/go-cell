@@ -14,6 +14,7 @@ import (
 	"github.com/itsfunny/go-cell/base/core/eventbus"
 	"github.com/itsfunny/go-cell/base/core/services"
 	"github.com/itsfunny/go-cell/base/node/core/extension"
+	"github.com/itsfunny/go-cell/component/codec"
 	"github.com/itsfunny/go-cell/di"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
 	logrusplugin "github.com/itsfunny/go-cell/sdk/log/logrus"
@@ -42,6 +43,7 @@ func New(ctx context.Context, builders ...di.OptionBuilder) *CellApplication {
 	ops = append(ops, extension.ExtensionManagerModule)
 	ops = append(ops, eventbus.DefaultEventBusModule)
 	ops = append(ops, extension.ApplicationEventBusModule)
+	ops = append(ops, codec.CodecModule)
 	for _, b := range builders {
 		ops = append(ops, b())
 	}

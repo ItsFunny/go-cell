@@ -8,62 +8,136 @@
 */
 package serialize
 
-
 var (
-	_ IInputArchive=(*JSONInputArchive)(nil)
+	_ IInputArchive = (*JSONInputArchive)(nil)
+	_ IInputArchive = (*ByteJSONInputArchive)(nil)
 )
+
 type JSONInputArchive struct {
-	
 }
 
-func (J *JSONInputArchive) ReadByte() ([]byte, error) {
+func (j *JSONInputArchive) ReadByte() ([]byte, error) {
 	panic("implement me")
 }
 
-func (J *JSONInputArchive) ReadBool() (bool, error) {
+func (j *JSONInputArchive) ReadBool() (bool, error) {
 	panic("implement me")
 }
 
-func (J *JSONInputArchive) ReadBoolSlice() ([]bool, error) {
+func (j *JSONInputArchive) ReadBoolSlice() ([]bool, error) {
 	panic("implement me")
 }
 
-func (J *JSONInputArchive) ReadInt32() (int32, error) {
+func (j *JSONInputArchive) ReadInt32() (int32, error) {
 	panic("implement me")
 }
 
-func (J *JSONInputArchive) ReadInt32Slice() ([]int32, error) {
+func (j *JSONInputArchive) ReadInt32Slice() ([]int32, error) {
 	panic("implement me")
 }
 
-func (J *JSONInputArchive) ReadInt() (int, error) {
+func (j *JSONInputArchive) ReadInt() (int, error) {
 	panic("implement me")
 }
 
-func (J *JSONInputArchive) ReadIntSlice() ([]int, error) {
+func (j *JSONInputArchive) ReadIntSlice() ([]int, error) {
 	panic("implement me")
 }
 
-func (J *JSONInputArchive) ReadInt64() (int64, error) {
+func (j *JSONInputArchive) ReadInt64() (int64, error) {
 	panic("implement me")
 }
 
-func (J *JSONInputArchive) ReadInt64Slice() ([]int64, error) {
+func (j *JSONInputArchive) ReadInt64Slice() ([]int64, error) {
 	panic("implement me")
 }
 
-func (J *JSONInputArchive) ReadFloat32() (float32, error) {
+func (j *JSONInputArchive) ReadFloat32() (float32, error) {
 	panic("implement me")
 }
 
-func (J *JSONInputArchive) ReadFloat32Slice() ([]float32, error) {
+func (j *JSONInputArchive) ReadFloat32Slice() ([]float32, error) {
 	panic("implement me")
 }
 
-func (J *JSONInputArchive) ReadString() (string, error) {
+func (j *JSONInputArchive) ReadString() (string, error) {
 	panic("implement me")
 }
 
-func (J *JSONInputArchive) ReadStringSlice(strings []string, err error) {
+func (j *JSONInputArchive) ReadStringSlice(strings []string, err error) {
+	panic("implement me")
+}
+
+/////
+
+type ByteJSONInputArchive struct {
+	data []byte
+}
+
+func NewByteJSONInputArchive(data []byte) *ByteJSONInputArchive {
+	return &ByteJSONInputArchive{data: data}
+}
+
+func (b *ByteJSONInputArchive) ReadByte() ([]byte, error) {
+	return b.data, nil
+}
+
+func (b *ByteJSONInputArchive) ReadBool() (bool, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (b *ByteJSONInputArchive) ReadBoolSlice() ([]bool, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (b *ByteJSONInputArchive) ReadInt32() (int32, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (b *ByteJSONInputArchive) ReadInt32Slice() ([]int32, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (b *ByteJSONInputArchive) ReadInt() (int, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (b *ByteJSONInputArchive) ReadIntSlice() ([]int, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (b *ByteJSONInputArchive) ReadInt64() (int64, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (b *ByteJSONInputArchive) ReadInt64Slice() ([]int64, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (b *ByteJSONInputArchive) ReadFloat32() (float32, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (b *ByteJSONInputArchive) ReadFloat32Slice() ([]float32, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (b *ByteJSONInputArchive) ReadString() (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (b *ByteJSONInputArchive) ReadStringSlice(strings []string, err error) {
+	//TODO implement me
 	panic("implement me")
 }

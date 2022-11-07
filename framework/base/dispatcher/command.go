@@ -16,6 +16,7 @@ import (
 	"github.com/itsfunny/go-cell/base/core/services"
 	"github.com/itsfunny/go-cell/base/couple"
 	"github.com/itsfunny/go-cell/base/reactor"
+	"github.com/itsfunny/go-cell/component/codec"
 	"github.com/itsfunny/go-cell/framework/base/context"
 	"github.com/itsfunny/go-cell/framework/base/errordef"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
@@ -45,6 +46,8 @@ type BaseCommandDispatcher struct {
 	selectorStrategy     *pipeline.Engine
 	onAddCommandPipeline pipeline.Pipeline
 
+	cdc *codec.CodecComponent
+
 	defaultFailStatus int
 }
 
@@ -68,7 +71,7 @@ func (b *BaseCommandDispatcher) CollectSummary(request couple.IServerRequest, wr
 	return b.impl.CollectSummary(request, wrapper)
 }
 
-func NewBaseCommandDispatcher(m logsdk.Module, impl ICommandDispatcher, selectors []ICommandSelector, handlers []reactor.CommandHandler) *BaseCommandDispatcher {
+func NewBaseCommandDispatcher(m logsdk.Module, impl ICommandDispatcher, selectors []ICommandSelector, handlers []reactor.CommandHandler, cdc *codec.CodecComponent) *BaseCommandDispatcher {
 	ret := &BaseCommandDispatcher{}
 	ret.impl = impl
 	ret.Commands = make(map[reactor.ProtocolID]*CommandWrapper)
@@ -99,6 +102,7 @@ func NewBaseCommandDispatcher(m logsdk.Module, impl ICommandDispatcher, selector
 	ret.onAddCommandPipeline = onCmdAddP
 	ret.BaseService = services.NewBaseService(nil, m, impl)
 	ret.channel = reactor.NewDefaultChannel(handlers...)
+	ret.cdc = cdc
 
 	return ret
 }
@@ -154,4 +158,8 @@ func (b *BaseCommandDispatcher) failFast(response couple.IServerResponse, status
 	response.AddHeader(common.RESPONSE_HEADER_MSG, "internal server error")
 	response.SetStatus(status)
 	response.FireError(errordef.ERROR_NO_SUCH_PROTOCOL)
+}
+
+func (b *BaseCommandDispatcher) GetCdc() *codec.CodecComponent {
+	return b.cdc
 }

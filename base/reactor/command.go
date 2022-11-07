@@ -53,7 +53,7 @@ type ICommand interface {
 
 type ICommandSerialize interface {
 	serialize.ISerialize
-	common.IMessage
+	IMessage
 }
 
 type Command struct {
@@ -62,7 +62,7 @@ type Command struct {
 	Run        Function
 	PostRun    PostRunMap
 
-	property CommandProperty
+	Property CommandProperty
 
 	RunType RunType
 
@@ -91,7 +91,7 @@ func (c *Command) Execute(ctx IBuzzContext) {
 		}
 	}
 
-	async := c.property.Async
+	async := c.Property.Async
 	if async {
 		panic("not supported yet")
 	} else {
@@ -123,19 +123,23 @@ func (c *Command) fire(ctx IBuzzContext) {
 }
 
 func (c *Command) newInstance(ctx IBuzzContext) (ICommandSerialize, error) {
-	if nil == c.property.RequestDataCreateF {
+	if nil == c.Property.RequestDataCreateF {
 		return nil, nil
 	}
-	if c.property.GetInputArchiveFromCtxFunc == nil {
+	if c.Property.GetInputArchiveFromCtxFunc == nil {
 		return nil, nil
 	}
 
-	reqBo := c.property.RequestDataCreateF()
-	if err := reqBo.Read(c.property.GetInputArchiveFromCtxFunc(ctx)); nil != err {
+	reqBo := c.Property.RequestDataCreateF()
+	archive, err := c.Property.GetInputArchiveFromCtxFunc(ctx)
+	if nil != err {
+		return nil, err
+	}
+	if err := reqBo.Read(archive, ctx.GetCommandContext().Codec.GetCodec()); nil != err {
 		return nil, err
 	}
 
-	return reqBo, reqBo.ValidateBasic()
+	return reqBo, reqBo.ValidateBasic(ctx)
 }
 
 func (c *Command) CreateResponseWrapper() *ContextResponseWrapper {

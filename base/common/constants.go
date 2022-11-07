@@ -8,7 +8,9 @@
 */
 package common
 
-import "strconv"
+import (
+	"strconv"
+)
 
 const (
 	RESPONSE_HEADER_CODE = "code"
@@ -16,7 +18,7 @@ const (
 )
 
 const (
-	CONTENT_TYPE="Content-Type"
+	CONTENT_TYPE = "Content-Type"
 )
 
 const (

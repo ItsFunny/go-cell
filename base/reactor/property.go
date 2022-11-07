@@ -12,8 +12,8 @@ import "github.com/itsfunny/go-cell/base/serialize"
 
 type CommandProperty struct {
 	Async bool
-	RequestType AliasRequestType
-	ResponseType AliasResponseType
-	RequestDataCreateF func()ICommandSerialize
-	GetInputArchiveFromCtxFunc func(ctx IBuzzContext) serialize.IInputArchive
+	//RequestType AliasRequestType
+	//ResponseType AliasResponseType
+	RequestDataCreateF         func() ICommandSerialize
+	GetInputArchiveFromCtxFunc func(ctx IBuzzContext) (serialize.IInputArchive, error)
 }

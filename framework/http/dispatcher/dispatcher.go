@@ -11,6 +11,7 @@ package dispatcher
 import (
 	"github.com/itsfunny/go-cell/base/couple"
 	"github.com/itsfunny/go-cell/base/reactor"
+	"github.com/itsfunny/go-cell/component/codec"
 	"github.com/itsfunny/go-cell/di"
 	"github.com/itsfunny/go-cell/framework/base/common"
 	"github.com/itsfunny/go-cell/framework/base/dispatcher"
@@ -39,9 +40,9 @@ type DefaultHttpDispatcher struct {
 	*dispatcher.BaseCommandDispatcher
 }
 
-func NewDefaultHttpDispatcher(h di.HttpCommandConstructorHolder) IHttpDispatcher {
+func NewDefaultHttpDispatcher(h di.HttpCommandConstructorHolder, cdc *codec.CodecComponent) IHttpDispatcher {
 	ret := &DefaultHttpDispatcher{}
-	ret.BaseCommandDispatcher = dispatcher.NewBaseCommandDispatcher(module, ret, h.Selectors, h.CommandHandler)
+	ret.BaseCommandDispatcher = dispatcher.NewBaseCommandDispatcher(module, ret, h.Selectors, h.CommandHandler, cdc)
 	return ret
 }
 
@@ -53,6 +54,7 @@ func (b *DefaultHttpDispatcher) CreateSuit(request couple.IServerRequest,
 		Summary:        b.CollectSummary(request, wrapper),
 		IChannel:       channel,
 		Command:        wrapper.Command,
+		Codec:          b.GetCdc(),
 	}
 	return NewHttpSuit(ctx)
 }

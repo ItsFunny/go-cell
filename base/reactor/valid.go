@@ -6,8 +6,8 @@
 # @Description :
 # @Attention :
 */
-package common
+package reactor
 
 type IMessage interface {
-	ValidateBasic() error
+	ValidateBasic(ctx IBuzzContext) error
 }
