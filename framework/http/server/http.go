@@ -9,6 +9,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"github.com/itsfunny/go-cell/base/core/services"
 	"github.com/itsfunny/go-cell/base/server"
@@ -51,9 +52,9 @@ type HttpServer struct {
 	blackList map[string]struct{}
 }
 
-func NewHttpServer(p proxy.IHttpProxy) IHttpServer {
+func NewHttpServer(ctx context.Context, p proxy.IHttpProxy) IHttpServer {
 	ret := &HttpServer{ready: false}
-	ret.BaseServer = server.NewBaseServer(logsdk.NewModule("http_server", 1), p, ret)
+	ret.BaseServer = server.NewBaseServer(ctx, logsdk.NewModule("http_server", 1), p, ret)
 	return ret
 }
 

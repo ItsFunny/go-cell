@@ -22,6 +22,7 @@ const (
 	FxSelectorGroup      = "httpSelector"
 	FxHttpCommandHandler = "httpCommandHandler"
 	FxComponent          = "component"
+	DDD                  = "ddd"
 )
 
 type OptionBuilder func() fx.Option

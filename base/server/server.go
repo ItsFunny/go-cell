@@ -9,6 +9,7 @@
 package server
 
 import (
+	"context"
 	"github.com/itsfunny/go-cell/base/core/services"
 	"github.com/itsfunny/go-cell/base/couple"
 	"github.com/itsfunny/go-cell/base/proxy"
@@ -40,9 +41,8 @@ func (b *BaseServer) Serve(request couple.IServerRequest, response couple.IServe
 	b.proxy.Proxy(NewDefaultProcessEvent(request, response))
 }
 
-func NewBaseServer(m logsdk.Module, proxy proxy.IProxy, impl IServer) *BaseServer {
+func NewBaseServer(ctx context.Context, m logsdk.Module, proxy proxy.IProxy, impl IServer) *BaseServer {
 	ret := &BaseServer{proxy: proxy}
-	ret.BaseService = services.NewBaseService(nil, m, impl)
+	ret.BaseService = services.NewBaseService(ctx, nil, m, impl)
 	return ret
 }
-

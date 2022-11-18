@@ -107,9 +107,9 @@ type baseChannelWatcher struct {
 
 // rollBack 0 / <0 means: never roll back
 // upgradeLimit 0  / <0 means: never upgrade
-func newBaseChannelWatcher(name string, cImpl ChannelWatcher, upgradeLimit, rollbackLimit int32, spinTimeMills int32, f func() routine.IRoutineComponent, mode byte) *baseChannelWatcher {
+func newBaseChannelWatcher(ctx context.Context, name string, cImpl ChannelWatcher, upgradeLimit, rollbackLimit int32, spinTimeMills int32, f func() routine.IRoutineComponent, mode byte) *baseChannelWatcher {
 	if f == nil || f() == nil {
-		f = func() routine.IRoutineComponent{
+		f = func() routine.IRoutineComponent {
 			return v2.NewV2RoutinePoolExecutorComponent(v2.WithSize(default_routine_pool_size))
 		}
 	}
@@ -136,7 +136,7 @@ func newBaseChannelWatcher(name string, cImpl ChannelWatcher, upgradeLimit, roll
 	}
 	r.rollBackLimit = rollbackLimit
 	r.upgradeLimit = upgradeLimit
-	r.BaseService = services.NewBaseService(nil, logsdk.NewModule(name, 1), r)
+	r.BaseService = services.NewBaseService(ctx, nil, logsdk.NewModule(name, 1), r)
 	r.baseStatus = &baseStatus{
 		status: status_ok,
 	}
@@ -251,7 +251,7 @@ func (this *baseChannelWatcher) action(f func(opt Opt) (ChannelWatcher, []servic
 func (this *baseChannelWatcher) OnStop(ctx *services.StopCTX) {
 	size := atomic.LoadInt32(&this.inFlight)
 	// spin is better
-	for ; size != 0; {
+	for size != 0 {
 		this.Logger.Info("not done yet", "size", size)
 		time.Sleep(time.Millisecond * this.spinTimeMills)
 		size = atomic.LoadInt32(&this.inFlight)

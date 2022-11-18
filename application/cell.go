@@ -37,13 +37,14 @@ type application struct {
 func New(ctx context.Context, builders ...di.OptionBuilder) *CellApplication {
 	apl := &application{}
 	ret := &CellApplication{}
-	ret.BaseService = services.NewBaseService(nil, logsdk.NewModule("APPLICATION", 1), ret,
+	ret.BaseService = services.NewBaseService(ctx, nil, logsdk.NewModule("APPLICATION", 1), ret,
 		services.BaseServiceWithCtx(ctx))
 	ops := make([]fx.Option, 0)
 	ops = append(ops, extension.ExtensionManagerModule)
 	ops = append(ops, eventbus.DefaultEventBusModule)
 	ops = append(ops, extension.ApplicationEventBusModule)
 	ops = append(ops, codec.CodecModule)
+	ops = append(ops, fx.Provide(func() context.Context { return ctx }))
 	for _, b := range builders {
 		ops = append(ops, b())
 	}
@@ -71,7 +72,6 @@ func New(ctx context.Context, builders ...di.OptionBuilder) *CellApplication {
 			if err != nil {
 				logrusplugin.Error("failure on stop: ", err)
 			}
-		case <-ctx.Done():
 		}
 	}()
 	if app.Err() != nil {
@@ -81,18 +81,18 @@ func New(ctx context.Context, builders ...di.OptionBuilder) *CellApplication {
 	return ret
 }
 
-func (this *CellApplication) Run(args []string) {
-	if err := this.app.Start(this.GetContext()); err != nil {
+func (app *CellApplication) Run(args []string) {
+	if err := app.app.Start(app.GetContext()); err != nil {
 		panic(err)
 	}
-	go this.step0(args)
-	<-this.Quit()
+	go app.step0(args)
+	<-app.Quit()
 }
 
-func (this *CellApplication) step0(args []string) {
+func (app *CellApplication) step0(args []string) {
 	wait := make(chan struct{})
 	go func() {
-		this.Event.FireApplicationEvents(this.GetContext(),
+		app.Event.FireApplicationEvents(app.GetContext(),
 			extension.ApplicationEnvironmentPreparedEvent{
 				ICallBack: event.CallBack{
 					CB: func() {
@@ -100,16 +100,17 @@ func (this *CellApplication) step0(args []string) {
 					},
 				},
 				Args: args,
+				Ctx:  app.GetContext(),
 			},
 		)
 	}()
 	<-wait
-	go this.step1()
+	go app.step1()
 }
-func (this *CellApplication) step1() {
+func (app *CellApplication) step1() {
 	wait := make(chan struct{})
 	go func() {
-		this.Event.FireApplicationEvents(this.GetContext(),
+		app.Event.FireApplicationEvents(app.GetContext(),
 			extension.ApplicationInitEvent{
 				ICallBack: event.CallBack{
 					CB: func() {
@@ -120,26 +121,26 @@ func (this *CellApplication) step1() {
 		)
 	}()
 	<-wait
-	go this.step2()
+	go app.step2()
 }
 
-func (this *CellApplication) step2() {
+func (app *CellApplication) step2() {
 	go func() {
 		wait := make(chan struct{})
-		this.Event.FireApplicationEvents(this.GetContext(), extension.ApplicationStartedEvent{
+		app.Event.FireApplicationEvents(app.GetContext(), extension.ApplicationStartedEvent{
 			ICallBack: event.CallBack{CB: func() {
 				close(wait)
 			}},
 		})
 		<-wait
-		go this.step3()
+		go app.step3()
 	}()
 }
 
-func (this *CellApplication) step3() {
+func (app *CellApplication) step3() {
 	go func() {
 		wait := make(chan struct{})
-		this.Event.FireApplicationEvents(this.GetContext(), extension.ApplicationReadyEvent{
+		app.Event.FireApplicationEvents(app.GetContext(), extension.ApplicationReadyEvent{
 			ICallBack: event.CallBack{
 				CB: func() {
 					close(wait)
@@ -148,4 +149,8 @@ func (this *CellApplication) step3() {
 		})
 		<-wait
 	}()
+}
+
+func (app *CellApplication) GetApplicationBus() extension.IApplicationEventBus {
+	return app.application.Event
 }

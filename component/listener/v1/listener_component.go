@@ -1,6 +1,7 @@
 package listener
 
 import (
+	"context"
 	"github.com/itsfunny/go-cell/base/core/services"
 	"github.com/itsfunny/go-cell/component/base"
 	"github.com/itsfunny/go-cell/component/listener"
@@ -18,13 +19,13 @@ type listenerComponent struct {
 	pubsub   *PubSub
 }
 
-func NewDefaultListenerComponent() listener.IListenerComponent {
-	return NewListenerComponent(256)
+func NewDefaultListenerComponent(ctx context.Context) listener.IListenerComponent {
+	return NewListenerComponent(ctx, 256)
 }
-func NewListenerComponent(cap int, opts ...Opt) *listenerComponent {
+func NewListenerComponent(ctx context.Context, cap int, opts ...Opt) *listenerComponent {
 	r := &listenerComponent{}
 	r.pubsub = New(cap)
-	r.BaseComponent = base.NewBaseComponent(logsdk.NewModule("LISTENER", 1), r)
+	r.BaseComponent = base.NewBaseComponent(ctx, logsdk.NewModule("LISTENER", 1), r)
 	for _, opt := range opts {
 		opt(r)
 	}

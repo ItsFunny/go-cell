@@ -9,6 +9,7 @@
 package proxy
 
 import (
+	"context"
 	"github.com/itsfunny/go-cell/base/core/services"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
 )
@@ -25,10 +26,10 @@ type BaseProxy struct {
 	proxy IProxy
 }
 
-func NewBaseProxy(lg logsdk.Logger, m logsdk.Module, proxy IProxy) *BaseProxy {
+func NewBaseProxy(ctx context.Context, lg logsdk.Logger, m logsdk.Module, proxy IProxy) *BaseProxy {
 	ret := &BaseProxy{
-		BaseService: services.NewBaseService(lg, m, proxy),
-		proxy: proxy,
+		BaseService: services.NewBaseService(ctx, lg, m, proxy),
+		proxy:       proxy,
 	}
 	return ret
 }

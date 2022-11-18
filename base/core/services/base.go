@@ -31,6 +31,8 @@ var (
 )
 
 type IBaseService interface {
+	SetCtx(ctx context.Context)
+
 	BStart(ctx ...StartOption) error
 	OnStart(ctx *StartCTX) error
 
@@ -285,7 +287,7 @@ func (bs *BaseService) BStart(opts ...StartOption) error {
 	return nil
 }
 
-func NewBaseService(logger logsdk.Logger, m logsdk.Module, concreteImpl IBaseService, ops ...BaseServiceOption) *BaseService {
+func NewBaseService(ctx context.Context, logger logsdk.Logger, m logsdk.Module, concreteImpl IBaseService, ops ...BaseServiceOption) *BaseService {
 	if logger == nil {
 		logger = logrusplugin.NewLogrusLogger(m)
 	}
@@ -293,7 +295,7 @@ func NewBaseService(logger logsdk.Logger, m logsdk.Module, concreteImpl IBaseSer
 		Logger: logger,
 		name:   m.String(),
 		impl:   concreteImpl,
-		ctx:    context.Background(),
+		ctx:    ctx,
 		c1:     make(chan struct{}),
 		c2:     make(chan struct{}),
 	}
@@ -301,6 +303,9 @@ func NewBaseService(logger logsdk.Logger, m logsdk.Module, concreteImpl IBaseSer
 		opt(res)
 	}
 	return res
+}
+func (bs *BaseService) SetCtx(ctx context.Context) {
+	bs.ctx = ctx
 }
 
 func (bs *BaseService) OnStart(ctx *StartCTX) error {

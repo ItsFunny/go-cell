@@ -9,6 +9,7 @@
 package dispatcher
 
 import (
+	"context"
 	"github.com/itsfunny/go-cell/base/couple"
 	"github.com/itsfunny/go-cell/base/reactor"
 	"github.com/itsfunny/go-cell/component/codec"
@@ -40,9 +41,9 @@ type DefaultHttpDispatcher struct {
 	*dispatcher.BaseCommandDispatcher
 }
 
-func NewDefaultHttpDispatcher(h di.HttpCommandConstructorHolder, cdc *codec.CodecComponent) IHttpDispatcher {
+func NewDefaultHttpDispatcher(ctx context.Context, h di.HttpCommandConstructorHolder, cdc *codec.CodecComponent) IHttpDispatcher {
 	ret := &DefaultHttpDispatcher{}
-	ret.BaseCommandDispatcher = dispatcher.NewBaseCommandDispatcher(module, ret, h.Selectors, h.CommandHandler, cdc)
+	ret.BaseCommandDispatcher = dispatcher.NewBaseCommandDispatcher(ctx, module, ret, h.Selectors, h.CommandHandler, cdc)
 	return ret
 }
 

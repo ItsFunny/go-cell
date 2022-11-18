@@ -9,6 +9,7 @@
 package proxy
 
 import (
+	context2 "context"
 	"github.com/itsfunny/go-cell/base/proxy"
 	"github.com/itsfunny/go-cell/base/server"
 	"github.com/itsfunny/go-cell/framework/base/context"
@@ -31,13 +32,13 @@ type BaseFrameworkProxy struct {
 	dispatch dispatcher.IDispatcher
 }
 
-func NewBaseFrameworkProxy(lg logsdk.Logger,
+func NewBaseFrameworkProxy(ctx context2.Context, lg logsdk.Logger,
 	m logsdk.Module,
 	dispatch dispatcher.IDispatcher, impl proxy.IProxy) *BaseFrameworkProxy {
 	ret := &BaseFrameworkProxy{
 		dispatch: dispatch,
 	}
-	ret.BaseProxy = proxy.NewBaseProxy(lg, m, impl)
+	ret.BaseProxy = proxy.NewBaseProxy(ctx, lg, m, impl)
 	return ret
 }
 func (b *BaseFrameworkProxy) GetDispatcher() dispatcher.IDispatcher {

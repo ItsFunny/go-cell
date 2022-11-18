@@ -1,6 +1,7 @@
 package codec
 
 import (
+	"context"
 	"github.com/itsfunny/go-cell/base/common/enums"
 	"github.com/itsfunny/go-cell/base/core/services"
 	"github.com/itsfunny/go-cell/component/base"
@@ -21,11 +22,11 @@ type CodecComponent struct {
 	cdc types.Codec
 }
 
-func NewCodecComponent() *CodecComponent {
+func NewCodecComponent(ctx context.Context) *CodecComponent {
 	ret := &CodecComponent{
 		cdc: impl.NewDefaultCodec(),
 	}
-	ret.BaseComponent = base.NewBaseComponent(enums.CodecModule, ret)
+	ret.BaseComponent = base.NewBaseComponent(ctx, enums.CodecModule, ret)
 
 	return ret
 }

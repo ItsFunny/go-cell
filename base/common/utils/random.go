@@ -3,6 +3,8 @@ package utils
 import (
 	crand "crypto/rand"
 	"encoding/hex"
+	_ "github.com/google/uuid"
+	guuid "github.com/google/uuid"
 	"io"
 	mrand "math/rand"
 	"sync"
@@ -378,4 +380,9 @@ func RandInt32(min, max int32) int32 {
 		return max
 	}
 	return mrand.Int31n(max-min) + min
+}
+
+func GenerateSequenceId() string {
+	id := guuid.New()
+	return id.String()
 }

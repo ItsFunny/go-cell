@@ -9,6 +9,7 @@
 package base
 
 import (
+	"context"
 	"github.com/itsfunny/go-cell/base/core/services"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
 	"strings"
@@ -22,7 +23,7 @@ type BaseComponent struct {
 	*services.BaseService
 }
 
-func NewBaseComponent(m logsdk.Module, i services.IBaseService) *BaseComponent {
+func NewBaseComponent(ctx context.Context, m logsdk.Module, i services.IBaseService) *BaseComponent {
 	r := &BaseComponent{
 		BaseService: nil,
 	}
@@ -31,6 +32,6 @@ func NewBaseComponent(m logsdk.Module, i services.IBaseService) *BaseComponent {
 		name = name + "_COMPONENT"
 		m = logsdk.NewModule(name, m.Index())
 	}
-	r.BaseService = services.NewBaseService(nil, m, i)
+	r.BaseService = services.NewBaseService(ctx, nil, m, i)
 	return r
 }

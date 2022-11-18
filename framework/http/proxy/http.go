@@ -9,6 +9,7 @@
 package proxy
 
 import (
+	context2 "context"
 	proxy2 "github.com/itsfunny/go-cell/base/proxy"
 	"github.com/itsfunny/go-cell/framework/base/proxy"
 	"github.com/itsfunny/go-cell/framework/http/dispatcher"
@@ -26,9 +27,9 @@ type HttpFrameWorkProxy struct {
 	*proxy.BaseFrameworkProxy
 }
 
-func NewHttpFrameWorkProxy(dispatcher dispatcher.IHttpDispatcher) IHttpProxy {
+func NewHttpFrameWorkProxy(ctx context2.Context, dispatcher dispatcher.IHttpDispatcher) IHttpProxy {
 	ret := &HttpFrameWorkProxy{}
-	ret.BaseFrameworkProxy = proxy.NewBaseFrameworkProxy(nil,
+	ret.BaseFrameworkProxy = proxy.NewBaseFrameworkProxy(ctx, nil,
 		logsdk.NewModule("http_framework_proxy", 1), dispatcher,
 		ret)
 	return ret

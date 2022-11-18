@@ -93,9 +93,9 @@ type ContractServiceImpl struct {
 	curBlockNumber int64
 }
 
-func NewContractServiceImpl(l listener.IListenerComponent) IContractService {
+func NewContractServiceImpl(ctx context.Context, l listener.IListenerComponent) IContractService {
 	ret := &ContractServiceImpl{}
-	ret.BaseService = services.NewBaseService(nil, logsdk.NewModule("contract", 1), ret)
+	ret.BaseService = services.NewBaseService(ctx, nil, logsdk.NewModule("contract", 1), ret)
 	ret.accounts = newAccountCache()
 	ret.listener = l
 	ret.blockC = make(chan *types.Header, 100)
@@ -156,7 +156,7 @@ func (this *ContractServiceImpl) initAdmin() error {
 		return errors.New("asdd")
 	}
 	senderAddress := crypto.PubkeyToAddress(*pubkeyECDSA)
-	this.Logger.Info("address","info",senderAddress.String())
+	this.Logger.Info("address", "info", senderAddress.String())
 	account := &Account{
 		key:      privateKey,
 		address:  senderAddress,

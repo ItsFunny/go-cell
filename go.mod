@@ -12,9 +12,10 @@ require (
 	github.com/ChengjinWu/gojson v0.0.0-20181113073026-04749cc2d015
 	github.com/emirpasic/gods v1.12.0
 	github.com/fsnotify/fsnotify v1.4.9
-	github.com/fxamacker/cbor/v2 v2.4.0 // indirect
+	github.com/fxamacker/cbor/v2 v2.4.0
 	github.com/go-openapi/spec v0.20.4
 	github.com/gogo/protobuf v1.3.2
+	github.com/google/uuid v1.1.5
 	github.com/gorilla/websocket v1.4.2
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d

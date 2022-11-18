@@ -9,6 +9,7 @@
 package watcher
 
 import (
+	"context"
 	"github.com/itsfunny/go-cell/base/core/services"
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
 	"github.com/itsfunny/go-cell/structure/channel"
@@ -38,13 +39,13 @@ type channelWatcher struct {
 	option  *Opt
 }
 
-func NewChannelWatcher(opts ...Option) *channelWatcher {
-	r := newW(false, opts...)
+func NewChannelWatcher(ctx context.Context, opts ...Option) *channelWatcher {
+	r := newW(ctx, false, opts...)
 	r.watcher = newRoutineChannelWatcher(*r.option)
 
 	return r
 }
-func newW(forever bool, opts ...Option) *channelWatcher {
+func newW(ctx context.Context, forever bool, opts ...Option) *channelWatcher {
 	if forever {
 		opts = append(opts, foreverOptions()...)
 	} else {
@@ -59,11 +60,11 @@ func newW(forever bool, opts ...Option) *channelWatcher {
 		mset:      make(map[string]struct{}),
 	}
 	r.option = &option
-	r.BaseService = services.NewBaseService(nil, logsdk.NewModule("CHANNEL_WATCHER", 1), r)
+	r.BaseService = services.NewBaseService(ctx, nil, logsdk.NewModule("CHANNEL_WATCHER", 1), r)
 	return r
 }
-func NewForeverWatcher(wType WatcherType, opts ...Option) *channelWatcher {
-	r := newW(true, opts...)
+func NewForeverWatcher(ctx context.Context, wType WatcherType, opts ...Option) *channelWatcher {
+	r := newW(ctx, true, opts...)
 	switch wType {
 	case WATCHER_TYPE_ROUTINE:
 		r.watcher = newSelectNChannelWatcher(*r.option)

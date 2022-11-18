@@ -73,18 +73,18 @@ func BufferCapacity(cap int) Option {
 	}
 }
 
-func defaultNewCommonEventBusComponentImpl(ops ...Option) ICommonEventBus {
+func defaultNewCommonEventBusComponentImpl(ctx context.Context, ops ...Option) ICommonEventBus {
 	ops = append(ops, BufferCapacity(10))
-	return NewCommonEventBusComponentImpl(ops...)
+	return NewCommonEventBusComponentImpl(ctx, ops...)
 }
 
-func NewCommonEventBusComponentImpl(options ...Option) ICommonEventBus {
+func NewCommonEventBusComponentImpl(ctx context.Context, options ...Option) ICommonEventBus {
 	s := &CommonEventBusComponentImpl{
 		subscriptions: make(map[string]map[string]struct{}),
 	}
 
 	m := logsdk.NewModule("MODULE_COMMON_EVENT_BUS", 1)
-	s.BaseService = services.NewBaseService(nil, m, s)
+	s.BaseService = services.NewBaseService(ctx, nil, m, s)
 
 	for _, option := range options {
 		option(s)

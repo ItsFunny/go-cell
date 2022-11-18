@@ -39,7 +39,7 @@ var (
 func start(lc fx.Lifecycle, m *NodeExtensionManager) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			return m.BStart(services.SyncStartOpt)
+			return m.BStart(services.SyncStartOpt, services.CtxStartOpt(ctx))
 		},
 		OnStop: func(ctx context.Context) error {
 			return m.BStop()

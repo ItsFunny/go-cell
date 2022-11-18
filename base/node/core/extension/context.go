@@ -9,6 +9,7 @@
 package extension
 
 import (
+	"context"
 	"github.com/itsfunny/go-cell/base/core/options"
 	"github.com/itsfunny/go-cell/base/reactor"
 	"github.com/itsfunny/go-cell/sdk/config"
@@ -46,6 +47,7 @@ type NodeContext struct {
 	Commands         []reactor.ICommand
 	IP               string
 	ConfigManager    *config.Manager
+	ctx              context.Context
 }
 
 func (n *NodeContext) GetCommands() []reactor.ICommand {

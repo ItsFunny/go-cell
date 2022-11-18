@@ -9,6 +9,7 @@
 package extension
 
 import (
+	"context"
 	"errors"
 	"github.com/itsfunny/go-cell/base/common/banner"
 	"github.com/itsfunny/go-cell/base/common/utils"
@@ -33,11 +34,12 @@ type NodeExtensionManager struct {
 	onClose func(err error)
 }
 
-func NewExtensionManager(bus IApplicationEventBus, e Extensions, h di.ReactorHolder) *NodeExtensionManager {
+func NewExtensionManager(goCtx context.Context, bus IApplicationEventBus, e Extensions, h di.ReactorHolder) *NodeExtensionManager {
 	ret := &NodeExtensionManager{}
-	ret.BaseService = services.NewBaseService(nil, extensionManagerModule, ret)
+	ret.BaseService = services.NewBaseService(goCtx, nil, extensionManagerModule, ret)
 	ctx := &NodeContext{}
 	ctx.ExtensionManager = ret
+	ctx.ctx = goCtx
 	ret.Ctx = ctx
 	ret.Ctx.Extensions = e.Extensions
 	ret.Ctx.Commands = h.Commands
@@ -99,7 +101,7 @@ func (m *NodeExtensionManager) handleMsg(data interface{}) {
 }
 func (m *NodeExtensionManager) onPrepared(e ApplicationEnvironmentPreparedEvent) {
 	m.Ctx.Args = e.Args
-	if err := m.initCommandLine(); nil != err {
+	if err := m.initCommandLine(e); nil != err {
 		m.Logger.Error("init command failed", "err", err)
 	}
 }
@@ -153,9 +155,15 @@ func (m *NodeExtensionManager) onReady(e ApplicationReadyEvent) {
 			}
 		}
 	}
+	m.fireExtensionLoadedEvent()
+}
+func (m *NodeExtensionManager) fireExtensionLoadedEvent() {
+	m.bus.FireApplicationEvents(m.GetContext(), ExtensionLoadedEvent{})
 }
 
-func (m *NodeExtensionManager) initCommandLine() error {
+func (m *NodeExtensionManager) initCommandLine(e ApplicationEnvironmentPreparedEvent) error {
+	m.SetCtx(e.Ctx)
+	m.Ctx.ctx = e.Ctx
 	args := m.Ctx.GetArgs()
 	opsMap := make(map[string]options.Option)
 	for _, ext := range m.Extensions {

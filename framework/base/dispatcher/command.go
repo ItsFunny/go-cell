@@ -71,7 +71,7 @@ func (b *BaseCommandDispatcher) CollectSummary(request couple.IServerRequest, wr
 	return b.impl.CollectSummary(request, wrapper)
 }
 
-func NewBaseCommandDispatcher(m logsdk.Module, impl ICommandDispatcher, selectors []ICommandSelector, handlers []reactor.CommandHandler, cdc *codec.CodecComponent) *BaseCommandDispatcher {
+func NewBaseCommandDispatcher(ctx context2.Context, m logsdk.Module, impl ICommandDispatcher, selectors []ICommandSelector, handlers []reactor.CommandHandler, cdc *codec.CodecComponent) *BaseCommandDispatcher {
 	ret := &BaseCommandDispatcher{}
 	ret.impl = impl
 	ret.Commands = make(map[reactor.ProtocolID]*CommandWrapper)
@@ -100,7 +100,7 @@ func NewBaseCommandDispatcher(m logsdk.Module, impl ICommandDispatcher, selector
 	})
 	ret.selectorStrategy = eng
 	ret.onAddCommandPipeline = onCmdAddP
-	ret.BaseService = services.NewBaseService(nil, m, impl)
+	ret.BaseService = services.NewBaseService(ctx, nil, m, impl)
 	ret.channel = reactor.NewDefaultChannel(handlers...)
 	ret.cdc = cdc
 
