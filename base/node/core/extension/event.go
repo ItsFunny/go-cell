@@ -74,3 +74,8 @@ type ApplicationReadyEvent struct {
 
 type ExtensionLoadedEvent struct {
 }
+
+type ApplicationExportEvent struct {
+	event.ICallBack
+	Path string
+}

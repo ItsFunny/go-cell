@@ -154,3 +154,14 @@ func (app *CellApplication) step3() {
 func (app *CellApplication) GetApplicationBus() extension.IApplicationEventBus {
 	return app.application.Event
 }
+
+func (app *CellApplication) ExportDefaultGenesis(rootPath string) {
+	cb := make(chan struct{})
+	app.Event.FireApplicationEvents(app.GetContext(), extension.ApplicationExportEvent{
+		ICallBack: event.CallBack{CB: func() {
+			close(cb)
+		}},
+		Path: rootPath,
+	})
+	<-cb
+}

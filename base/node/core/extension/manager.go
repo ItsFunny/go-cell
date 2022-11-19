@@ -17,6 +17,7 @@ import (
 	"github.com/itsfunny/go-cell/base/core/eventbus"
 	"github.com/itsfunny/go-cell/base/core/options"
 	"github.com/itsfunny/go-cell/base/core/services"
+	"github.com/itsfunny/go-cell/component/codec"
 	"github.com/itsfunny/go-cell/di"
 	"github.com/itsfunny/go-cell/sdk/config"
 )
@@ -31,10 +32,13 @@ type NodeExtensionManager struct {
 	state byte
 	bus   IApplicationEventBus
 
+	cdc *codec.CodecComponent
+
 	onClose func(err error)
 }
 
-func NewExtensionManager(goCtx context.Context, bus IApplicationEventBus, e Extensions, h di.ReactorHolder) *NodeExtensionManager {
+func NewExtensionManager(goCtx context.Context, cdc *codec.CodecComponent,
+	bus IApplicationEventBus, e Extensions, h di.ReactorHolder) *NodeExtensionManager {
 	ret := &NodeExtensionManager{}
 	ret.BaseService = services.NewBaseService(goCtx, nil, extensionManagerModule, ret)
 	ctx := &NodeContext{}
@@ -44,6 +48,7 @@ func NewExtensionManager(goCtx context.Context, bus IApplicationEventBus, e Exte
 	ret.Ctx.Extensions = e.Extensions
 	ret.Ctx.Commands = h.Commands
 	ret.bus = bus
+	ret.cdc = cdc
 	ret.Extensions = e.Extensions
 	ret.AllOps = make(map[string]*options.OptionWrapper)
 	ret.UnImportSet = make(map[string]struct{})
@@ -95,6 +100,8 @@ func (m *NodeExtensionManager) handleMsg(data interface{}) {
 			m.onStart(v)
 		case ApplicationReadyEvent:
 			m.onReady(v)
+		case ApplicationExportEvent:
+			m.onExport(v)
 		}
 	default:
 	}
@@ -113,18 +120,28 @@ func (m *NodeExtensionManager) onInit(v ApplicationInitEvent) {
 		if m.skipExtension(ex) {
 			continue
 		}
+		loadDefault := func() {
+			defaultGenesis := ex.DefaultGenesis(m.cdc)
+			if err := ex.LoadGenesis(m.cdc, defaultGenesis); nil != err && ex.IsRequired() {
+				m.Logger.Error("module 获取失败", "err", err)
+				panic(err)
+			}
+		}
 		if m.Ctx.ConfigManager != nil {
 			if len(ex.ConfigModuleName()) > 0 {
 				value, err := m.Ctx.ConfigManager.GetCurrentConfiguration().GetConfigValue(ex.ConfigModuleName())
-				if nil != err && ex.IsRequired() {
-					m.Logger.Error("module 获取失败", "err", err)
-					panic(err)
+				if nil != err {
+					loadDefault()
 				} else {
 					dataBytes := value.AsBytes()
-					if err = ex.LoadGenesis(dataBytes); nil != err && ex.IsRequired() {
+					if err = ex.LoadGenesis(m.cdc, dataBytes); nil != err && ex.IsRequired() {
 						panic(err)
 					}
 				}
+			}
+		} else {
+			if len(ex.ConfigModuleName()) > 0 {
+				loadDefault()
 			}
 		}
 
@@ -172,6 +189,19 @@ func (m *NodeExtensionManager) onReady(e ApplicationReadyEvent) {
 	}
 	m.fireExtensionLoadedEvent()
 }
+
+// TODO
+func (m *NodeExtensionManager) onExport(e ApplicationExportEvent) {
+
+	for _, ext := range m.Extensions {
+		mo := ext.ConfigModuleName()
+		if len(mo) == 0 {
+			continue
+		}
+
+	}
+}
+
 func (m *NodeExtensionManager) fireExtensionLoadedEvent() {
 	m.bus.FireApplicationEvents(m.GetContext(), ExtensionLoadedEvent{})
 }
@@ -205,7 +235,7 @@ func (m *NodeExtensionManager) initCommandLine(e ApplicationEnvironmentPreparedE
 		if exist {
 			panic("xxx")
 		}
-		opsMap[op.Name()] = homeOption
+		opsMap[op.Name()] = op
 		m.AllOps[op.Name()] = &options.OptionWrapper{
 			Option: op,
 			Value:  op.Default(),

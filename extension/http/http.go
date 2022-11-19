@@ -12,6 +12,7 @@ import (
 	"github.com/itsfunny/go-cell/base/core/services"
 	"github.com/itsfunny/go-cell/base/node/core/extension"
 	server2 "github.com/itsfunny/go-cell/base/server"
+	"github.com/itsfunny/go-cell/component/codec"
 	server3 "github.com/itsfunny/go-cell/framework/base/server"
 	"github.com/itsfunny/go-cell/framework/http/config"
 	"github.com/itsfunny/go-cell/framework/http/server"
@@ -46,21 +47,6 @@ func (this *HttpFarmeWorkExtension) Name() string {
 func (this *HttpFarmeWorkExtension) OnExtensionInit(ctx extension.INodeContext) error {
 	cmds := ctx.GetCommands()
 	server3.FillServerCommand(this.Server, cmds)
-	cfg := ctx.GetConfigManager()
-	var httpCfg config.HttpConfiguration
-	if cfg != nil {
-		v, err := cfg.GetCurrentConfiguration().GetConfigValue(ConfigModule)
-		if nil != err {
-			httpCfg = *config.DefaultHttpConfiguration()
-		} else {
-			if err := v.AsObject(&httpCfg); nil != err {
-				httpCfg = *config.DefaultHttpConfiguration()
-			}
-		}
-	} else {
-		httpCfg = *config.DefaultHttpConfiguration()
-	}
-	this.Server.SetConfig(&httpCfg)
 	return nil
 }
 
@@ -73,4 +59,20 @@ func (this *HttpFarmeWorkExtension) OnExtensionReady(ctx extension.INodeContext)
 
 func (this *HttpFarmeWorkExtension) OnExtensionClose(ctx extension.INodeContext) error {
 	return nil
+}
+
+func (h *HttpFarmeWorkExtension) ConfigModuleName() string {
+	return ConfigModule
+}
+func (h *HttpFarmeWorkExtension) LoadGenesis(cdc *codec.CodecComponent, data []byte) error {
+	var httpCfg config.HttpConfiguration
+	if err := cdc.UnMarshal(data, &httpCfg); nil != err {
+		return err
+	}
+	h.Server.SetConfig(&httpCfg)
+	return nil
+}
+func (h *HttpFarmeWorkExtension) DefaultGenesis(cdc *codec.CodecComponent) []byte {
+	cc := config.DefaultHttpConfiguration()
+	return cdc.MustMarshal(cc)
 }
