@@ -14,7 +14,7 @@ type IConfigValue interface {
 	GetModuleName() string
 	AsValueList() []IConfigValue
 	// TODO
-	AsObject(m interface{})error
+	AsObject(m interface{}) error
 	AsBoolean() bool
 	AsByte() byte
 	AsInt32() int32
@@ -45,14 +45,14 @@ type ConfigValueJson struct {
 	parseer IConfigurationParser
 
 	originBytes []byte
-	data interface{}
+	data        interface{}
 }
 
-func newConfigValueJson(data interface{}, cfg *Configuration, moduleName string,originBytes []byte) *ConfigValueJson {
+func newConfigValueJson(data interface{}, cfg *Configuration, moduleName string, originBytes []byte) *ConfigValueJson {
 	ret := &ConfigValueJson{}
 	ret.BaseConfigValue = newBaseConfigValue(cfg, ret, moduleName)
 	ret.data = data
-	ret.originBytes=originBytes
+	ret.originBytes = originBytes
 	return ret
 }
 
@@ -81,8 +81,8 @@ func (c *ConfigValueJson) AsValueList() []IConfigValue {
 	panic("implement me")
 }
 
-func (c *ConfigValueJson) AsObject(u interface{})error {
-	return json.Unmarshal(c.originBytes,u)
+func (c *ConfigValueJson) AsObject(u interface{}) error {
+	return json.Unmarshal(c.originBytes, u)
 }
 
 func (c *ConfigValueJson) AsBoolean() bool {
@@ -114,7 +114,7 @@ func (c *ConfigValueJson) AsFloat64() float64 {
 }
 
 func (c *ConfigValueJson) AsBytes() []byte {
-	panic("implement me")
+	return c.originBytes
 }
 
 func (c *ConfigValueJson) AsString() string {

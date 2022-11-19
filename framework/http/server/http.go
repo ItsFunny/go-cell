@@ -14,6 +14,7 @@ import (
 	"github.com/itsfunny/go-cell/base/core/services"
 	"github.com/itsfunny/go-cell/base/server"
 	"github.com/itsfunny/go-cell/di"
+	"github.com/itsfunny/go-cell/framework/http/config"
 	"github.com/itsfunny/go-cell/framework/http/couple"
 	"github.com/itsfunny/go-cell/framework/http/dispatcher"
 	"github.com/itsfunny/go-cell/framework/http/proxy"
@@ -37,6 +38,7 @@ var (
 
 type IHttpServer interface {
 	server.IServer
+	SetConfig(c *config.HttpConfiguration)
 }
 
 type HttpServer struct {
@@ -44,6 +46,8 @@ type HttpServer struct {
 	ready bool
 
 	mux *http.ServeMux
+
+	Cfg *config.HttpConfiguration
 
 	handlers map[string]http.Handler
 
@@ -67,9 +71,9 @@ func (s *HttpServer) OnStart(c *services.StartCTX) error {
 	// TODO ,move to filter#filter(request)
 	s.blackList = make(map[string]struct{})
 	s.blackList["/favicon.ico"] = struct{}{}
-	ip := ""
-	port := defaultPort
-	addr := fmt.Sprintf("%s:%d", ip, port)
+	//ip := ""
+	//port := defaultPort
+	addr := fmt.Sprintf("%s:%d", s.Cfg.IP, s.Cfg.Port)
 	s.Logger.Info("http start up ", "addr", addr)
 	// FIXME
 	go func() {
@@ -99,6 +103,9 @@ func (s *HttpServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 func (s *HttpServer) filter(uri string) bool {
 	_, exist := s.blackList[uri]
 	return exist
+}
+func (s *HttpServer) SetConfig(c *config.HttpConfiguration) {
+	s.Cfg = c
 }
 
 func SetDefaultPort(port int) {

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"github.com/ChengjinWu/gojson"
 	"github.com/emirpasic/gods/lists/arraylist"
 	"github.com/itsfunny/go-cell/base/common/utils"
@@ -125,17 +126,23 @@ func (this *Configuration) buildInheritanceList(configTypes map[string]string) [
 func (this *Configuration) registerParser(schema string, parser IConfigurationParser) {
 	this.parser[schema] = parser
 }
-func (this *Configuration) GetConfigValue(moduleName string) IConfigValue {
-	module := this.getModule(moduleName)
+func (this *Configuration) GetConfigValue(moduleName string) (IConfigValue, error) {
+	module, err := this.getModule(moduleName)
+	if nil != err {
+		return nil, err
+	}
 	if module.configValue != nil {
-		return module.configValue
+		return module.configValue, nil
 	}
 
 	switch module.Schema {
 	case "json":
-		module.configValue = this.getConfigObject(moduleName)
+		module.configValue, err = this.getConfigObject(moduleName)
+		if nil != err {
+			return nil, err
+		}
 	}
-	return module.configValue
+	return module.configValue, nil
 }
 
 func (this *Configuration) getParser(schema string) IConfigurationParser {
@@ -145,16 +152,19 @@ func (this *Configuration) getParser(schema string) IConfigurationParser {
 	}
 	return p
 }
-func (this *Configuration) getModule(moduleName string) *ConfigModule {
+func (this *Configuration) getModule(moduleName string) (*ConfigModule, error) {
 	m := this.modules[moduleName]
 	if m == nil {
-		panic("module not exists:" + moduleName)
+		return nil, errors.New("module not exists:" + moduleName)
 	}
-	return m
+	return m, nil
 }
 
-func (this *Configuration) getConfigObject(moduleName string) IConfigValue {
-	module := this.getModule(moduleName)
+func (this *Configuration) getConfigObject(moduleName string) (IConfigValue, error) {
+	module, err := this.getModule(moduleName)
+	if nil != err {
+		return nil, err
+	}
 	parser := this.parser[module.Schema]
 	if parser == nil {
 		panic("asd")
@@ -167,5 +177,5 @@ func (this *Configuration) getConfigObject(moduleName string) IConfigValue {
 		panic(err)
 	}
 
-	return from
+	return from, nil
 }

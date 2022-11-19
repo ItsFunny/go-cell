@@ -110,7 +110,7 @@ type baseChannelWatcher struct {
 func newBaseChannelWatcher(ctx context.Context, name string, cImpl ChannelWatcher, upgradeLimit, rollbackLimit int32, spinTimeMills int32, f func() routine.IRoutineComponent, mode byte) *baseChannelWatcher {
 	if f == nil || f() == nil {
 		f = func() routine.IRoutineComponent {
-			return v2.NewV2RoutinePoolExecutorComponent(v2.WithSize(default_routine_pool_size))
+			return v2.NewV2RoutinePoolExecutorComponent(ctx, v2.WithSize(default_routine_pool_size))
 		}
 	}
 	r := &baseChannelWatcher{
@@ -123,7 +123,7 @@ func newBaseChannelWatcher(ctx context.Context, name string, cImpl ChannelWatche
 		baseStatus:        nil,
 		deleta:            singlylinkedlist.New(),
 		operation:         make(chan operation, 20),
-		listener:          listener2.NewDefaultListenerComponent(),
+		listener:          listener2.NewDefaultListenerComponent(ctx),
 		spinTimeMills:     time.Duration(spinTimeMills),
 		mode:              mode,
 	}

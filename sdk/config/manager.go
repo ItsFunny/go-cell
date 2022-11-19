@@ -77,7 +77,11 @@ func (this *Manager) RegisterListener(module string, l func()) {
 		this.newCfg = nil
 	}
 	cfg := this.cur
-	m := cfg.getModule(module)
+	m, err := cfg.getModule(module)
+	if nil != err {
+		logrusplugin.MError(managerModule, "err", err, "name", module)
+		return
+	}
 	if m == nil {
 		logrusplugin.MError(managerModule, "module not exists", "name", module)
 		return

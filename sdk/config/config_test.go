@@ -13,7 +13,8 @@ func TestInalize(t *testing.T) {
 		ServerAddr string `json:"serverAddr"`
 	}
 	a := &A{}
-	err := m.GetCurrentConfiguration().GetConfigValue("nacos.properties").AsObject(a)
+	v, err := m.GetCurrentConfiguration().GetConfigValue("nacos.properties")
+	err = v.AsObject(a)
 	fmt.Println(err)
 	fmt.Println(a)
 }
@@ -26,7 +27,8 @@ func TestIndentent(t *testing.T) {
 		ServerAddr string `json:"serverAddr"`
 	}
 	a := &A{}
-	err := m.GetCurrentConfiguration().GetConfigValue("nacos.properties").AsObject(a)
+	v, err := m.GetCurrentConfiguration().GetConfigValue("nacos.properties")
+	err = v.AsObject(a)
 	fmt.Println(err)
 	fmt.Println(a)
 	time.Sleep(time.Minute * 100)

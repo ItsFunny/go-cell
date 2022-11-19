@@ -113,6 +113,21 @@ func (m *NodeExtensionManager) onInit(v ApplicationInitEvent) {
 		if m.skipExtension(ex) {
 			continue
 		}
+		if m.Ctx.ConfigManager != nil {
+			if len(ex.ConfigModuleName()) > 0 {
+				value, err := m.Ctx.ConfigManager.GetCurrentConfiguration().GetConfigValue(ex.ConfigModuleName())
+				if nil != err && ex.IsRequired() {
+					m.Logger.Error("module 获取失败", "err", err)
+					panic(err)
+				} else {
+					dataBytes := value.AsBytes()
+					if err = ex.LoadGenesis(dataBytes); nil != err && ex.IsRequired() {
+						panic(err)
+					}
+				}
+			}
+		}
+
 		if err := ex.ExtensionInit(m.Ctx); nil != err {
 			if ex.IsRequired() {
 				panic(err)

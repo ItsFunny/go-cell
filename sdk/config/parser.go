@@ -44,25 +44,28 @@ func (j *JSONParser) ParseFrom(configuration *Configuration, value interface{}, 
 		return nil, err
 	}
 
-	jsonValue := j.newJsonValue(configuration, moduleName, obj,data)
-	return jsonValue, nil
+	return j.newJsonValue(configuration, moduleName, obj, data)
 }
 
-func (j *JSONParser) newJsonValue(cfg *Configuration, moduleName string, jsonObject interface{},originBytes []byte) *ConfigValueJson {
+func (j *JSONParser) newJsonValue(cfg *Configuration, moduleName string, jsonObject interface{}, originBytes []byte) (*ConfigValueJson, error) {
 	key := &JSONKey{ModuleName: moduleName, Obj: jsonObject}
 	v := j.jsonValues[key]
 	if nil != v {
-		return v
+		return v, nil
 	}
 
 	switch vv := jsonObject.(type) {
 	case *gojson.JsonObject:
 		moduleObj := vv.GetJsonObject("module")
 		if moduleObj != nil && moduleObj.Value != nil && len(moduleObj.GetString()) > 0 {
-			return cfg.GetConfigValue(moduleObj.GetString()).(*ConfigValueJson)
+			ret, err := cfg.GetConfigValue(moduleObj.GetString())
+			if nil != err {
+				return nil, err
+			}
+			return ret.(*ConfigValueJson), nil
 		}
 	}
-	jsonValue := newConfigValueJson(jsonObject, cfg, moduleName,originBytes)
+	jsonValue := newConfigValueJson(jsonObject, cfg, moduleName, originBytes)
 	j.jsonValues[key] = jsonValue
-	return jsonValue
+	return jsonValue, nil
 }

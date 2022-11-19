@@ -9,6 +9,7 @@
 package v2
 
 import (
+	"context"
 	"github.com/itsfunny/go-cell/base/core/services"
 	"github.com/itsfunny/go-cell/component/base"
 	"github.com/itsfunny/go-cell/component/routine"
@@ -34,17 +35,17 @@ var (
 	}
 )
 
-func NewSingleRoutingPoolExecutor(opts ...Option) *routineComponentV2 {
+func NewSingleRoutingPoolExecutor(ctx context.Context, opts ...Option) *routineComponentV2 {
 	r := &routineComponentV2{}
-	r.BaseComponent = base.NewBaseComponent(logsdk.NewModule("ROUTINE_V2", 1), r)
+	r.BaseComponent = base.NewBaseComponent(ctx, logsdk.NewModule("ROUTINE_V2", 1), r)
 	pool, _ := NewPool(append(opts, WithSize(1))...)
 	r.pool = pool
 	return r
 }
 
-func NewV2RoutinePoolExecutorComponent(opts ...Option) *routineComponentV2 {
+func NewV2RoutinePoolExecutorComponent(ctx context.Context, opts ...Option) *routineComponentV2 {
 	r := &routineComponentV2{}
-	r.BaseComponent = base.NewBaseComponent(logsdk.NewModule("ROUTINE_V2", 1), r)
+	r.BaseComponent = base.NewBaseComponent(ctx, logsdk.NewModule("ROUTINE_V2", 1), r)
 	pool, _ := NewPool(opts...)
 	r.pool = pool
 	return r

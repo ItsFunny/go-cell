@@ -30,6 +30,14 @@ type INodeExtension interface {
 	OnExtensionClose(ctx INodeContext) error
 	GetOptions() []options.Option
 	IsRequired() bool
+
+	ConfigMiddleware
+}
+
+type ConfigMiddleware interface {
+	LoadGenesis(data []byte) error
+	DefaultGenesis() []byte
+	ConfigModuleName() string
 }
 
 type IServerNodeExtension interface {
@@ -74,7 +82,6 @@ func (b *BaseExtension) OnExtensionReady(ctx INodeContext) error {
 	return nil
 }
 
-
 func (b *BaseExtension) ExtensionClose(ctx INodeContext) error {
 	return b.impl.OnExtensionClose(ctx)
 }
@@ -89,4 +96,16 @@ func (b *BaseExtension) GetOptions() []options.Option {
 
 func (b *BaseExtension) IsRequired() bool {
 	return true
+}
+
+func (b *BaseExtension) DefaultGenesis() []byte {
+	return nil
+}
+
+func (b *BaseExtension) ConfigModuleName() string {
+	return ""
+}
+
+func (b *BaseExtension) LoadGenesis(data []byte) error {
+	return nil
 }
