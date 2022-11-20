@@ -44,6 +44,7 @@ func NewExtensionManager(goCtx context.Context, cdc *codec.CodecComponent,
 	ctx := &NodeContext{}
 	ctx.ExtensionManager = ret
 	ctx.ctx = goCtx
+	ctx.cdc = cdc
 	ret.Ctx = ctx
 	ret.Ctx.Extensions = e.Extensions
 	ret.Ctx.Commands = h.Commands
@@ -111,11 +112,10 @@ func (m *NodeExtensionManager) onPrepared(e ApplicationEnvironmentPreparedEvent)
 	if err := m.initCommandLine(e); nil != err {
 		m.Logger.Error("init command failed", "err", err)
 	}
+	m.loadGenesis()
 }
 
-func (m *NodeExtensionManager) onInit(v ApplicationInitEvent) {
-	m.Logger.Info(banner.INIT)
-
+func (m *NodeExtensionManager) loadGenesis() {
 	for _, ex := range m.Extensions {
 		if m.skipExtension(ex) {
 			continue
@@ -144,7 +144,15 @@ func (m *NodeExtensionManager) onInit(v ApplicationInitEvent) {
 				loadDefault()
 			}
 		}
+	}
+}
 
+func (m *NodeExtensionManager) onInit(v ApplicationInitEvent) {
+	m.Logger.Info(banner.INIT)
+	for _, ex := range m.Extensions {
+		if m.skipExtension(ex) {
+			continue
+		}
 		if err := ex.ExtensionInit(m.Ctx); nil != err {
 			if ex.IsRequired() {
 				panic(err)
@@ -203,7 +211,9 @@ func (m *NodeExtensionManager) onExport(e ApplicationExportEvent) {
 }
 
 func (m *NodeExtensionManager) fireExtensionLoadedEvent() {
-	m.bus.FireApplicationEvents(m.GetContext(), ExtensionLoadedEvent{})
+	m.bus.FireApplicationEvents(m.GetContext(), ExtensionLoadedEvent{
+		Context: m.Ctx,
+	})
 }
 
 func (m *NodeExtensionManager) initCommandLine(e ApplicationEnvironmentPreparedEvent) error {

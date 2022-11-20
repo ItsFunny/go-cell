@@ -73,6 +73,7 @@ type ApplicationReadyEvent struct {
 }
 
 type ExtensionLoadedEvent struct {
+	Context *NodeContext
 }
 
 type ApplicationExportEvent struct {

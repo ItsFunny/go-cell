@@ -64,6 +64,7 @@ func (this *HttpFarmeWorkExtension) OnExtensionClose(ctx extension.INodeContext)
 func (h *HttpFarmeWorkExtension) ConfigModuleName() string {
 	return ConfigModule
 }
+
 func (h *HttpFarmeWorkExtension) LoadGenesis(cdc *codec.CodecComponent, data []byte) error {
 	var httpCfg config.HttpConfiguration
 	if err := cdc.UnMarshal(data, &httpCfg); nil != err {
@@ -75,4 +76,12 @@ func (h *HttpFarmeWorkExtension) LoadGenesis(cdc *codec.CodecComponent, data []b
 func (h *HttpFarmeWorkExtension) DefaultGenesis(cdc *codec.CodecComponent) []byte {
 	cc := config.DefaultHttpConfiguration()
 	return cdc.MustMarshal(cc)
+}
+
+func (h *HttpFarmeWorkExtension) CurrentGenesis(cdc *codec.CodecComponent) []byte {
+	cfg := h.Server.GetConfig()
+	if cfg == nil {
+		return h.DefaultGenesis(cdc)
+	}
+	return cdc.MustMarshal(cfg)
 }

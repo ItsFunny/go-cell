@@ -12,7 +12,9 @@ import (
 	"context"
 	"github.com/itsfunny/go-cell/base/core/options"
 	"github.com/itsfunny/go-cell/base/reactor"
+	"github.com/itsfunny/go-cell/component/codec"
 	"github.com/itsfunny/go-cell/sdk/config"
+	"reflect"
 )
 
 var (
@@ -31,6 +33,9 @@ type INodeContext interface {
 	GetMetaData() map[string]string
 	GetIp() string
 	GetConfigManager() *config.Manager
+	GetCodec() *codec.CodecComponent
+
+	SwitchTo(ty reflect.Type) INodeExtension
 }
 
 type NodeContext struct {
@@ -48,6 +53,7 @@ type NodeContext struct {
 	IP               string
 	ConfigManager    *config.Manager
 	ctx              context.Context
+	cdc              *codec.CodecComponent
 }
 
 func (n *NodeContext) GetCommands() []reactor.ICommand {
@@ -96,4 +102,16 @@ func (n *NodeContext) GetIp() string {
 
 func (n *NodeContext) GetConfigManager() *config.Manager {
 	return n.ConfigManager
+}
+func (n *NodeContext) SwitchTo(ty reflect.Type) INodeExtension {
+	for _, ex := range n.Extensions {
+		exType := reflect.TypeOf(ex)
+		if exType == ty {
+			return ex
+		}
+	}
+	return nil
+}
+func (n *NodeContext) GetCodec() *codec.CodecComponent {
+	return n.cdc
 }

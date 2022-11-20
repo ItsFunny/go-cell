@@ -201,7 +201,7 @@ func (bs *BaseService) ready(ctx *ReadyCTX) error {
 		}
 	}
 	close(bs.c2)
-	bs.Logger.Info("服务进入[READY]状态,impl:", bs.impl)
+	bs.Logger.Info("into [READY]status,impl:", bs.impl)
 	return nil
 }
 
@@ -247,7 +247,7 @@ func (bs *BaseService) start(ctx *StartCTX) error {
 		}
 
 		cost := time.Now().Sub(now)
-		bs.Logger.Info(fmt.Sprintf("成功启动服务:%v ,impl:%v,耗时[%v]毫秒(%v秒)", bs.name, bs.impl, cost.Milliseconds(), cost.Seconds()))
+		bs.Logger.Info(fmt.Sprintf("start successfully:%v ,impl:%v,cost[%v]ms(%vs)", bs.name, bs.impl, cost.Milliseconds(), cost.Seconds()))
 		atomic.StoreUint32(&bs.started, FINAL_STARTED)
 		return nil
 	}

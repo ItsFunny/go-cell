@@ -38,6 +38,7 @@ type INodeExtension interface {
 type ConfigMiddleware interface {
 	LoadGenesis(cdc *codec.CodecComponent, data []byte) error
 	DefaultGenesis(cdc *codec.CodecComponent) []byte
+	CurrentGenesis(cdc *codec.CodecComponent) []byte
 	ConfigModuleName() string
 }
 
@@ -108,5 +109,9 @@ func (b *BaseExtension) ConfigModuleName() string {
 }
 
 func (b *BaseExtension) LoadGenesis(cdc *codec.CodecComponent, data []byte) error {
+	return nil
+}
+
+func (b *BaseExtension) CurrentGenesis(cdc *codec.CodecComponent) []byte {
 	return nil
 }

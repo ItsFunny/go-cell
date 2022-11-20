@@ -54,7 +54,7 @@ func (u *UriSelector) OnRegisterCommand(wrapper *CommandWrapper) {
 
 func (u *UriSelector) Select(req *CommandSelectReq) {
 	httpReq := req.Request.(*couple2.HttpServerRequest)
-	uri := httpReq.Request.URL.Path
+	uri := httpReq.Request.RequestURI
 	ret := u.commands[reactor.ProtocolIDFromString(uri)]
 	if nil != ret {
 		req.Promise.Send(ret)

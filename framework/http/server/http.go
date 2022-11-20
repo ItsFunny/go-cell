@@ -21,6 +21,7 @@ import (
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
 	"go.uber.org/fx"
 	"net/http"
+	"strings"
 )
 
 var (
@@ -39,6 +40,7 @@ var (
 type IHttpServer interface {
 	server.IServer
 	SetConfig(c *config.HttpConfiguration)
+	GetConfig() *config.HttpConfiguration
 }
 
 type HttpServer struct {
@@ -98,7 +100,9 @@ func (s *HttpServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(400)
 		return
 	}
-	s.Serve(couple.NewHttpServerRequest(req), couple.NewHttpServerResponse(s.GetContext(), w))
+	// TODO,need decorators
+	req.RequestURI = strings.ReplaceAll(req.RequestURI, "//", "/")
+	s.Serve(couple.NewHttpServerRequest(req), couple.NewHttpServerResponse(context.Background(), w))
 }
 func (s *HttpServer) filter(uri string) bool {
 	_, exist := s.blackList[uri]
@@ -107,7 +111,9 @@ func (s *HttpServer) filter(uri string) bool {
 func (s *HttpServer) SetConfig(c *config.HttpConfiguration) {
 	s.Cfg = c
 }
-
+func (s *HttpServer) GetConfig() *config.HttpConfiguration {
+	return s.Cfg
+}
 func SetDefaultPort(port int) {
 	defaultPort = port
 }

@@ -7,6 +7,7 @@ import (
 	guuid "github.com/google/uuid"
 	"io"
 	mrand "math/rand"
+	"strings"
 	"sync"
 	"time"
 )
@@ -384,5 +385,5 @@ func RandInt32(min, max int32) int32 {
 
 func GenerateSequenceId() string {
 	id := guuid.New()
-	return id.String()
+	return strings.ReplaceAll(id.String(), "-", "")
 }

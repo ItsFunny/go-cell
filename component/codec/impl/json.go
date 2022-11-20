@@ -18,9 +18,15 @@ func NewDefaultCodec() *DefaultCodec {
 }
 
 func (d *DefaultCodec) Marshal(data interface{}) ([]byte, error) {
+	if m, ok := data.(types.Marshaller); ok {
+		return m.Marshal()
+	}
 	return cbor.Marshal(data)
 }
 
 func (d *DefaultCodec) Unmarshal(data []byte, ret interface{}) error {
+	if un, ok := ret.(types.Unmarshaler); ok {
+		return un.Unmarshal(data)
+	}
 	return cbor.Unmarshal(data, ret)
 }

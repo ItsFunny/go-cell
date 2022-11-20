@@ -3,6 +3,7 @@ package config
 import (
 	logsdk "github.com/itsfunny/go-cell/sdk/log"
 	logrusplugin "github.com/itsfunny/go-cell/sdk/log/logrus"
+	"strings"
 	"sync"
 )
 
@@ -39,6 +40,7 @@ func (this *Manager) GetCurrentConfiguration() *Configuration {
 }
 
 func NewManager(rootPath string, configType string) *Manager {
+	rootPath = strings.TrimSpace(rootPath)
 	ret := &Manager{newCfg: nil}
 	ret.cur = NewConfiguration(ret)
 	ret.rootPath = rootPath

@@ -58,12 +58,13 @@ func NewHttpServerResponse(ctx context.Context, writer http.ResponseWriter) *Htt
 		Writer: NewResponseWriter(writer),
 	}
 	ret.BaseServerResponse = couple.NewBaseServerResponse(ctx, ret)
+
 	return ret
 }
 
 func (this *HttpServerResponse) OnFireResult() {
 	ret, _ := this.Promise.GetForever()
-	if nil==ret{
+	if nil == ret {
 		return
 	}
 	for k, v := range this.Header {

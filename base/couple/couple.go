@@ -29,6 +29,8 @@ type IServerResponse interface {
 	OnFireError()
 	GetPromise() *promise.Promise
 	SetPromise(p *promise.Promise)
+
+	GetGoContext() context.Context
 }
 
 var (
@@ -40,6 +42,7 @@ type BaseServerResponse struct {
 	Promise *promise.Promise
 	Status  int
 	impl    IServerResponse
+	ctx     context.Context
 }
 
 func NewBaseServerResponse(ctx context.Context, impl IServerResponse, ops ...promise.PromiseOntion) *BaseServerResponse {
@@ -47,6 +50,7 @@ func NewBaseServerResponse(ctx context.Context, impl IServerResponse, ops ...pro
 		Header:  make(map[string]string),
 		Promise: promise.NewPromise(ctx, ops...),
 	}
+	ret.ctx = ctx
 	ret.impl = impl
 	return ret
 }
@@ -86,4 +90,8 @@ func (this *BaseServerResponse) OnFireResult() {
 }
 func (this *BaseServerResponse) OnFireError() {
 	this.impl.OnFireError()
+}
+
+func (this *BaseServerResponse) GetGoContext() context.Context {
+	return this.ctx
 }
