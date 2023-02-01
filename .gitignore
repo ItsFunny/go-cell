@@ -4,3 +4,4 @@ vendor
 demo/useless
 */.DS_Store
 *.Ds_Store
+personal/**
